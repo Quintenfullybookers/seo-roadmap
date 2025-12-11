@@ -62,6 +62,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-bottom:48px}
 .client-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all .2s;position:relative;cursor:pointer}
 .client-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.edit-client-btn{position:absolute;top:12px;left:12px;background:var(--blue);color:white;border:none;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer;opacity:0;transition:all .2s;z-index:10}
+.client-card:hover .edit-client-btn{opacity:1}
+.edit-client-btn:hover{background:var(--blue-dark);transform:scale(1.05)}
 .client-status-badge{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:var(--shadow)}
 .client-status-badge.opstartfase{background:var(--lightblue-bg)}
 .client-status-badge.kritiek{background:var(--red-bg)}
@@ -387,12 +390,14 @@ const [customItems,setCustomItems]=useState({});
 const [planningItems,setPlanningItems]=useState({});
 const [clients,setClients]=useState([]);
 const [showModal,setShowModal]=useState(false);
+const [showEditModal,setShowEditModal]=useState(false);
 const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
 const [showStatusModal,setShowStatusModal]=useState(false);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});
+const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
 const [clientToDelete,setClientToDelete]=useState(null);
@@ -540,6 +545,17 @@ saveData({tasks,customItems,planningItems,clients:updatedClients});
 setShowModal(false);
 setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});
 setToast({type:'success',message:'✓ Klant toegevoegd'});
+};
+
+const editClient=()=>{
+if(!isAdmin)return;
+if(!editingClient||!editingClient.name){setToast({type:'error',message:'Voer naam in'});return;}
+const updatedClients=clients.map(c=>c.id===editingClient.id?{...c,...editingClient}:c);
+setClients(updatedClients);
+saveData({tasks,customItems,planningItems,clients:updatedClients});
+setShowEditModal(false);
+setEditingClient(null);
+setToast({type:'success',message:'✓ Klant bijgewerkt'});
 };
 
 const updateClientStatus=(clientId,newStatus)=>{
@@ -837,6 +853,7 @@ const pmInfo=getPMInfo(client.projectManager||'none');
 return(
 <div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
+{isAdmin&&(<button className="edit-client-btn" onClick={(e)=>{e.stopPropagation();setEditingClient({...client});setShowEditModal(true);}}>✏️</button>)}
 <div className="client-header">
 <h3 className="client-name">{client.name}</h3>
 {pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color}}>{pmInfo.icon} {pmInfo.label}</div>)}
@@ -983,6 +1000,56 @@ return(
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{isAdmin&&showEditModal&&editingClient&&(
+<div className="modal-overlay" onClick={()=>setShowEditModal(false)}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">Klant Bewerken</h2>
+<div className="input-group">
+<label className="input-label">Bedrijfsnaam *</label>
+<input type="text" className="modal-input" value={editingClient.name} onChange={(e)=>setEditingClient({...editingClient,name:e.target.value})} autoFocus/>
+</div>
+<div className="input-group">
+<label className="input-label">Website</label>
+<input type="text" className="modal-input" placeholder="https://..." value={editingClient.website||''} onChange={(e)=>setEditingClient({...editingClient,website:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">SE Ranking Link</label>
+<input type="text" className="modal-input" placeholder="https://..." value={editingClient.seRanking||''} onChange={(e)=>setEditingClient({...editingClient,seRanking:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">Plaats</label>
+<input type="text" className="modal-input" value={editingClient.city||''} onChange={(e)=>setEditingClient({...editingClient,city:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">Status</label>
+<div className="status-select">
+{STATUS_OPTIONS.map(status=>(
+<div key={status.key} className={`status-option ${editingClient.status===status.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,status:status.key})}>
+<span className="status-option-icon">{status.icon}</span>
+<span className="status-option-text">{status.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Projectmanager</label>
+<div className="status-select">
+{PROJECT_MANAGERS.map(pm=>(
+<div key={pm.key} className={`status-option ${(editingClient.projectManager||'none')===pm.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,projectManager:pm.key})}>
+<span className="status-option-icon">{pm.icon}</span>
+<span className="status-option-text">{pm.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={editClient}>Opslaan</button>
+<button className="btn btn-secondary" onClick={()=>{setShowEditModal(false);setEditingClient(null);}}>Annuleren</button>
 </div>
 </div>
 </div>
