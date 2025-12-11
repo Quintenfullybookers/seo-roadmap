@@ -84,6 +84,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .progress-percentage{font-weight:600;color:var(--blue)}
 .progress-bar{height:8px;background:var(--gray-bg);border-radius:4px;overflow:hidden}
 .progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-dark));transition:width .3s ease;border-radius:4px}
+.planning-box{margin-top:16px;padding:12px;background:var(--blue-light);border-radius:6px}
+.planning-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--blue);margin-bottom:8px}
+.planning-item{font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.4}
 .add-client-card{background:var(--blue-light);border:2px dashed var(--blue);border-radius:12px;padding:48px 24px;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;transition:all .2s}
 .add-client-card:hover{background:var(--blue);border-color:var(--blue-dark)}
 .add-client-card:hover .add-icon,.add-client-card:hover .add-text{color:var(--white)}
@@ -616,6 +619,25 @@ const getStatusInfo=(statusKey)=>{
 return STATUS_OPTIONS.find(s=>s.key===statusKey)||STATUS_OPTIONS[3];
 };
 
+const getClientPlanning=(clientId)=>{
+const now=new Date();
+const currentMonth=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthDate=new Date(now.getFullYear(),now.getMonth()+1,1);
+const nextMonth=`${nextMonthDate.getFullYear()}-${String(nextMonthDate.getMonth()+1).padStart(2,'0')}`;
+const currentKey=`${clientId}-${currentMonth}`;
+const nextKey=`${clientId}-${nextMonth}`;
+return{
+current:{month:currentMonth,items:planningItems[currentKey]||[]},
+next:{month:nextMonth,items:planningItems[nextKey]||[]}
+};
+};
+
+const getMonthName=(monthKey)=>{
+const months=['Jan','Feb','Mrt','Apr','Mei','Jun','Jul','Aug','Sep','Okt','Nov','Dec'];
+const [year,month]=monthKey.split('-');
+return `${months[parseInt(month)-1]} ${year}`;
+};
+
 // LOADING
 if(loading){
 return(<div className="loading-screen"><div className="spinner"></div><div className="loading-text">Laden...</div></div>);
@@ -730,6 +752,34 @@ return(
 <div className="progress-fill" style={{width:`${progress}%`}}/>
 </div>
 </div>
+{(()=>{
+const planning=getClientPlanning(client.id);
+const hasPlanning=planning.current.items.length>0||planning.next.items.length>0;
+if(!hasPlanning)return null;
+return(
+<div className="planning-box">
+<div className="planning-title">📅 Planning</div>
+{planning.current.items.length>0&&(
+<div style={{marginBottom:'8px'}}>
+<div style={{fontSize:'11px',fontWeight:'600',color:'var(--blue)',marginBottom:'4px'}}>{getMonthName(planning.current.month)}</div>
+{planning.current.items.slice(0,3).map(item=>(
+<div key={item.id} className="planning-item" style={{textDecoration:item.completed?'line-through':'none',opacity:item.completed?0.6:1}}>• {item.text}</div>
+))}
+{planning.current.items.length>3&&<div className="planning-item" style={{fontStyle:'italic',color:'var(--text-light)'}}>+{planning.current.items.length-3} meer...</div>}
+</div>
+)}
+{planning.next.items.length>0&&(
+<div>
+<div style={{fontSize:'11px',fontWeight:'600',color:'var(--blue)',marginBottom:'4px'}}>{getMonthName(planning.next.month)}</div>
+{planning.next.items.slice(0,3).map(item=>(
+<div key={item.id} className="planning-item" style={{textDecoration:item.completed?'line-through':'none',opacity:item.completed?0.6:1}}>• {item.text}</div>
+))}
+{planning.next.items.length>3&&<div className="planning-item" style={{fontStyle:'italic',color:'var(--text-light)'}}>+{planning.next.items.length-3} meer...</div>}
+</div>
+)}
+</div>
+);
+})()}
 {isAdmin&&<button className="delete-btn" onClick={(e)=>{e.stopPropagation();setClientToDelete(client.id);setShowDeleteModal(true);}}>🗑️</button>}
 </div>
 );
