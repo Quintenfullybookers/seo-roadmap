@@ -6,7 +6,7 @@
 <title>SEO Roadmap - The Fully Bookers</title>
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
-:root{--blue:#0066CC;--blue-dark:#004C99;--blue-light:#E6F2FF;--green:#10B981;--green-bg:#D1FAE5;--orange:#F59E0B;--orange-bg:#FEF3C7;--red:#DC2626;--red-bg:#FEE2E2;--gray:#6B7280;--gray-bg:#F3F4F6;--text:#111827;--text-light:#6B7280;--border:#E5E7EB;--bg:#FAFAFA;--white:#FFFFFF;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);--shadow:0 4px 6px -1px rgb(0 0 0/.1);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.1)}
+:root{--blue:#0066CC;--blue-dark:#004C99;--blue-light:#E6F2FF;--green:#10B981;--green-bg:#D1FAE5;--orange:#F59E0B;--orange-bg:#FEF3C7;--yellow:#EAB308;--yellow-bg:#FEF9C3;--red:#DC2626;--red-bg:#FEE2E2;--lightblue:#3B82F6;--lightblue-bg:#DBEAFE;--gray:#6B7280;--gray-bg:#F3F4F6;--text:#111827;--text-light:#6B7280;--border:#E5E7EB;--bg:#FAFAFA;--white:#FFFFFF;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);--shadow:0 4px 6px -1px rgb(0 0 0/.1);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.1)}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
 .app{min-height:100vh;position:relative}
@@ -29,6 +29,10 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .reload-btn{padding:4px 8px;font-size:10px;background:var(--blue);color:white;border:none;border-radius:4px;cursor:pointer}
 .reload-btn:hover{background:var(--blue-dark)}
 .sidebar.minimal .reload-btn{display:none}
+.mode-indicator{padding:0 24px 8px;font-size:11px;display:flex;align-items:center;gap:6px}
+.mode-badge{padding:4px 8px;border-radius:4px;font-weight:600;font-size:10px}
+.mode-badge.viewer{background:var(--blue-light);color:var(--blue)}
+.mode-badge.admin{background:var(--green-bg);color:var(--green)}
 .save-status{padding:0 24px 8px;font-size:11px;color:var(--text-light);display:flex;align-items:center;gap:6px}
 .sidebar.minimal .save-status{padding:0 12px 8px;justify-content:center}
 .save-status-dot{width:6px;height:6px;border-radius:50%;background:var(--gray)}
@@ -47,14 +51,37 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .sidebar.minimal .nav-count{display:none}
 .main{flex:1;padding:48px 64px;max-width:1400px;margin-left:280px}
 .sidebar.minimal ~ .main{margin-left:80px}
-.header{margin-bottom:48px}
+.header{margin-bottom:32px}
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
+.status-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
+.status-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:all .2s;cursor:pointer}
+.status-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
+.status-card.active{border-width:2px;box-shadow:var(--shadow)}
+.status-icon{font-size:32px;margin-bottom:8px}
+.status-count{font-size:28px;font-weight:700;font-family:'DM Sans',sans-serif;margin-bottom:4px}
+.status-label{font-size:12px;font-weight:600;text-transform:uppercase;letter-spacing:.5px}
+.status-card.opstartfase .status-count{color:var(--lightblue)}
+.status-card.kritiek .status-count{color:var(--red)}
+.status-card.aandacht .status-count{color:var(--orange)}
+.status-card.schema .status-count{color:var(--yellow)}
+.status-card.top .status-count{color:var(--green)}
+.filter-bar{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
+.filter-label{font-size:13px;font-weight:600;color:var(--text-light)}
+.filter-btn{padding:6px 12px;border:1px solid var(--border);background:var(--white);border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
+.filter-btn:hover{background:var(--bg)}
+.filter-btn.active{background:var(--blue);color:white;border-color:var(--blue)}
 .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(320px,1fr));gap:24px;margin-bottom:48px}
 .client-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all .2s;position:relative}
 .client-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.client-status-badge{position:absolute;top:12px;right:12px;width:40px;height:40px;border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:20px;box-shadow:var(--shadow)}
+.client-status-badge.opstartfase{background:var(--lightblue-bg)}
+.client-status-badge.kritiek{background:var(--red-bg)}
+.client-status-badge.aandacht{background:var(--orange-bg)}
+.client-status-badge.schema{background:var(--yellow-bg)}
+.client-status-badge.top{background:var(--green-bg)}
 .client-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
-.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
+.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif;padding-right:50px}
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px}
 .client-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px}
 .client-link:hover{text-decoration:underline}
@@ -81,122 +108,156 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .section-header{font-size:13px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light);margin-bottom:16px;display:flex;justify-content:space-between;align-items:center}
 .add-item-btn{background:var(--blue);color:var(--white);border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
 .add-item-btn:hover{background:var(--blue-dark)}
-.current-client-banner{background:var(--blue-light);padding:16px 20px;border-radius:8px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between}
+.current-client-banner{background:var(--blue-light);padding:16px 20px;border-radius:8px;margin-bottom:32px;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px}
+.banner-left{display:flex;align-items:center;gap:16px;flex:1}
 .banner-text{font-size:14px;color:var(--blue-dark)}
 .banner-client{font-weight:700;color:var(--blue)}
+.banner-status-display{display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:6px;font-size:13px;font-weight:600}
+.banner-status-icon{font-size:20px}
+.banner-buttons{display:flex;gap:8px}
 .banner-btn{background:var(--blue);color:var(--white);border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
 .banner-btn:hover{background:var(--blue-dark)}
 .banner-btn.danger{background:var(--red)}
 .banner-btn.danger:hover{background:#B91C1C}
-.task-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:16px;transition:all .2s;cursor:pointer}
-.task-card:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
+.task-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:16px;transition:all .2s}
+.task-card.clickable{cursor:pointer}
+.task-card.clickable:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .task-card.completed{background:var(--bg);opacity:.7}
-.checkbox{width:20px;height:20px;border:2px solid var(--border);border-radius:6px;cursor:pointer;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
-.checkbox:hover{border-color:var(--blue)}
+.checkbox{width:20px;height:20px;border:2px solid var(--border);border-radius:6px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.checkbox.clickable{cursor:pointer}
+.checkbox.clickable:hover{border-color:var(--blue)}
 .checkbox.checked{background:var(--blue);border-color:var(--blue)}
 .checkbox.checked::after{content:'✓';color:white;font-size:14px;font-weight:bold}
 .task-content{flex:1}
 .task-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px}
 .task-desc{font-size:13px;color:var(--text-light)}
-.task-meta{display:flex;gap:8px;align-items:center}
-.status-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
-.status-todo{background:var(--gray-bg);color:var(--gray)}
-.status-bezig{background:var(--orange-bg);color:var(--orange)}
-.status-afgerond{background:var(--green-bg);color:var(--green)}
-.status-urgent{background:var(--red-bg);color:var(--red)}
-.status-badge:hover{transform:scale(1.05)}
-.client-badge{padding:4px 12px;border-radius:12px;font-size:12px;font-weight:600;background:var(--blue-light);color:var(--blue)}
-.custom-item-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:8px;transition:all .2s}
-.custom-item-card:hover{box-shadow:var(--shadow)}
-.custom-item-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
-.custom-item-fields{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:12px}
-.custom-field{display:flex;flex-direction:column;gap:4px}
-.field-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light);font-weight:600}
-.field-value{font-size:14px;color:var(--text);font-weight:500}
-.delete-item-btn{background:var(--red-bg);color:var(--red);border:none;width:28px;height:28px;border-radius:6px;cursor:pointer;font-size:14px;transition:all .2s;display:flex;align-items:center;justify-content:center}
-.delete-item-btn:hover{background:var(--red);color:var(--white)}
-.modal-overlay{position:fixed;top:0;left:0;right:0;bottom:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
-.modal{background:var(--white);border-radius:12px;padding:32px;max-width:500px;width:90%;box-shadow:0 20px 25px -5px rgb(0 0 0/.1);max-height:90vh;overflow-y:auto}
-.modal-title{font-size:20px;font-weight:700;margin-bottom:8px;font-family:'DM Sans',sans-serif}
-.modal-subtitle{font-size:14px;color:var(--text-light);margin-bottom:24px}
-.modal-field{margin-bottom:16px}
-.modal-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:6px}
-.modal-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
+.task-card.completed .task-title{text-decoration:line-through;color:var(--text-light)}
+.delete-item-btn{background:none;border:none;color:var(--text-light);cursor:pointer;transition:all .2s;padding:4px 8px;font-size:16px}
+.delete-item-btn:hover{color:var(--red)}
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.5);display:flex;align-items:center;justify-content:center;z-index:1000}
+.modal{background:var(--white);border-radius:12px;padding:32px;max-width:500px;width:90%;max-height:90vh;overflow-y:auto}
+.modal-title{font-size:24px;font-weight:700;margin-bottom:24px;font-family:'DM Sans',sans-serif}
+.input-group{margin-bottom:20px}
+.input-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
+.modal-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;transition:all .2s}
 .modal-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
+.status-select{display:grid;gap:8px;margin-top:8px}
+.status-option{padding:12px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;background:var(--white)}
+.status-option:hover{border-color:var(--blue);background:var(--blue-light)}
+.status-option.selected{border-color:var(--blue);background:var(--blue-light);font-weight:600}
+.status-option-icon{font-size:24px}
+.status-option-text{flex:1;font-size:14px}
 .modal-buttons{display:flex;gap:12px;margin-top:24px}
-.btn{flex:1;padding:12px;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s}
+.btn{padding:12px 24px;border:none;border-radius:6px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;font-family:inherit}
 .btn-primary{background:var(--blue);color:var(--white)}
 .btn-primary:hover{background:var(--blue-dark)}
 .btn-secondary{background:var(--gray-bg);color:var(--text)}
-.btn-secondary:hover{background:var(--gray);color:var(--white)}
+.btn-secondary:hover{background:var(--gray)}
 .btn-danger{background:var(--red);color:var(--white)}
 .btn-danger:hover{background:#B91C1C}
-.setup-screen{max-width:600px;margin:100px auto;padding:48px;background:var(--white);border-radius:12px;box-shadow:var(--shadow)}
-.setup-title{font-size:28px;font-weight:700;margin-bottom:16px;font-family:'DM Sans',sans-serif}
-.setup-info{background:var(--blue-light);padding:16px;border-radius:8px;margin:24px 0;font-size:14px;line-height:1.6}
-.input-group{margin-bottom:16px}
-.input-label{display:block;font-size:14px;font-weight:500;margin-bottom:8px}
-.input-field{width:100%;padding:12px;border:1px solid var(--border);border-radius:8px;font-size:14px}
-.error-message{background:var(--red-bg);color:var(--red);padding:12px;border-radius:6px;margin-bottom:16px;font-size:14px}
-.loading{text-align:center;padding:100px;font-size:18px;color:var(--text-light)}
-.loading-spinner{width:50px;height:50px;border:4px solid var(--border);border-top:4px solid var(--blue);border-radius:50%;animation:spin 1s linear infinite;margin:20px auto}
-@keyframes spin{0%{transform:rotate(0deg)}100%{transform:rotate(360deg)}}
-.empty-state{text-align:center;padding:64px 32px;color:var(--text-light)}
-.empty-icon{font-size:48px;margin-bottom:16px}
-@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
-.task-card,.client-card,.custom-item-card{animation:fadeIn .3s ease}
+.loading-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:100vh;background:var(--bg)}
+.spinner{width:48px;height:48px;border:4px solid var(--border);border-top-color:var(--blue);border-radius:50%;animation:spin 1s linear infinite}
+@keyframes spin{to{transform:rotate(360deg)}}
+.loading-text{margin-top:16px;color:var(--text-light);font-size:14px}
+.admin-login-btn{position:fixed;bottom:24px;right:24px;background:var(--blue);color:white;border:none;padding:12px 20px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;box-shadow:var(--shadow-lg);transition:all .2s;display:flex;align-items:center;gap:8px;z-index:999}
+.admin-login-btn:hover{background:var(--blue-dark);transform:translateY(-2px)}
 .toast{position:fixed;bottom:24px;right:24px;background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;box-shadow:var(--shadow-lg);display:flex;align-items:center;gap:12px;z-index:2000;animation:slideIn .3s ease}
+.toast.hiding{animation:slideOut .3s ease;opacity:0}
 @keyframes slideIn{from{transform:translateX(400px);opacity:0}to{transform:translateX(0);opacity:1}}
 @keyframes slideOut{from{transform:translateX(0);opacity:1}to{transform:translateX(400px);opacity:0}}
-.toast.hiding{animation:slideOut .3s ease}
-.toast-icon{font-size:20px}
-.toast-text{font-size:14px;font-weight:500;color:var(--text)}
 .toast-success{border-left:4px solid var(--green)}
 .toast-error{border-left:4px solid var(--red)}
 .toast-info{border-left:4px solid var(--blue)}
-@media (max-width:768px){
-.sidebar{width:240px}
-.sidebar.minimal{width:60px}
-.main{padding:24px 32px;margin-left:240px}
-.sidebar.minimal ~ .main{margin-left:60px}
-.title{font-size:28px}
-.dashboard-grid{grid-template-columns:1fr}
-.custom-item-fields{grid-template-columns:1fr}
-}
+.toast-icon{font-size:20px}
+.toast-text{font-size:14px;color:var(--text)}
+.empty-state{text-align:center;padding:80px 20px;color:var(--text-light)}
+.empty-icon{font-size:64px;margin-bottom:16px;opacity:.5}
+.empty-text{font-size:18px;font-weight:600;margin-bottom:8px}
+.empty-subtext{font-size:14px}
+.viewer-overlay{position:absolute;inset:0;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;border-radius:8px;opacity:0;transition:opacity .2s}
+.viewer-mode .add-client-card:hover .viewer-overlay{opacity:1}
+.viewer-message{background:var(--white);padding:16px 24px;border-radius:8px;box-shadow:var(--shadow);font-size:13px;color:var(--text);font-weight:600}
 </style>
+<script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
+<script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
+<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
 </head>
 <body>
 <div id="root"></div>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
-<script src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
-<script src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
-<script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script type="text/babel">
 const {useState,useEffect}=React;
 
-// STAPPEN DATA
-const STEPS=[
-{id:1,name:'Indexatie & Setup',icon:'🔍',sections:[
-{title:'Search Console',tasks:[{id:'1-1',title:'GSC aanmaken',desc:'Verifieer via DNS'},{id:'1-2',title:'Sitemap aanmaken',desc:''},{id:'1-3',title:'Sitemap indienen',desc:'In GSC'}]},
-{title:'Analytics',tasks:[{id:'1-4',title:'GA4 installeren',desc:'Via GTM'},{id:'1-5',title:'GA4 koppelen',desc:'Aan GSC'}]},
-{title:'Robots',tasks:[{id:'1-6',title:'Robots.txt check',desc:'Check blokkades'},{id:'1-7',title:'Indexering check',desc:'URL-inspectie'},{id:'1-8',title:'Indexering aanvragen',desc:'Nieuwe paginas'}]}
+// HARDCODED FIREBASE CREDENTIALS (voor viewer mode)
+const VIEWER_FIREBASE_CONFIG={
+apiKey:"AIzaSyD5o1oXmigR7KWaHkZPPVNRHiXxhqxTOJA",
+projectId:"seo-roadmap",
+authDomain:"seo-roadmap.firebaseapp.com"
+};
+
+// ADMIN WACHTWOORD
+const ADMIN_PASSWORD="D0rsrq!W%2CAtqq*";
+
+// STATUS DEFINITIONS
+const STATUS_OPTIONS=[
+{key:'opstartfase',label:'Opstartfase',icon:'🔵',color:'lightblue'},
+{key:'kritiek',label:'Kritiek',icon:'🔴',color:'red'},
+{key:'aandacht',label:'Aandacht Vereist',icon:'🟠',color:'orange'},
+{key:'schema',label:'Op Schema',icon:'🟡',color:'yellow'},
+{key:'top',label:'Top!',icon:'🟢',color:'green'}
+];
+
+// ROADMAP STEPS
+const ROADMAP_STEPS=[
+{id:1,name:'Onderzoek & Strategie',icon:'🔍',tasks:[
+{id:'1-1',text:'Keyword research uitvoeren',desc:'Zoekwoorden analyseren voor hoofdpagina\'s'},
+{id:'1-2',text:'Concurrentieanalyse',desc:'Top 5 concurrenten analyseren'},
+{id:'1-3',text:'Technische audit',desc:'Volledige website scan uitvoeren'},
+{id:'1-4',text:'Content gap analyse',desc:'Ontbrekende content identificeren'}
 ]},
-{id:2,name:'GMB',icon:'📍',sections:[{title:'Google My Business',tasks:[{id:'2-1',title:'GMB koppelen',desc:''},{id:'2-2',title:'GMB Locaties',desc:'Alle locaties toegevoegd'},{id:'2-3',title:'GMB Automations Reviews',desc:'Ingesteld'},{id:'2-4',title:'GMB Questionaire',desc:'Ingevuld door klant'}]}]},
-{id:3,name:'Zoekwoord Onderzoek',icon:'🎯',sections:[
-{title:'Tools',tasks:[{id:'3-1',title:'Toevoegen in SE Ranking',desc:''},{id:'3-2',title:'Toevoegen in Localfalcon',desc:''},{id:'3-3',title:'Toevoegen Zoekwoorden SE Ranking',desc:''}]},
-{title:'Zoekwoorden Voorstel',tasks:[{id:'3-4',title:'Zoekwoorden voorstel',desc:''},{id:'3-5',title:'Feedback klant',desc:''},{id:'3-6',title:'Verwerkt in SE Ranking',desc:''}]},
-{title:'0-meting',tasks:[{id:'3-7',title:'0-Meting',desc:''},{id:'3-8',title:'0-Meting Lokaal',desc:''},{id:'3-9',title:'Pagespeed test',desc:''}]}
+{id:2,name:'Technische Optimalisatie',icon:'⚙️',tasks:[
+{id:'2-1',text:'Site speed optimalisatie',desc:'Laadtijd onder 3 seconden brengen'},
+{id:'2-2',text:'Mobile optimization',desc:'100% mobile-friendly maken'},
+{id:'2-3',text:'Core Web Vitals',desc:'LCP, FID, CLS optimaliseren'},
+{id:'2-4',text:'Schema markup',desc:'Structured data implementeren'},
+{id:'2-5',text:'XML sitemap',desc:'Sitemap aanmaken en indienen'},
+{id:'2-6',text:'Robots.txt',desc:'Robots.txt optimaliseren'}
 ]},
-{id:4,name:'Technische Optimalisatie',icon:'🔧',sections:[
-{title:'Snelheid',tasks:[{id:'4-1',title:'PageSpeed test',desc:'Streef 80+'},{id:'4-2',title:'Afbeeldingen',desc:'Comprimeer'}]},
-{title:'Mobile',tasks:[{id:'4-3',title:'Mobile test',desc:'Check mobile'}]},
-{title:'Techniek',tasks:[{id:'4-4',title:'SSL-certificaat',desc:'HTTPS'},{id:'4-5',title:'301 redirects',desc:'Oude urls'},{id:'4-6',title:'404 oplossen',desc:'Check GSC'},{id:'4-7',title:'Broken links',desc:'Screaming Frog'},{id:'4-8',title:'Structured data',desc:'Schema.org'}]},
-{title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
+{id:3,name:'On-Page SEO',icon:'📄',tasks:[
+{id:'3-1',text:'Title tags optimaliseren',desc:'Unieke, keyword-rijke titles'},
+{id:'3-2',text:'Meta descriptions',desc:'Aantrekkelijke descriptions schrijven'},
+{id:'3-3',text:'Header structuur',desc:'H1-H6 correct implementeren'},
+{id:'3-4',text:'Internal linking',desc:'Linkstructuur verbeteren'},
+{id:'3-5',text:'Image optimization',desc:'Alt-tags en compressie'},
+{id:'3-6',text:'URL structuur',desc:'SEO-vriendelijke URLs'}
 ]},
-{id:5,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'}]},
-{id:6,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
-{id:7,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
+{id:4,name:'Content Creatie',icon:'✍️',tasks:[
+{id:'4-1',text:'Landingspagina\'s',desc:'Belangrijkste service pagina\'s'},
+{id:'4-2',text:'Blog strategie',desc:'Content kalender opstellen'},
+{id:'4-3',text:'Blog articles',desc:'10 SEO-geoptimaliseerde artikelen'},
+{id:'4-4',text:'Product/service beschrijvingen',desc:'Unieke content per item'},
+{id:'4-5',text:'FAQ pagina',desc:'Veelgestelde vragen beantwoorden'}
+]},
+{id:5,name:'Linkbuilding',icon:'🔗',tasks:[
+{id:'5-1',text:'Lokale directories',desc:'Inschrijven bij relevante directories'},
+{id:'5-2',text:'Guest posting',desc:'Gastartikelen plaatsen'},
+{id:'5-3',text:'Broken link building',desc:'Kapotte links vervangen'},
+{id:'5-4',text:'Partnerships',desc:'Samenwerkingen aangaan'},
+{id:'5-5',text:'PR activiteiten',desc:'Mediacontacten leggen'}
+]},
+{id:6,name:'Lokale SEO',icon:'📍',tasks:[
+{id:'6-1',text:'Google Business Profile',desc:'Profiel optimaliseren'},
+{id:'6-2',text:'NAP consistency',desc:'Consistente bedrijfsgegevens'},
+{id:'6-3',text:'Lokale citations',desc:'Vermeldingen bij lokale sites'},
+{id:'6-4',text:'Reviews management',desc:'Reviewstrategie opzetten'},
+{id:'6-5',text:'Local schema',desc:'Lokale structured data'}
+]},
+{id:7,name:'Meten & Bijsturen',icon:'📊',tasks:[
+{id:'7-1',text:'Google Search Console',desc:'Installatie en monitoring'},
+{id:'7-2',text:'Google Analytics',desc:'Setup en dashboards'},
+{id:'7-3',text:'Rank tracking',desc:'Positie monitoring instellen'}
+]},
 {id:8,name:'Planning',icon:'📅',type:'planning',months:[
 {key:'2025-12',label:'December 2025'},{key:'2026-01',label:'Januari 2026'},{key:'2026-02',label:'Februari 2026'},
 {key:'2026-03',label:'Maart 2026'},{key:'2026-04',label:'April 2026'},{key:'2026-05',label:'Mei 2026'},
@@ -205,7 +266,29 @@ const STEPS=[
 ]}
 ];
 
-// TOAST COMPONENT
+// LOCAL STORAGE
+const saveLocalData=(tasks,customItems,planningItems,clients)=>{
+localStorage.setItem('seo-tasks',JSON.stringify(tasks));
+localStorage.setItem('seo-custom-items',JSON.stringify(customItems));
+localStorage.setItem('seo-planning',JSON.stringify(planningItems));
+localStorage.setItem('seo-clients',JSON.stringify(clients));
+};
+
+const loadLocalData=()=>{
+try{
+return{
+tasks:JSON.parse(localStorage.getItem('seo-tasks')||'{}'),
+customItems:JSON.parse(localStorage.getItem('seo-custom-items')||'{}'),
+planningItems:JSON.parse(localStorage.getItem('seo-planning')||'{}'),
+clients:JSON.parse(localStorage.getItem('seo-clients')||'[]')
+};
+}catch(e){
+console.error('Error loading local data:',e);
+return{tasks:{},customItems:{},planningItems:{},clients:[]};
+}
+};
+
+// TOAST
 function Toast({message,type,onClose}){
 useEffect(()=>{
 const timer=setTimeout(()=>{
@@ -218,50 +301,39 @@ const icons={success:'✅',error:'❌',info:'💾'};
 return(<div className={`toast toast-${type}`}><div className="toast-icon">{icons[type]}</div><div className="toast-text">{message}</div></div>);
 }
 
-// SETUP SCREEN
-function SetupScreen({onComplete}){
-const [apiKey,setApiKey]=useState('');
-const [projectId,setProjectId]=useState('');
+// ADMIN LOGIN MODAL
+function AdminLoginModal({onLogin,onCancel}){
+const [password,setPassword]=useState('');
 const [error,setError]=useState('');
-const [loading,setLoading]=useState(false);
+const handleSubmit=()=>{
+if(password===ADMIN_PASSWORD){
+onLogin();
+}else{
+setError('Incorrect wachtwoord');
+setTimeout(()=>setError(''),3000);
+}
+};
 return(
-<div className="setup-screen">
-<h1 className="setup-title">🔥 Firebase Setup</h1>
-<p style={{color:'var(--text-light)',marginBottom:'24px'}}>Verbind met Firebase voor cloud opslag</p>
-{error&&<div className="error-message">{error}</div>}
-<div className="setup-info">
-<strong>📌 Verplicht:</strong> Firebase credentials zijn nodig.<br/><br/>
-<strong>Hoe verkrijg je deze?</strong><br/>
-1. Ga naar <a href="https://console.firebase.google.com" target="_blank" style={{color:'var(--blue)'}}>console.firebase.google.com</a><br/>
-2. Open je project<br/>
-3. ⚙️ → Project settings<br/>
-4. Scroll naar "SDK setup and configuration"<br/>
-5. Kopieer API Key en Project ID<br/><br/>
-<strong>Firestore Rules instellen:</strong><br/>
-Firestore Database → Rules → Zet:<br/>
-<code style={{background:'var(--bg)',padding:'4px',borderRadius:'4px'}}>allow read, write: if true;</code>
-</div>
+<div className="modal-overlay" onClick={onCancel}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">🔐 Admin Login</h2>
+<p style={{marginBottom:'24px',color:'var(--text-light)',fontSize:'14px'}}>Voer het admin wachtwoord in om edit rechten te krijgen.</p>
+{error&&<div className="error-message" style={{background:'var(--red-bg)',color:'var(--red)',padding:'12px',borderRadius:'6px',marginBottom:'16px',fontSize:'13px'}}>{error}</div>}
 <div className="input-group">
-<label className="input-label">API Key *</label>
-<input type="text" className="input-field" placeholder="AIzaSy..." value={apiKey} onChange={(e)=>setApiKey(e.target.value)} autoFocus/>
+<label className="input-label">Wachtwoord</label>
+<input type="password" className="modal-input" value={password} onChange={(e)=>setPassword(e.target.value)} onKeyPress={(e)=>{if(e.key==='Enter')handleSubmit();}} autoFocus placeholder="••••••••"/>
 </div>
-<div className="input-group">
-<label className="input-label">Project ID *</label>
-<input type="text" className="input-field" placeholder="seo-roadmap-xxx" value={projectId} onChange={(e)=>setProjectId(e.target.value)}/>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={handleSubmit}>Inloggen</button>
+<button className="btn btn-secondary" onClick={onCancel}>Annuleren</button>
 </div>
-<button className="btn-primary" style={{width:'100%'}} onClick={()=>{
-if(!apiKey||!projectId){setError('Vul beide velden in');return;}
-setLoading(true);
-setTimeout(()=>onComplete({apiKey,projectId}),500);
-}} disabled={loading}>
-{loading?'Verbinden...':'Verbinden met Firebase'}
-</button>
+</div>
 </div>
 );
 }
 
-// PLANNING MONTH COMPONENT
-function PlanningMonth({month,selectedClient,planningItems,onAdd,onToggle,onDelete,getCurrentMonth}){
+// PLANNING MONTH
+function PlanningMonth({month,selectedClient,planningItems,onAdd,onToggle,onDelete,getCurrentMonth,isAdmin}){
 const [showInput,setShowInput]=useState(false);
 const [inputValue,setInputValue]=useState('');
 const monthItems=planningItems[`${selectedClient}-${month.key}`]||[];
@@ -272,13 +344,13 @@ return(
 {month.key===getCurrentMonth()&&(<span style={{marginLeft:'8px',fontSize:'11px',background:'var(--blue)',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>)}
 </div>
 {monthItems.map(item=>(
-<div key={item.id} className={`task-card ${item.completed?'completed':''}`}>
-<div className={`checkbox ${item.completed?'checked':''}`} onClick={()=>onToggle(month.key,item.id)}/>
+<div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
+<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)onToggle(month.key,item.id);}}/>
 <div className="task-content"><div className="task-title">{item.text}</div></div>
-<button className="delete-item-btn" onClick={()=>onDelete(month.key,item.id)}>🗑️</button>
+{isAdmin&&<button className="delete-item-btn" onClick={()=>onDelete(month.key,item.id)}>🗑️</button>}
 </div>
 ))}
-{showInput?(
+{isAdmin&&showInput&&(
 <div style={{marginTop:'8px',display:'flex',gap:'8px'}}>
 <input type="text" className="modal-input" placeholder="Planning item..." value={inputValue}
 onChange={(e)=>setInputValue(e.target.value)}
@@ -287,7 +359,8 @@ autoFocus style={{margin:0}}/>
 <button className="btn btn-primary" onClick={()=>{onAdd(month.key,inputValue);setInputValue('');setShowInput(false);}} style={{padding:'10px 20px',flex:'0 0 auto'}}>Toevoegen</button>
 <button className="btn btn-secondary" onClick={()=>{setShowInput(false);setInputValue('');}} style={{padding:'10px 20px',flex:'0 0 auto'}}>Annuleren</button>
 </div>
-):(
+)}
+{isAdmin&&!showInput&&(
 <button className="add-item-btn" onClick={()=>setShowInput(true)} style={{width:'100%',marginTop:'8px'}}>+ Planning item toevoegen</button>
 )}
 {monthItems.length===0&&!showInput&&(<div style={{textAlign:'center',padding:'32px',color:'var(--text-light)',fontSize:'14px'}}>Nog geen planning voor deze maand</div>)}
@@ -297,7 +370,6 @@ autoFocus style={{margin:0}}/>
 
 // MAIN APP
 function App(){
-const [showSetup,setShowSetup]=useState(false);
 const [loading,setLoading]=useState(true);
 const [db,setDb]=useState(null);
 const [syncStatus,setSyncStatus]=useState('connecting');
@@ -311,90 +383,61 @@ const [clients,setClients]=useState([]);
 const [showModal,setShowModal]=useState(false);
 const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
-const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:''});
+const [showStatusModal,setShowStatusModal]=useState(false);
+const [showAdminLogin,setShowAdminLogin]=useState(false);
+const [isAdmin,setIsAdmin]=useState(false);
+const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema'});
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [itemModalStep,setItemModalStep]=useState(null);
-const [itemModalSection,setItemModalSection]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
+const [statusFilter,setStatusFilter]=useState('all');
 
 // INIT
 useEffect(()=>{
 console.log('🚀 APP STARTING...');
-const setupDone=localStorage.getItem('setup-done');
-const savedConfig=localStorage.getItem('firebase-config');
-
-if(!setupDone||!savedConfig){
-console.log('⚙️ Setup needed');
-setShowSetup(true);
-setLoading(false);
-return;
-}
-
-try{
-const config=JSON.parse(savedConfig);
-console.log('🔧 Config found',{hasApiKey:!!config.apiKey,hasProjectId:!!config.projectId});
-initFirebase(config);
-}catch(e){
-console.error('❌ Config error:',e);
-setShowSetup(true);
-setLoading(false);
-}
+console.log('👁️ VIEWER MODE (Read-only)');
+initFirebase(VIEWER_FIREBASE_CONFIG);
 },[]);
 
 // FIREBASE INIT
 const initFirebase=async(config)=>{
 try{
 console.log('🔥 FIREBASE INIT START');
-console.log('   API Key:',config.apiKey?'✓':'✗');
-console.log('   Project ID:',config.projectId||'MISSING');
-
-if(!config.apiKey||!config.projectId){
-throw new Error('Missing credentials');
-}
-
 setSyncStatus('connecting');
 
 if(!firebase.apps.length){
-firebase.initializeApp({
-apiKey:config.apiKey,
-projectId:config.projectId,
-authDomain:`${config.projectId}.firebaseapp.com`
-});
+firebase.initializeApp(config);
 console.log('   ✓ App initialized');
 }
 
 const firestore=firebase.firestore();
-console.log('   ✓ Firestore created');
 
-// TEST CONNECTION
+try{
+await firestore.disableNetwork();
+await firestore.enableNetwork();
+console.log('   ✓ Network enabled');
+}catch(e){
+console.log('   ⚠️ Network toggle failed');
+}
+
 const testDoc=await firestore.collection('roadmaps').doc('main').get();
-console.log('   ✓ Connection test OK');
+console.log('   ✓ Connection OK');
 
-// SET DB FIRST
 setDb(firestore);
 setSyncStatus('connected');
-console.log('   ✓ DB set in state');
 
-// LOAD DATA
 if(testDoc.exists){
 const data=testDoc.data();
-console.log('   📥 Data loaded:',{clients:(data.clients||[]).length});
+console.log('   📥 Data loaded');
 setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setClients(data.clients||[]);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.clients||[]);
-}else{
-console.log('   📝 Creating empty doc');
-await firestore.collection('roadmaps').doc('main').set({
-tasks:{},customItems:{},planningItems:{},clients:[],
-createdAt:firebase.firestore.FieldValue.serverTimestamp()
-});
 }
 
-// REALTIME LISTENER
 firestore.collection('roadmaps').doc('main').onSnapshot((doc)=>{
 if(doc.exists){
 const data=doc.data();
@@ -406,256 +449,56 @@ setClients(data.clients||[]);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.clients||[]);
 }
 });
-console.log('   ✓ Listener active');
 
-setShowSetup(false);
 setLoading(false);
-setToast({type:'success',message:'✓ Firebase verbonden!'});
-console.log('✅✅✅ FIREBASE READY ✅✅✅');
-
+console.log('✅ FIREBASE READY');
 }catch(error){
-console.error('❌❌❌ FIREBASE ERROR');
-console.error('   Code:',error.code);
-console.error('   Message:',error.message);
-console.error('   Full:',error);
-
-setDb(null);
+console.error('❌ FIREBASE ERROR:',error);
 setSyncStatus('error');
-setShowSetup(true);
 setLoading(false);
-
-let msg='Firebase fout: '+error.message;
-if(error.code==='permission-denied'||error.message.includes('permission')){
-msg='Firestore Rules blokkeren!\n\nGa naar Firebase Console:\nFirestore Database → Rules\n\nZet: allow read, write: if true;';
-}
-alert(msg);
-setToast({type:'error',message:msg});
+setToast({type:'error',message:'Verbinding mislukt'});
 }
 };
 
-// SAVE/LOAD LOCAL
-const saveLocalData=(t,ci,pi,cl)=>{
-try{
-localStorage.setItem('seo-roadmap-data',JSON.stringify({tasks:t,customItems:ci,planningItems:pi,clients:cl,timestamp:Date.now()}));
-console.log('💾 localStorage saved');
-}catch(e){
-console.error('❌ localStorage error:',e);
-}
-};
-
-const loadLocalData=()=>{
-try{
-const saved=localStorage.getItem('seo-roadmap-data');
-if(saved){
-const data=JSON.parse(saved);
-setTasks(data.tasks||{});
-setCustomItems(data.customItems||{});
-setPlanningItems(data.planningItems||{});
-setClients(data.clients||[]);
-console.log('📥 localStorage loaded');
-}
-}catch(e){
-console.error('❌ localStorage load error:',e);
-}
-};
-
-// SAVE DATA TO FIREBASE
+// SAVE DATA (alleen in admin mode)
 const saveData=async(updates)=>{
-const newTasks=updates.tasks!==undefined?updates.tasks:tasks;
-const newCustomItems=updates.customItems!==undefined?updates.customItems:customItems;
-const newPlanningItems=updates.planningItems!==undefined?updates.planningItems:planningItems;
-const newClients=updates.clients!==undefined?updates.clients:clients;
-
-if(updates.tasks!==undefined)setTasks(newTasks);
-if(updates.customItems!==undefined)setCustomItems(newCustomItems);
-if(updates.planningItems!==undefined)setPlanningItems(newPlanningItems);
-if(updates.clients!==undefined)setClients(newClients);
-
-console.log('💾 SAVING:',{clients:newClients.length});
-setSaveStatus('saving');
-saveLocalData(newTasks,newCustomItems,newPlanningItems,newClients);
-
+if(!isAdmin){
+console.log('⚠️ Viewer mode - no save');
+return;
+}
 if(!db){
-console.error('❌ NO FIREBASE!');
-setSaveStatus('error');
-setToast({type:'error',message:'❌ Geen Firebase!'});
-setTimeout(()=>setSaveStatus('idle'),3000);
+setToast({type:'error',message:'❌ Geen verbinding'});
 return;
 }
 
+setSaveStatus('saving');
+
 try{
-console.log('📤 Saving to Firebase...');
-await db.collection('roadmaps').doc('main').set({
-tasks:newTasks,
-customItems:newCustomItems,
-planningItems:newPlanningItems,
-clients:newClients,
+const dataToSave={
+...updates,
 updatedAt:firebase.firestore.FieldValue.serverTimestamp()
-});
-console.log('✅✅✅ SAVED TO FIREBASE ✅✅✅');
+};
+
+await db.collection('roadmaps').doc('main').set(dataToSave,{merge:true});
+
+saveLocalData(updates.tasks||tasks,updates.customItems||customItems,updates.planningItems||planningItems,updates.clients||clients);
+
+console.log('✅ SAVED');
 setSaveStatus('success');
-setToast({type:'success',message:'✓ Opgeslagen'});
 setTimeout(()=>setSaveStatus('idle'),2000);
 }catch(error){
-console.error('❌❌❌ SAVE ERROR:',error);
+console.error('❌ Save error:',error);
+setToast({type:'error',message:'Opslaan mislukt'});
 setSaveStatus('error');
-let msg='Opslaan gefaald: '+error.message;
-if(error.code==='permission-denied'){
-msg='Firestore Rules blokkeren schrijven!';
-}
-setToast({type:'error',message:msg});
-alert(msg);
-setTimeout(()=>setSaveStatus('idle'),5000);
+setTimeout(()=>setSaveStatus('idle'),3000);
 }
 };
 
-// SETUP COMPLETE
-const handleSetupComplete=(config)=>{
-localStorage.setItem('firebase-config',JSON.stringify(config));
-localStorage.setItem('setup-done','true');
-initFirebase(config);
-};
-
-// REST OF FUNCTIONS (keep all existing functions)
-const toggleTask=(taskId)=>{
-if(taskId==='7-reset'){
-if(confirm('Alle maandelijkse taken resetten?')){
-const newTasks={...tasks};
-for(let i=1;i<=3;i++){const id=`7-${i}`;if(newTasks[id])newTasks[id].completed=false;}
-saveData({tasks:newTasks});
-alert('Taken gereset!');
-}
-return;
-}
-const newTasks={...tasks,[taskId]:{...tasks[taskId],completed:!tasks[taskId]?.completed,client:selectedClient||tasks[taskId]?.client}};
-saveData({tasks:newTasks});
-};
-
-const updateStatus=(taskId)=>{
-const statuses=['todo','bezig','afgerond','urgent'];
-const current=tasks[taskId]?.status||'todo';
-const nextIndex=(statuses.indexOf(current)+1)%statuses.length;
-const newTasks={...tasks,[taskId]:{...tasks[taskId],status:statuses[nextIndex],client:selectedClient||tasks[taskId]?.client}};
-saveData({tasks:newTasks});
-};
-
-const addClient=()=>{
-if(newClient.name.trim()){
-const clientObj={name:newClient.name.trim(),website:newClient.website.trim(),seRanking:newClient.seRanking.trim(),city:newClient.city.trim()};
-const newClients=[...clients,clientObj];
-saveData({clients:newClients});
-setNewClient({name:'',website:'',seRanking:'',city:''});
-setShowModal(false);
-}
-};
-
-const assignAllTasks=(clientName)=>{
-if(!confirm(`Alle taken toewijzen aan ${clientName}?`))return;
-const newTasks={...tasks};
-STEPS.forEach(step=>{if(step.sections)step.sections.forEach(section=>section.tasks.forEach(task=>{newTasks[task.id]={...newTasks[task.id],client:clientName};}));});
-saveData({tasks:newTasks});
-alert(`Alle taken toegewezen!`);
-};
-
-const confirmDelete=(client)=>{setClientToDelete(client);setShowDeleteModal(true);};
-
-const deleteClient=()=>{
-if(!clientToDelete)return;
-const newClients=clients.filter(c=>c.name!==clientToDelete.name);
-const newTasks={...tasks};
-Object.keys(newTasks).forEach(taskId=>{if(newTasks[taskId].client===clientToDelete.name)newTasks[taskId].client=null;});
-const newCustomItems={...customItems};
-Object.keys(newCustomItems).forEach(key=>{newCustomItems[key]=newCustomItems[key].filter(item=>item.client!==clientToDelete.name);});
-const newPlanningItems={...planningItems};
-Object.keys(newPlanningItems).forEach(key=>{if(key.startsWith(`${clientToDelete.name}-`))delete newPlanningItems[key];});
-saveData({clients:newClients,tasks:newTasks,customItems:newCustomItems,planningItems:newPlanningItems});
-setShowDeleteModal(false);
-setClientToDelete(null);
-};
-
-const openItemModal=(stepId,sectionKey=null)=>{
-setItemModalStep(stepId);
-setItemModalSection(sectionKey);
-setItemModalData({});
-setShowItemModal(true);
-};
-
-const addCustomItem=()=>{
-const newItem={id:Date.now().toString(),client:selectedClient,section:itemModalSection,...itemModalData};
-const key=itemModalSection?`${itemModalStep}-${itemModalSection}`:itemModalStep;
-const newCustomItems={...customItems,[key]:[...(customItems[key]||[]),newItem]};
-saveData({customItems:newCustomItems});
-setShowItemModal(false);
-setItemModalData({});
-};
-
-const deleteCustomItem=(stepId,sectionKey,itemId)=>{
-const key=sectionKey?`${stepId}-${sectionKey}`:stepId;
-const newCustomItems={...customItems,[key]:(customItems[key]||[]).filter(item=>item.id!==itemId)};
-saveData({customItems:newCustomItems});
-};
-
-const addPlanningItem=(month,text)=>{
-if(!text.trim()||!selectedClient)return;
-const key=`${selectedClient}-${month}`;
-const newItem={id:Date.now().toString(),text:text.trim(),completed:false};
-const newPlanningItems={...planningItems,[key]:[...(planningItems[key]||[]),newItem]};
-saveData({planningItems:newPlanningItems});
-};
-
-const togglePlanningItem=(month,itemId)=>{
-if(!selectedClient)return;
-const key=`${selectedClient}-${month}`;
-const newPlanningItems={...planningItems,[key]:(planningItems[key]||[]).map(item=>item.id===itemId?{...item,completed:!item.completed}:item)};
-saveData({planningItems:newPlanningItems});
-};
-
-const deletePlanningItem=(month,itemId)=>{
-if(!selectedClient)return;
-const key=`${selectedClient}-${month}`;
-const newPlanningItems={...planningItems,[key]:(planningItems[key]||[]).filter(item=>item.id!==itemId)};
-saveData({planningItems:newPlanningItems});
-};
-
-const getCurrentMonth=()=>{const now=new Date();return`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;};
-const getNextMonth=()=>{const now=new Date();now.setMonth(now.getMonth()+1);return`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;};
-
-const getClientStats=(client)=>{
-const allTasks=STEPS.filter(s=>s.sections).reduce((acc,step)=>[...acc,...step.sections.flatMap(s=>s.tasks)],[]);
-const clientTasks=allTasks.filter(t=>tasks[t.id]?.client===client.name);
-const completed=clientTasks.filter(t=>tasks[t.id]?.completed).length;
-let customCount=0;
-STEPS.filter(s=>s.type).forEach(step=>{
-if(step.type==='custom'){const items=customItems[step.id]||[];customCount+=items.filter(i=>i.client===client.name).length;}
-else if(step.type==='hybrid'){const key=`${step.id}-${step.customSection.title}`;const items=customItems[key]||[];customCount+=items.filter(i=>i.client===client.name).length;}
-});
-return{total:clientTasks.length+customCount,completed,remaining:(clientTasks.length+customCount)-completed,percentage:(clientTasks.length+customCount)>0?(completed/(clientTasks.length+customCount))*100:0};
-};
-
-const getClientPlanningForMonth=(client,month)=>planningItems[`${client}-${month}`]||[];
-const openClient=(client)=>{setSelectedClient(client.name);setActiveView('step');setActiveStep(1);};
-
-const getStepProgress=(stepId,client)=>{
-const step=STEPS.find(s=>s.id===stepId);
-if(step.type==='planning'){
-if(!client)return{total:0,completed:0};
-let total=0,completed=0;
-step.months.forEach(month=>{const items=getClientPlanningForMonth(client,month.key);total+=items.length;completed+=items.filter(item=>item.completed).length;});
-return{total,completed};
-}
-if(step.type==='custom'){const items=customItems[stepId]||[];const clientItems=client?items.filter(i=>i.client===client):items;return{total:clientItems.length,completed:0};}
-const stepTasks=step.sections?.flatMap(s=>s.tasks)||[];
-const filteredTasks=client?stepTasks.filter(t=>tasks[t.id]?.client===client):stepTasks;
-const completed=filteredTasks.filter(t=>tasks[t.id]?.completed).length;
-let customCount=0;
-if(step.type==='hybrid'&&step.customSection){const key=`${stepId}-${step.customSection.title}`;const items=customItems[key]||[];customCount=client?items.filter(i=>i.client===client).length:items.length;}
-return{total:filteredTasks.length+customCount,completed};
-};
-
+// RELOAD
 const reloadFromFirebase=async()=>{
 if(!db)return;
+setToast({type:'info',message:'🔄 Herladen...'});
 try{
-setToast({type:'info',message:'Herladen...'});
 const doc=await db.collection('roadmaps').doc('main').get();
 if(doc.exists){
 const data=doc.data();
@@ -665,263 +508,598 @@ setPlanningItems(data.planningItems||{});
 setClients(data.clients||[]);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.clients||[]);
 setToast({type:'success',message:'✓ Herladen voltooid'});
-console.log('✅ Manual reload complete');
 }
-}catch(e){
-console.error('❌ Reload error:',e);
-setToast({type:'error',message:'Herladen gefaald'});
+}catch(error){
+setToast({type:'error',message:'Herladen mislukt'});
 }
 };
 
-if(loading)return(<div className="loading"><div className="loading-spinner"></div><div>Laden...</div></div>);
-if(showSetup)return <SetupScreen onComplete={handleSetupComplete}/>;
+// ADMIN LOGIN
+const handleAdminLogin=()=>{
+setIsAdmin(true);
+setShowAdminLogin(false);
+setToast({type:'success',message:'✓ Admin mode actief!'});
+console.log('🔓 ADMIN MODE ENABLED');
+};
 
-const currentStep=STEPS.find(s=>s.id===activeStep);
-const sortedClients=[...clients].sort((a,b)=>a.name.localeCompare(b.name));
+// CLIENT FUNCTIONS
+const addClient=()=>{
+if(!isAdmin)return;
+if(!newClient.name){
+setToast({type:'error',message:'Voer een bedrijfsnaam in'});
+return;
+}
+const client={
+id:Date.now(),
+...newClient,
+createdAt:new Date().toISOString()
+};
+const updatedClients=[...clients,client];
+setClients(updatedClients);
+saveData({tasks,customItems,planningItems,clients:updatedClients});
+setShowModal(false);
+setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema'});
+setToast({type:'success',message:'✓ Klant toegevoegd'});
+};
+
+const updateClientStatus=(clientId,newStatus)=>{
+if(!isAdmin)return;
+const updatedClients=clients.map(c=>c.id===clientId?{...c,status:newStatus}:c);
+setClients(updatedClients);
+saveData({tasks,customItems,planningItems,clients:updatedClients});
+setToast({type:'success',message:'✓ Status bijgewerkt'});
+};
+
+const deleteClient=(id)=>{
+if(!isAdmin)return;
+const updatedClients=clients.filter(c=>c.id!==id);
+setClients(updatedClients);
+const newTasks={...tasks};
+const newCustomItems={...customItems};
+const newPlanningItems={...planningItems};
+Object.keys(newTasks).forEach(key=>{if(key.startsWith(`${id}-`))delete newTasks[key];});
+Object.keys(newCustomItems).forEach(key=>{if(key.startsWith(`${id}-`))delete newCustomItems[key];});
+Object.keys(newPlanningItems).forEach(key=>{if(key.startsWith(`${id}-`))delete newPlanningItems[key];});
+setTasks(newTasks);
+setCustomItems(newCustomItems);
+setPlanningItems(newPlanningItems);
+saveData({tasks:newTasks,customItems:newCustomItems,planningItems:newPlanningItems,clients:updatedClients});
+if(selectedClient===id){
+setSelectedClient(null);
+setActiveView('dashboard');
+}
+setShowDeleteModal(false);
+setClientToDelete(null);
+setToast({type:'success',message:'✓ Klant verwijderd'});
+};
+
+// TASK FUNCTIONS
+const toggleTask=(stepId,taskId)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}-${taskId}`;
+const newTasks={...tasks,[key]:!tasks[key]};
+setTasks(newTasks);
+saveData({tasks:newTasks,customItems,planningItems,clients});
+};
+
+const addCustomItem=(stepId,text)=>{
+if(!isAdmin)return;
+if(!text.trim())return;
+const key=`${selectedClient}-${stepId}`;
+const items=customItems[key]||[];
+const newItem={id:Date.now(),text:text.trim(),completed:false};
+const newCustomItems={...customItems,[key]:[...items,newItem]};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,clients});
+};
+
+const toggleCustomItem=(stepId,itemId)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}`;
+const items=customItems[key]||[];
+const newItems=items.map(item=>item.id===itemId?{...item,completed:!item.completed}:item);
+const newCustomItems={...customItems,[key]:newItems};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,clients});
+};
+
+const deleteCustomItem=(stepId,itemId)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}`;
+const items=customItems[key]||[];
+const newItems=items.filter(item=>item.id!==itemId);
+const newCustomItems={...customItems,[key]:newItems};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,clients});
+};
+
+// PLANNING FUNCTIONS
+const addPlanningItem=(monthKey,text)=>{
+if(!isAdmin)return;
+if(!text.trim())return;
+const key=`${selectedClient}-${monthKey}`;
+const items=planningItems[key]||[];
+const newItem={id:Date.now(),text:text.trim(),completed:false};
+const newPlanningItems={...planningItems,[key]:[...items,newItem]};
+setPlanningItems(newPlanningItems);
+saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+};
+
+const togglePlanningItem=(monthKey,itemId)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${monthKey}`;
+const items=planningItems[key]||[];
+const newItems=items.map(item=>item.id===itemId?{...item,completed:!item.completed}:item);
+const newPlanningItems={...planningItems,[key]:newItems};
+setPlanningItems(newPlanningItems);
+saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+};
+
+const deletePlanningItem=(monthKey,itemId)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${monthKey}`;
+const items=planningItems[key]||[];
+const newItems=items.filter(item=>item.id!==itemId);
+const newPlanningItems={...planningItems,[key]:newItems};
+setPlanningItems(newPlanningItems);
+saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+};
+
+// HELPERS
+const getCurrentMonth=()=>{
+const now=new Date();
+return `${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+};
+
+const getClientProgress=(clientId)=>{
+let total=0;
+let completed=0;
+ROADMAP_STEPS.forEach(step=>{
+if(step.type==='planning')return;
+if(step.tasks){
+step.tasks.forEach(task=>{
+total++;
+const key=`${clientId}-${step.id}-${task.id}`;
+if(tasks[key])completed++;
+});
+}
+const customKey=`${clientId}-${step.id}`;
+const customList=customItems[customKey]||[];
+customList.forEach(item=>{
+total++;
+if(item.completed)completed++;
+});
+});
+return total>0?Math.round((completed/total)*100):0;
+};
+
+const getClientStats=(clientId)=>{
+let totalTasks=0;
+let completedTasks=0;
+let customCount=0;
+ROADMAP_STEPS.forEach(step=>{
+if(step.type==='planning')return;
+if(step.tasks){
+step.tasks.forEach(task=>{
+totalTasks++;
+const key=`${clientId}-${step.id}-${task.id}`;
+if(tasks[key])completedTasks++;
+});
+}
+const customKey=`${clientId}-${step.id}`;
+const customList=customItems[customKey]||[];
+customCount+=customList.length;
+totalTasks+=customList.length;
+customList.forEach(item=>{if(item.completed)completedTasks++;});
+});
+return{total:totalTasks,completed:completedTasks,custom:customCount};
+};
+
+const getStatusCounts=()=>{
+const counts={};
+STATUS_OPTIONS.forEach(opt=>counts[opt.key]=0);
+clients.forEach(client=>{
+const status=client.status||'schema';
+counts[status]=(counts[status]||0)+1;
+});
+return counts;
+};
+
+const getFilteredClients=()=>{
+if(statusFilter==='all')return clients;
+return clients.filter(c=>(c.status||'schema')===statusFilter);
+};
+
+const getStatusInfo=(statusKey)=>{
+return STATUS_OPTIONS.find(s=>s.key===statusKey)||STATUS_OPTIONS[3];
+};
+
+// LOADING
+if(loading){
+return(<div className="loading-screen"><div className="spinner"></div><div className="loading-text">Laden...</div></div>);
+}
+
+// DASHBOARD
+if(activeView==='dashboard'){
+const statusCounts=getStatusCounts();
+const filteredClients=getFilteredClients();
 
 return(
-<>
-<div className="app">
-<div className={`sidebar ${activeView==='dashboard'?'minimal':''}`}>
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
 <div className="logo">
 <div className="logo-text">THE FULLY BOOKERS</div>
 <div className="logo-subtitle">SEO Roadmap</div>
 </div>
-
 <div className="sync-status">
-<div className={`sync-dot sync-${syncStatus}`}></div>
+<div className={`sync-dot sync-${syncStatus}`}/>
 <span className="sync-text">
 {syncStatus==='connected'&&'✓ Verbonden'}
 {syncStatus==='connecting'&&'⚠️ Verbinden...'}
 {syncStatus==='error'&&'❌ Fout'}
 </span>
-{syncStatus==='connected'&&(
-<button className="reload-btn" onClick={reloadFromFirebase} title="Herlaad uit cloud">🔄</button>
-)}
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
 </div>
-
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+</div>
+{isAdmin&&(
 <div className="save-status">
-<div className={`save-status-dot ${saveStatus}`}></div>
+<div className={`save-status-dot ${saveStatus}`}/>
 <span className="save-status-text">
 {saveStatus==='saving'&&'Opslaan...'}
 {saveStatus==='success'&&'Opgeslagen'}
-{saveStatus==='error'&&'Gefaald'}
-{saveStatus==='idle'&&''}
+{saveStatus==='error'&&'Fout'}
 </span>
 </div>
+)}
+<nav>
+<div className="nav-item active">
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.length}</span>
+</div>
+</nav>
+</aside>
+<main className="main">
+<header className="header">
+<h1 className="title">Klanten Dashboard</h1>
+<p className="subtitle">Overzicht van alle SEO projecten</p>
+</header>
 
-<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>{setActiveView('dashboard');setSelectedClient(null);}}>
-<span className="nav-icon">📊</span><span className="nav-text">Dashboard</span><span className="nav-count">{clients.length}</span>
+<div className="status-overview">
+{STATUS_OPTIONS.map(status=>(
+<div key={status.key} className={`status-card ${status.key} ${statusFilter===status.key?'active':''}`} onClick={()=>setStatusFilter(statusFilter===status.key?'all':status.key)}>
+<div className="status-icon">{status.icon}</div>
+<div className="status-count">{statusCounts[status.key]||0}</div>
+<div className="status-label">{status.label}</div>
 </div>
-{activeView!=='dashboard'&&STEPS.map(step=>{
-const {total,completed}=getStepProgress(step.id,selectedClient);
-return(<div key={step.id} className={`nav-item ${activeView==='step'&&activeStep===step.id?'active':''}`} onClick={()=>{setActiveView('step');setActiveStep(step.id);}}>
-<span className="nav-icon">{step.icon}</span><span className="nav-text">{step.name}</span><span className="nav-count">{completed}/{total}</span>
-</div>);
-})}
+))}
 </div>
 
-<div className="main">
-{activeView==='dashboard'?(
-<>
-<div className="header"><div className="title">📊 Klanten Dashboard</div><div className="subtitle">Overzicht van alle klanten en hun voortgang</div></div>
-<div className="dashboard-grid">
-{sortedClients.map(client=>{
-const stats=getClientStats(client);
-const currentMonth=getCurrentMonth();
-const nextMonth=getNextMonth();
-const currentPlanning=getClientPlanningForMonth(client.name,currentMonth);
-const nextPlanning=getClientPlanningForMonth(client.name,nextMonth);
-const currentOpen=currentPlanning.filter(item=>!item.completed);
-const nextOpen=nextPlanning.filter(item=>!item.completed);
-return(
-<div key={client.name} className="client-card">
-<div className="client-header">
-<div>
-<div className="client-name">{client.name}</div>
-{client.city&&<div className="client-meta">📍 {client.city}</div>}
-</div>
-<button className="delete-btn" onClick={(e)=>{e.stopPropagation();confirmDelete(client);}}>🗑️</button>
-</div>
-{(client.website||client.seRanking)&&(
-<div style={{marginBottom:'12px'}}>
-{client.website&&<a href={client.website} target="_blank" rel="noopener" className="client-link">🌐 Website</a>}
-{client.seRanking&&<a href={client.seRanking} target="_blank" rel="noopener" className="client-link">📊 SE Ranking</a>}
+{statusFilter!=='all'&&(
+<div className="filter-bar">
+<span className="filter-label">Filter:</span>
+<button className="filter-btn active" onClick={()=>setStatusFilter('all')}>
+{getStatusInfo(statusFilter).icon} {getStatusInfo(statusFilter).label}
+<span style={{marginLeft:'4px'}}>×</span>
+</button>
 </div>
 )}
+
+<div className="dashboard-grid">
+{filteredClients.map(client=>{
+const stats=getClientStats(client.id);
+const progress=getClientProgress(client.id);
+const statusInfo=getStatusInfo(client.status||'schema');
+return(
+<div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
+<div className={`client-status-badge ${statusInfo.key}`}>
+{statusInfo.icon}
+</div>
+<div className="client-header">
+<h3 className="client-name">{client.name}</h3>
+</div>
+<div className="client-meta">
+{client.city&&<span>📍 {client.city}</span>}
+{client.website&&(<><br/><a href={client.website} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>🌐 Website</a></>)}
+{client.seRanking&&(<a href={client.seRanking} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📊 SE Ranking</a>)}
+</div>
 <div className="client-stats">
-<div className="stat-box"><div className="stat-number">{stats.total}</div><div className="stat-label">Taken</div></div>
-<div className="stat-box"><div className="stat-number">{stats.completed}</div><div className="stat-label">Klaar</div></div>
-<div className="stat-box"><div className="stat-number">{stats.remaining}</div><div className="stat-label">Te doen</div></div>
+<div className="stat-box">
+<div className="stat-number">{stats.total}</div>
+<div className="stat-label">Taken</div>
+</div>
+<div className="stat-box">
+<div className="stat-number">{stats.completed}</div>
+<div className="stat-label">Afgerond</div>
+</div>
+<div className="stat-box">
+<div className="stat-number">{stats.custom}</div>
+<div className="stat-label">Custom</div>
+</div>
 </div>
 <div className="progress-section">
-<div className="progress-label"><span>Voortgang</span><span className="progress-percentage">{Math.round(stats.percentage)}%</span></div>
-<div className="progress-bar"><div className="progress-fill" style={{width:`${stats.percentage}%`}}/></div>
+<div className="progress-label">
+<span>Voortgang</span>
+<span className="progress-percentage">{progress}%</span>
 </div>
-{currentOpen.length>0&&(
-<div className="planning-box">
-<div className="planning-title">📅 Deze maand</div>
-{currentOpen.slice(0,3).map(item=><div key={item.id} className="planning-item">• {item.text}</div>)}
-{currentOpen.length>3&&<div style={{fontSize:'12px',color:'var(--blue)',marginTop:'4px',fontWeight:'500'}}>+{currentOpen.length-3} meer...</div>}
+<div className="progress-bar">
+<div className="progress-fill" style={{width:`${progress}%`}}/>
 </div>
-)}
-{nextOpen.length>0&&(
-<div className="planning-box">
-<div className="planning-title">📅 Volgende maand</div>
-{nextOpen.slice(0,3).map(item=><div key={item.id} className="planning-item">• {item.text}</div>)}
-{nextOpen.length>3&&<div style={{fontSize:'12px',color:'var(--blue)',marginTop:'4px',fontWeight:'500'}}>+{nextOpen.length-3} meer...</div>}
 </div>
-)}
-<div style={{marginTop:'16px',display:'flex',gap:'8px'}}>
-<button className="banner-btn" onClick={()=>openClient(client)} style={{flex:1}}>Open →</button>
-<button className="banner-btn" onClick={()=>assignAllTasks(client.name)} style={{background:'var(--green)',fontSize:'11px',padding:'8px 12px'}}>📌 Alles</button>
-</div>
+{isAdmin&&<button className="delete-btn" onClick={(e)=>{e.stopPropagation();setClientToDelete(client.id);setShowDeleteModal(true);}}>🗑️</button>}
 </div>
 );
 })}
+{isAdmin&&(
 <div className="add-client-card" onClick={()=>setShowModal(true)}>
-<div className="add-icon">➕</div>
-<div className="add-text">Nieuwe klant</div>
+<div className="add-icon">+</div>
+<div className="add-text">Nieuwe Klant</div>
 </div>
-</div>
-</>
-):currentStep.type==='planning'?(
-<>
-<div className="header"><div className="title">{currentStep.icon} {currentStep.name}</div><div className="subtitle">{selectedClient||'Selecteer klant'} - Planning 2025-2026</div></div>
-{selectedClient&&(<div className="current-client-banner"><div className="banner-text">Planning voor <span className="banner-client">{selectedClient}</span></div><button className="banner-btn" onClick={()=>setSelectedClient(null)}>Alle klanten</button></div>)}
-{!selectedClient?(<div className="empty-state"><div className="empty-icon">📅</div><p>Selecteer eerst een klant</p></div>):(
-currentStep.months.map(month=>(<PlanningMonth key={month.key} month={month} selectedClient={selectedClient} planningItems={planningItems} onAdd={addPlanningItem} onToggle={togglePlanningItem} onDelete={deletePlanningItem} getCurrentMonth={getCurrentMonth}/>))
 )}
-</>
-):(
-<>
-<div className="header"><div className="title">{currentStep.icon} {currentStep.name}</div><div className="subtitle">{selectedClient||'Alle klanten'} - {getStepProgress(activeStep,selectedClient).completed}/{getStepProgress(activeStep,selectedClient).total} voltooid</div></div>
-{selectedClient&&(
-<div className="current-client-banner">
-<div className="banner-text">Taken toegewezen aan <span className="banner-client">{selectedClient}</span></div>
-<div style={{display:'flex',gap:'8px'}}>
-<button className="banner-btn" onClick={()=>{
-const step=STEPS.find(s=>s.id===activeStep);
-if(step.sections){const allStepTasks=step.sections.flatMap(s=>s.tasks);const updates={};allStepTasks.forEach(task=>{updates[task.id]={...tasks[task.id],client:selectedClient};});saveData({tasks:{...tasks,...updates}});alert(`${allStepTasks.length} taken toegewezen!`);}
-}} style={{background:'var(--green)',fontSize:'12px',padding:'6px 12px'}}>📌 Wijs stap toe</button>
-<button className="banner-btn" onClick={()=>setSelectedClient(null)}>Alle klanten</button>
+{!isAdmin&&(
+<div className="add-client-card" style={{position:'relative',cursor:'not-allowed',opacity:0.6}}>
+<div className="add-icon">🔒</div>
+<div className="add-text">Admin Rechten Vereist</div>
+<div className="viewer-overlay">
+<div className="viewer-message">👁️ Viewer Mode - Alleen Lezen</div>
 </div>
 </div>
 )}
-<div className="progress-bar" style={{marginBottom:'48px'}}><div className="progress-fill" style={{width:`${(getStepProgress(activeStep,selectedClient).completed/getStepProgress(activeStep,selectedClient).total)*100||0}%`}}/></div>
-{currentStep.type==='custom'?(
-<div className="section">
-<div className="section-header">Content Items<button className="add-item-btn" onClick={()=>openItemModal(currentStep.id)}>+ Nieuw</button></div>
-{(customItems[currentStep.id]||[]).filter(item=>!selectedClient||item.client===selectedClient).map(item=>(
-<div key={item.id} className="custom-item-card">
-<div className="custom-item-header">
-<div className="custom-item-fields">
-{currentStep.customFields.map(field=>(<div key={field.key} className="custom-field"><div className="field-label">{field.label}</div><div className="field-value">{item[field.key]||'-'}</div></div>))}
-</div>
-<button className="delete-item-btn" onClick={()=>deleteCustomItem(currentStep.id,null,item.id)}>🗑️</button>
-</div>
-{item.client&&<div style={{marginTop:'12px'}}><div className="client-badge">{item.client}</div></div>}
-</div>
-))}
-{(customItems[currentStep.id]||[]).filter(item=>!selectedClient||item.client===selectedClient).length===0&&(<div className="empty-state"><div className="empty-icon">📝</div><p>Nog geen items</p></div>)}
-</div>
-):(
-<>
-{currentStep.sections?.map((section,idx)=>(
-<div key={idx} className="section">
-<div className="section-header">{section.title}</div>
-{section.tasks.map(task=>{
-const taskData=tasks[task.id]||{};
-const status=taskData.status||'todo';
-const taskClient=taskData.client;
-if(selectedClient&&taskClient&&taskClient!==selectedClient)return null;
-return(
-<div key={task.id} className={`task-card ${taskData.completed?'completed':''}`} style={{border:!taskClient&&selectedClient?'2px dashed var(--blue-light)':undefined,background:task.id==='7-reset'?'var(--orange-bg)':undefined}}>
-<div className={`checkbox ${taskData.completed?'checked':''}`} onClick={()=>toggleTask(task.id)} style={{display:task.id==='7-reset'?'none':undefined}}/>
-<div className="task-content" style={{flex:task.id==='7-reset'?'1':undefined}}><div className="task-title">{task.title}</div>{task.desc&&<div className="task-desc">{task.desc}</div>}</div>
-{task.id==='7-reset'?(
-<button className="banner-btn danger" onClick={()=>toggleTask(task.id)} style={{padding:'6px 12px',fontSize:'12px'}}>Reset</button>
-):(
-<div className="task-meta">
-<div className={`status-badge status-${status}`} onClick={()=>updateStatus(task.id)}>
-{status==='todo'&&'Todo'}{status==='bezig'&&'Bezig'}{status==='afgerond'&&'Afgerond'}{status==='urgent'&&'Urgent'}
-</div>
-{taskClient?<div className="client-badge">{taskClient}</div>:selectedClient&&<div className="client-badge" style={{background:'var(--gray-bg)',color:'var(--gray)'}}>Niet toegewezen</div>}
-</div>
-)}
-</div>
-);
-})}
-</div>
-))}
-{currentStep.type==='hybrid'&&currentStep.customSection&&(
-<div className="section">
-<div className="section-header">{currentStep.customSection.title}<button className="add-item-btn" onClick={()=>openItemModal(currentStep.id,currentStep.customSection.title)}>+ Nieuwe link</button></div>
-{(customItems[`${currentStep.id}-${currentStep.customSection.title}`]||[]).filter(item=>!selectedClient||item.client===selectedClient).map(item=>(
-<div key={item.id} className="custom-item-card">
-<div className="custom-item-header">
-<div className="custom-item-fields">
-{currentStep.customSection.fields.map(field=>(<div key={field.key} className="custom-field"><div className="field-label">{field.label}</div><div className="field-value">{item[field.key]||'-'}</div></div>))}
-</div>
-<button className="delete-item-btn" onClick={()=>deleteCustomItem(currentStep.id,currentStep.customSection.title,item.id)}>🗑️</button>
-</div>
-{item.client&&<div style={{marginTop:'12px'}}><div className="client-badge">{item.client}</div></div>}
-</div>
-))}
-{(customItems[`${currentStep.id}-${currentStep.customSection.title}`]||[]).filter(item=>!selectedClient||item.client===selectedClient).length===0&&(<div className="empty-state"><div className="empty-icon">🔗</div><p>Nog geen links</p></div>)}
-</div>
-)}
-</>
-)}
-</>
-)}
-</div>
 </div>
 
-{showModal&&(
+{filteredClients.length===0&&statusFilter!=='all'&&(
+<div className="empty-state">
+<div className="empty-icon">{getStatusInfo(statusFilter).icon}</div>
+<div className="empty-text">Geen klanten met status "{getStatusInfo(statusFilter).label}"</div>
+</div>
+)}
+</main>
+
+{!isAdmin&&(
+<button className="admin-login-btn" onClick={()=>setShowAdminLogin(true)}>
+🔐 Admin Login
+</button>
+)}
+
+{showAdminLogin&&<AdminLoginModal onLogin={handleAdminLogin} onCancel={()=>setShowAdminLogin(false)}/>}
+</div>
+);
+}
+
+// ROADMAP VIEW
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+
+const currentStep=ROADMAP_STEPS.find(s=>s.id===activeStep);
+const stats=getClientStats(selectedClient);
+const progress=getClientProgress(selectedClient);
+const statusInfo=getStatusInfo(currentClient.status||'schema');
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo">
+<div className="logo-text">THE FULLY BOOKERS</div>
+<div className="logo-subtitle">SEO Roadmap</div>
+</div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+</div>
+{isAdmin&&(
+<div className="save-status">
+<div className={`save-status-dot ${saveStatus}`}/>
+<span className="save-status-text">
+{saveStatus==='saving'&&'Opslaan...'}
+{saveStatus==='success'&&'Opgeslagen'}
+{saveStatus==='error'&&'Fout'}
+</span>
+</div>
+)}
+<nav>
+<div className="nav-item" onClick={()=>setActiveView('dashboard')}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+</div>
+{ROADMAP_STEPS.map(step=>(
+<div key={step.id} className={`nav-item ${activeStep===step.id?'active':''}`} onClick={()=>setActiveStep(step.id)}>
+<span className="nav-icon">{step.icon}</span>
+<span className="nav-text">{step.name}</span>
+</div>
+))}
+</nav>
+</aside>
+<main className="main">
+<div className="current-client-banner">
+<div className="banner-left">
+<div className="banner-text">
+Project: <span className="banner-client">{currentClient.name}</span>
+</div>
+<div className={`banner-status-display`} style={{borderLeft:`4px solid var(--${statusInfo.color})`}}>
+<span className="banner-status-icon">{statusInfo.icon}</span>
+<span>{statusInfo.label}</span>
+</div>
+</div>
+{isAdmin&&(
+<div className="banner-buttons">
+<button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
+<button className="banner-btn danger" onClick={()=>{setClientToDelete(selectedClient);setShowDeleteModal(true);}}>Verwijderen</button>
+</div>
+)}
+</div>
+
+<header className="header">
+<h1 className="title">{currentStep.icon} {currentStep.name}</h1>
+<p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
+</header>
+
+{currentStep.type==='planning'?(
+<>
+{currentStep.months.map(month=>(
+<PlanningMonth
+key={month.key}
+month={month}
+selectedClient={selectedClient}
+planningItems={planningItems}
+onAdd={addPlanningItem}
+onToggle={togglePlanningItem}
+onDelete={deletePlanningItem}
+getCurrentMonth={getCurrentMonth}
+isAdmin={isAdmin}
+/>
+))}
+</>
+):(
+<>
+{currentStep.tasks&&currentStep.tasks.map(task=>{
+const key=`${selectedClient}-${currentStep.id}-${task.id}`;
+const isChecked=!!tasks[key];
+return(
+<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleTask(currentStep.id,task.id);}}>
+<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`}/>
+<div className="task-content">
+<div className="task-title">{task.text}</div>
+<div className="task-desc">{task.desc}</div>
+</div>
+</div>
+);
+})}
+
+<div className="section">
+<div className="section-header">
+Custom Items
+{isAdmin&&<button className="add-item-btn" onClick={()=>{setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Toevoegen</button>}
+</div>
+{(customItems[`${selectedClient}-${currentStep.id}`]||[]).map(item=>(
+<div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
+<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}/>
+<div className="task-content">
+<div className="task-title">{item.text}</div>
+</div>
+{isAdmin&&<button className="delete-item-btn" onClick={()=>deleteCustomItem(currentStep.id,item.id)}>🗑️</button>}
+</div>
+))}
+</div>
+</>
+)}
+</main>
+
+{!isAdmin&&(
+<button className="admin-login-btn" onClick={()=>setShowAdminLogin(true)}>
+🔐 Admin Login
+</button>
+)}
+
+{showAdminLogin&&<AdminLoginModal onLogin={handleAdminLogin} onCancel={()=>setShowAdminLogin(false)}/>}
+
+{isAdmin&&showModal&&(
 <div className="modal-overlay" onClick={()=>setShowModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<div className="modal-title">➕ Nieuwe klant</div>
-<div className="modal-subtitle">Voeg klant toe</div>
-<div className="modal-field"><label className="modal-label">Naam *</label><input type="text" className="modal-input" placeholder="Hotel De Smid" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} onKeyPress={(e)=>e.key==='Enter'&&addClient()} autoFocus/></div>
-<div className="modal-field"><label className="modal-label">Website</label><input type="text" className="modal-input" placeholder="https://example.com" value={newClient.website} onChange={(e)=>setNewClient({...newClient,website:e.target.value})}/></div>
-<div className="modal-field"><label className="modal-label">SE Ranking</label><input type="text" className="modal-input" placeholder="https://online.seranking.com/..." value={newClient.seRanking} onChange={(e)=>setNewClient({...newClient,seRanking:e.target.value})}/></div>
-<div className="modal-field"><label className="modal-label">Stad</label><input type="text" className="modal-input" placeholder="Amsterdam" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/></div>
-<div className="modal-buttons"><button className="btn btn-secondary" onClick={()=>setShowModal(false)}>Annuleren</button><button className="btn btn-primary" onClick={addClient}>Toevoegen</button></div>
+<h2 className="modal-title">Nieuwe Klant Toevoegen</h2>
+<div className="input-group">
+<label className="input-label">Bedrijfsnaam *</label>
+<input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
+</div>
+<div className="input-group">
+<label className="input-label">Website</label>
+<input type="text" className="modal-input" placeholder="https://..." value={newClient.website} onChange={(e)=>setNewClient({...newClient,website:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">SE Ranking Link</label>
+<input type="text" className="modal-input" placeholder="https://..." value={newClient.seRanking} onChange={(e)=>setNewClient({...newClient,seRanking:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">Plaats</label>
+<input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">Status</label>
+<div className="status-select">
+{STATUS_OPTIONS.map(status=>(
+<div key={status.key} className={`status-option ${newClient.status===status.key?'selected':''}`} onClick={()=>setNewClient({...newClient,status:status.key})}>
+<span className="status-option-icon">{status.icon}</span>
+<span className="status-option-text">{status.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={addClient}>Opslaan</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema'});}}>Annuleren</button>
+</div>
 </div>
 </div>
 )}
 
-{showDeleteModal&&(
+{isAdmin&&showStatusModal&&(
+<div className="modal-overlay" onClick={()=>setShowStatusModal(false)}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">Status Wijzigen</h2>
+<div className="status-select">
+{STATUS_OPTIONS.map(status=>(
+<div key={status.key} className={`status-option ${currentClient.status===status.key?'selected':''}`} onClick={()=>{updateClientStatus(selectedClient,status.key);setShowStatusModal(false);}}>
+<span className="status-option-icon">{status.icon}</span>
+<span className="status-option-text">{status.label}</span>
+</div>
+))}
+</div>
+<div className="modal-buttons">
+<button className="btn btn-secondary" onClick={()=>setShowStatusModal(false)}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{isAdmin&&showDeleteModal&&(
 <div className="modal-overlay" onClick={()=>setShowDeleteModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<div className="modal-title">🗑️ Klant verwijderen</div>
-<div className="modal-subtitle">Weet je zeker dat je <strong>{clientToDelete?.name}</strong> wilt verwijderen?</div>
-<div className="modal-buttons"><button className="btn btn-secondary" onClick={()=>setShowDeleteModal(false)}>Annuleren</button><button className="btn btn-danger" onClick={deleteClient}>Verwijderen</button></div>
+<h2 className="modal-title">Klant Verwijderen?</h2>
+<p style={{marginBottom:'24px',color:'var(--text-light)'}}>Dit verwijdert alle taken en planning. Deze actie kan niet ongedaan gemaakt worden.</p>
+<div className="modal-buttons">
+<button className="btn btn-danger" onClick={()=>deleteClient(clientToDelete)}>Verwijderen</button>
+<button className="btn btn-secondary" onClick={()=>{setShowDeleteModal(false);setClientToDelete(null);}}>Annuleren</button>
+</div>
 </div>
 </div>
 )}
 
-{showItemModal&&(
+{isAdmin&&showItemModal&&(
 <div className="modal-overlay" onClick={()=>setShowItemModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<div className="modal-title">➕ Nieuw item</div>
-<div className="modal-subtitle">{itemModalSection||currentStep?.name}</div>
-{(itemModalSection?currentStep?.customSection?.fields:currentStep?.customFields)?.map(field=>(
-<div key={field.key} className="modal-field"><label className="modal-label">{field.label}</label><input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData(prev=>({...prev,[field.key]:e.target.value}))}/></div>
-))}
-<div className="modal-buttons"><button className="btn btn-secondary" onClick={()=>setShowItemModal(false)}>Annuleren</button><button className="btn btn-primary" onClick={addCustomItem}>Toevoegen</button></div>
+<h2 className="modal-title">Custom Item Toevoegen</h2>
+<div className="input-group">
+<label className="input-label">Taak omschrijving</label>
+<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}}/>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={()=>{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}>Toevoegen</button>
+<button className="btn btn-secondary" onClick={()=>setShowItemModal(false)}>Annuleren</button>
+</div>
 </div>
 </div>
 )}
 
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
-</>
+</div>
 );
 }
 
+// RENDER
 ReactDOM.render(<App/>,document.getElementById('root'));
 </script>
 </body>
 </html>
- 
