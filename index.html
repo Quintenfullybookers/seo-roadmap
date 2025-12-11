@@ -329,17 +329,6 @@ return(
 <label className="input-label">Wachtwoord</label>
 <input type="password" className="modal-input" value={password} onChange={(e)=>setPassword(e.target.value)} onKeyPress={(e)=>{if(e.key==='Enter')handleSubmit();}} autoFocus placeholder="••••••••"/>
 </div>
-<div className="input-group">
-<label className="input-label">Projectmanager</label>
-<div className="status-select">
-{PROJECT_MANAGERS.map(pm=>(
-<div key={pm.key} className={`status-option ${newClient.projectManager===pm.key?'selected':''}`} onClick={()=>setNewClient({...newClient,projectManager:pm.key})}>
-<span className="status-option-icon">{pm.icon}</span>
-<span className="status-option-text">{pm.label}</span>
-</div>
-))}
-</div>
-</div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={handleSubmit}>Inloggen</button>
 <button className="btn btn-secondary" onClick={onCancel}>Annuleren</button>
@@ -1218,17 +1207,6 @@ return(
 </div>
 ))}
 </div>
-<div className="input-group">
-<label className="input-label">Projectmanager</label>
-<div className="status-select">
-{PROJECT_MANAGERS.map(pm=>(
-<div key={pm.key} className={`status-option ${newClient.projectManager===pm.key?'selected':''}`} onClick={()=>setNewClient({...newClient,projectManager:pm.key})}>
-<span className="status-option-icon">{pm.icon}</span>
-<span className="status-option-text">{pm.label}</span>
-</div>
-))}
-</div>
-</div>
 <div className="modal-buttons">
 <button className="btn btn-secondary" onClick={()=>setShowStatusModal(false)}>Annuleren</button>
 </div>
@@ -1241,17 +1219,6 @@ return(
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
 <h2 className="modal-title">Klant Verwijderen?</h2>
 <p style={{marginBottom:'24px',color:'var(--text-light)'}}>Dit verwijdert alle taken en planning. Kan niet ongedaan gemaakt worden.</p>
-<div className="input-group">
-<label className="input-label">Projectmanager</label>
-<div className="status-select">
-{PROJECT_MANAGERS.map(pm=>(
-<div key={pm.key} className={`status-option ${newClient.projectManager===pm.key?'selected':''}`} onClick={()=>setNewClient({...newClient,projectManager:pm.key})}>
-<span className="status-option-icon">{pm.icon}</span>
-<span className="status-option-text">{pm.label}</span>
-</div>
-))}
-</div>
-</div>
 <div className="modal-buttons">
 <button className="btn btn-danger" onClick={()=>deleteClient(clientToDelete)}>Verwijderen</button>
 <button className="btn btn-secondary" onClick={()=>{setShowDeleteModal(false);setClientToDelete(null);}}>Annuleren</button>
@@ -1267,17 +1234,6 @@ return(
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
 <input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}}/>
-</div>
-<div className="input-group">
-<label className="input-label">Projectmanager</label>
-<div className="status-select">
-{PROJECT_MANAGERS.map(pm=>(
-<div key={pm.key} className={`status-option ${newClient.projectManager===pm.key?'selected':''}`} onClick={()=>setNewClient({...newClient,projectManager:pm.key})}>
-<span className="status-option-icon">{pm.icon}</span>
-<span className="status-option-text">{pm.label}</span>
-</div>
-))}
-</div>
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={()=>{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}>Toevoegen</button>
