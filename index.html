@@ -448,6 +448,7 @@ const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
 const [sortOrder,setSortOrder]=useState('name-asc');
+const [expandedPlanning,setExpandedPlanning]=useState({});
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [itemModalStep,setItemModalStep]=useState(null);
@@ -1113,11 +1114,17 @@ return(
 const planning=getClientPlanning(client.id);
 const hasPlanning=planning.current.items.length>0||planning.next.items.length>0;
 if(!hasPlanning)return null;
+const isExpanded=expandedPlanning[client.id];
 return(
 <div className="planning-box">
-<div className="planning-title">📅 Planning</div>
+<div className="planning-title" onClick={(e)=>{e.stopPropagation();setExpandedPlanning({...expandedPlanning,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>📅 Planning</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)'}}>▼</span>
+</div>
+{isExpanded&&(
+<>
 {planning.current.items.length>0&&(
-<div style={{marginBottom:'8px'}}>
+<div style={{marginBottom:'8px',marginTop:'8px'}}>
 <div style={{fontSize:'11px',fontWeight:'600',color:'var(--blue)',marginBottom:'4px'}}>{getMonthName(planning.current.month)}</div>
 {planning.current.items.slice(0,3).map(item=>(
 <div key={item.id} className="planning-item" style={{textDecoration:item.completed?'line-through':'none',opacity:item.completed?0.6:1}}>• {item.text}</div>
@@ -1133,6 +1140,8 @@ return(
 ))}
 {planning.next.items.length>3&&<div className="planning-item" style={{fontStyle:'italic',color:'var(--text-light)'}}>+{planning.next.items.length-3} meer...</div>}
 </div>
+)}
+</>
 )}
 </div>
 );
