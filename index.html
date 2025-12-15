@@ -71,8 +71,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .client-status-badge.aandacht{background:var(--orange-bg)}
 .client-status-badge.schema{background:var(--yellow-bg)}
 .client-status-badge.top{background:var(--green-bg)}
-.client-header{margin-bottom:12px}
-.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
+.client-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
+.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif;padding-right:50px}
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px}
 .client-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px}
 .client-link:hover{text-decoration:underline}
@@ -95,7 +95,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .pm-filter-btn{padding:8px 16px;border:1px solid var(--border);background:var(--white);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;font-weight:500}
 .pm-filter-btn:hover{background:var(--bg);transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,0,0,.05)}
 .pm-filter-btn.active{border-width:2px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.pm-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;color:white;margin-top:4px}
+.pm-badge{display:inline-flex;align-items:center;gap:4px;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;color:white;margin-top:6px}
 .sort-section{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .sort-label{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
 .sort-dropdown{padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--white);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:all .2s;outline:none;min-width:240px}
@@ -143,8 +143,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .input-label{display:block;font-size:13px;font-weight:600;color:var(--text);margin-bottom:8px}
 .modal-input{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;transition:all .2s}
 .modal-input:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
-.modal-textarea{width:100%;padding:10px 12px;border:1px solid var(--border);border-radius:6px;font-size:14px;font-family:inherit;transition:all .2s;resize:vertical;min-height:120px}
-.modal-textarea:focus{outline:none;border-color:var(--blue);box-shadow:0 0 0 3px var(--blue-light)}
 .status-select{display:grid;gap:8px;margin-top:8px}
 .status-option{padding:12px 16px;border:2px solid var(--border);border-radius:8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:12px;background:var(--white)}
 .status-option:hover{border-color:var(--blue);background:var(--blue-light)}
@@ -180,21 +178,6 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .viewer-overlay{position:absolute;inset:0;background:rgba(255,255,255,.7);display:flex;align-items:center;justify-content:center;border-radius:8px;opacity:0;transition:opacity .2s}
 .viewer-mode .add-client-card:hover .viewer-overlay{opacity:1}
 .viewer-message{background:var(--white);padding:16px 24px;border-radius:8px;box-shadow:var(--shadow);font-size:13px;color:var(--text);font-weight:600}
-.notes-container{display:flex;flex-direction:column;gap:16px;margin-bottom:24px}
-.note-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px;transition:all .2s}
-.note-card:hover{box-shadow:0 2px 8px rgba(0,0,0,.05)}
-.note-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
-.note-meta{display:flex;gap:12px;align-items:center;font-size:12px;color:var(--text-light)}
-.note-author{font-weight:600;color:var(--text)}
-.note-time{color:var(--text-light)}
-.note-edited{font-style:italic;color:var(--text-light)}
-.note-actions{display:flex;gap:8px}
-.note-btn{background:none;border:none;font-size:16px;cursor:pointer;padding:4px 8px;border-radius:4px;transition:all .2s}
-.note-btn:hover{background:var(--bg)}
-.note-btn.danger:hover{background:var(--red-bg);color:var(--red)}
-.note-text{color:var(--text);line-height:1.6;white-space:pre-wrap}
-.add-note-btn{width:100%;padding:16px;background:var(--blue);color:white;border:none;border-radius:8px;font-size:14px;font-weight:600;cursor:pointer;transition:all .2s;margin-top:16px}
-.add-note-btn:hover{background:var(--blue-dark);transform:translateY(-1px)}
 .joke-footer{margin-top:48px;padding:12px 0;text-align:center;border-top:1px solid var(--border)}
 .joke-text{font-size:11px;color:var(--text-light);font-style:italic;line-height:1.4}
 .export-btn{margin:16px 24px 0;padding:10px 16px;background:var(--green);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;justify-content:center}
@@ -418,16 +401,14 @@ const [showEditModal,setShowEditModal]=useState(false);
 const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
 const [showStatusModal,setShowStatusModal]=useState(false);
-const [showNotesModal,setShowNotesModal]=useState(false);
+const [showNoteModal,setShowNoteModal]=useState(false);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});
 const [editingClient,setEditingClient]=useState(null);
-const [editingNote,setEditingNote]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
 const [sortOrder,setSortOrder]=useState('default');
-const [showArchived,setShowArchived]=useState(false);
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [itemModalStep,setItemModalStep]=useState(null);
@@ -620,32 +601,12 @@ setToast({type:'success',message:'✓ Verwijderd'});
 const addNote=(clientId,text)=>{
 if(!isAdmin||!text.trim())return;
 const noteId=Date.now();
-const author=isAdmin?'Admin':'Viewer';
-const note={id:noteId,clientId,text:text.trim(),author,timestamp:new Date().toISOString()};
-const noteKey=`${clientId}-${noteId}`;
-const newNotes={...notes,[noteKey]:note};
+const note={id:noteId,clientId,text:text.trim(),author:'Admin',timestamp:new Date().toISOString()};
+const newNotes={...notes,[`${clientId}-${noteId}`]:note};
 setNotes(newNotes);
-saveData({tasks,customItems,planningItems,clients,notes:newNotes});
-setShowNotesModal(false);
+saveData({tasks,customItems,planningItems,notes:newNotes,clients});
+setShowNoteModal(false);
 setToast({type:'success',message:'✓ Notitie toegevoegd'});
-};
-
-const editNote=(noteKey,newText)=>{
-if(!isAdmin||!newText.trim())return;
-const newNotes={...notes,[noteKey]:{...notes[noteKey],text:newText.trim(),editedAt:new Date().toISOString()}};
-setNotes(newNotes);
-saveData({tasks,customItems,planningItems,clients,notes:newNotes});
-setEditingNote(null);
-setToast({type:'success',message:'✓ Notitie bijgewerkt'});
-};
-
-const deleteNote=(noteKey)=>{
-if(!isAdmin)return;
-const newNotes={...notes};
-delete newNotes[noteKey];
-setNotes(newNotes);
-saveData({tasks,customItems,planningItems,clients,notes:newNotes});
-setToast({type:'success',message:'✓ Notitie verwijderd'});
 };
 
 const getClientNotes=(clientId)=>{
@@ -943,16 +904,14 @@ return(
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
 {isAdmin&&(<button className="edit-client-btn" onClick={(e)=>{e.stopPropagation();setEditingClient({...client});setShowEditModal(true);}}>✏️</button>)}
 <div className="client-header">
-<div>
 <h3 className="client-name">{client.name}</h3>
 {pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color}}>{pmInfo.icon} {pmInfo.label}</div>)}
-</div>
 </div>
 <div className="client-meta">
 {client.city&&<span>📍 {client.city}</span>}
 {client.website&&(<><br/><a href={client.website} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>🌐 Website</a></>)}
 {client.seRanking&&(<a href={client.seRanking} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📊 SE Ranking</a>)}
-{(()=>{const noteCount=getClientNotes(client.id).length;return noteCount>0?<span style={{marginLeft:'8px'}}>💬 {noteCount} notitie{noteCount!==1?'s':''}</span>:null;})()}
+{(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'#666'}}>💬 {nc}</span>:null;})()}
 </div>
 <div className="client-stats">
 <div className="stat-box">
@@ -1199,11 +1158,6 @@ return(
 <span className="nav-text">{step.name}</span>
 </div>
 ))}
-<div className={`nav-item ${activeStep==='notes'?'active':''}`} onClick={()=>setActiveStep('notes')}>
-<span className="nav-icon">💬</span>
-<span className="nav-text">Notities</span>
-<span className="nav-count">{getClientNotes(selectedClient).length}</span>
-</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -1224,6 +1178,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 {isAdmin&&(
 <div className="banner-buttons">
+<button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
 <button className="banner-btn danger" onClick={()=>{setClientToDelete(selectedClient);setShowDeleteModal(true);}}>Verwijderen</button>
 </div>
@@ -1231,49 +1186,10 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 
 <header className="header">
-<h1 className="title">{activeStep==='notes'?'💬 Notities':(currentStep?currentStep.icon+' '+currentStep.name:'')}</h1>
-<p className="subtitle">{activeStep==='notes'?`${getClientNotes(selectedClient).length} notitie(s)`:`Voortgang: ${stats.completed} / ${stats.total} taken (${progress}%)`}</p>
+<h1 className="title">{currentStep.icon} {currentStep.name}</h1>
+<p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
 </header>
 
-{activeStep==='notes'?(
-<>
-<div className="notes-container">
-{getClientNotes(selectedClient).map(note=>(
-<div key={note.id} className="note-card">
-<div className="note-header">
-<div className="note-meta">
-<span className="note-author">{note.author}</span>
-<span className="note-time">{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})}</span>
-{note.editedAt&&<span className="note-edited">(bewerkt)</span>}
-</div>
-{isAdmin&&(
-<div className="note-actions">
-<button className="note-btn" onClick={()=>setEditingNote(note)}>✏️</button>
-<button className="note-btn danger" onClick={()=>deleteNote(`${selectedClient}-${note.id}`)}>🗑️</button>
-</div>
-)}
-</div>
-<div className="note-text">{note.text}</div>
-</div>
-))}
-{getClientNotes(selectedClient).length===0&&(
-<div className="empty-state">
-<div className="empty-icon">💬</div>
-<div className="empty-text">Nog geen notities</div>
-<div className="empty-subtext">Voeg een notitie toe om te beginnen</div>
-</div>
-)}
-</div>
-{isAdmin&&(
-<button className="add-note-btn" onClick={()=>setShowNotesModal(true)}>
-➕ Nieuwe Notitie
-</button>
-)}
-</>
-):(
-<>
-{currentStep?(
-<>
 {currentStep.type==='planning'?(
 <>
 {currentStep.months.map(month=>(
@@ -1328,10 +1244,6 @@ return(
 ))}
 </div>
 )}
-</>
-)
-</>
-):null}
 </>
 )}
 </main>
@@ -1442,33 +1354,17 @@ return(
 </div>
 )}
 
-{isAdmin&&showNotesModal&&(
-<div className="modal-overlay" onClick={()=>setShowNotesModal(false)}>
+{isAdmin&&showNoteModal&&(
+<div className="modal-overlay" onClick={()=>setShowNoteModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">Nieuwe Notitie</h2>
+<h2 className="modal-title">Notitie Toevoegen</h2>
 <div className="input-group">
 <label className="input-label">Notitie</label>
-<textarea className="modal-textarea" value={itemModalData.noteText||''} onChange={(e)=>setItemModalData({...itemModalData,noteText:e.target.value})} autoFocus rows="5" placeholder="Voeg een notitie toe..."/>
+<textarea className="modal-input" style={{minHeight:'120px',resize:'vertical'}} value={itemModalData.noteText||''} onChange={(e)=>setItemModalData({...itemModalData,noteText:e.target.value})} autoFocus placeholder="Voeg een notitie toe..."/>
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={()=>{addNote(selectedClient,itemModalData.noteText||'');setItemModalData({});}}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowNotesModal(false);setItemModalData({});}}>Annuleren</button>
-</div>
-</div>
-</div>
-)}
-
-{isAdmin&&editingNote&&(
-<div className="modal-overlay" onClick={()=>setEditingNote(null)}>
-<div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">Notitie Bewerken</h2>
-<div className="input-group">
-<label className="input-label">Notitie</label>
-<textarea className="modal-textarea" value={itemModalData.editNoteText!==undefined?itemModalData.editNoteText:editingNote.text} onChange={(e)=>setItemModalData({...itemModalData,editNoteText:e.target.value})} autoFocus rows="5"/>
-</div>
-<div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{editNote(`${selectedClient}-${editingNote.id}`,itemModalData.editNoteText!==undefined?itemModalData.editNoteText:editingNote.text);setItemModalData({});}}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setEditingNote(null);setItemModalData({});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowNoteModal(false);setItemModalData({});}}>Annuleren</button>
 </div>
 </div>
 </div>
