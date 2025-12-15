@@ -295,11 +295,12 @@ const STEPS=[
 ];
 
 // LOCAL STORAGE
-const saveLocalData=(tasks,customItems,planningItems,notes,clients)=>{
+const saveLocalData=(tasks,customItems,planningItems,notes,deadlines,clients)=>{
 localStorage.setItem('seo-tasks',JSON.stringify(tasks));
 localStorage.setItem('seo-custom-items',JSON.stringify(customItems));
 localStorage.setItem('seo-planning',JSON.stringify(planningItems));
 localStorage.setItem('seo-notes',JSON.stringify(notes));
+localStorage.setItem('seo-deadlines',JSON.stringify(deadlines));
 localStorage.setItem('seo-clients',JSON.stringify(clients));
 };
 
@@ -395,6 +396,7 @@ const [tasks,setTasks]=useState({});
 const [customItems,setCustomItems]=useState({});
 const [planningItems,setPlanningItems]=useState({});
 const [notes,setNotes]=useState({});
+const [deadlines,setDeadlines]=useState({});
 const [clients,setClients]=useState([]);
 const [showModal,setShowModal]=useState(false);
 const [showEditModal,setShowEditModal]=useState(false);
@@ -402,6 +404,8 @@ const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
 const [showStatusModal,setShowStatusModal]=useState(false);
 const [showNoteModal,setShowNoteModal]=useState(false);
+const [showDeadlineModal,setShowDeadlineModal]=useState(false);
+const [deadlineModalTask,setDeadlineModalTask]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});
@@ -449,8 +453,9 @@ setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
+setDeadlines(data.deadlines||{});
 setClients(data.clients||[]);
-saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.clients||[]);
+saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[]);
 }
 
 firestore.collection('roadmaps').doc('main').onSnapshot((doc)=>{
@@ -460,8 +465,9 @@ setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
+setDeadlines(data.deadlines||{});
 setClients(data.clients||[]);
-saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.clients||[]);
+saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[]);
 }
 });
 
@@ -482,7 +488,7 @@ if(!db){setToast({type:'error',message:'Geen verbinding'});return;}
 setSaveStatus('saving');
 try{
 await db.collection('roadmaps').doc('main').set({...updates,updatedAt:firebase.firestore.FieldValue.serverTimestamp()},{merge:true});
-saveLocalData(updates.tasks||tasks,updates.customItems||customItems,updates.planningItems||planningItems,updates.notes||notes,updates.clients||clients);
+saveLocalData(updates.tasks||tasks,updates.customItems||customItems,updates.planningItems||planningItems,updates.notes||notes,updates.deadlines||deadlines,updates.clients||clients);
 setSaveStatus('success');
 setTimeout(()=>setSaveStatus('idle'),2000);
 }catch(error){
@@ -504,8 +510,9 @@ setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
+setDeadlines(data.deadlines||{});
 setClients(data.clients||[]);
-saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.clients||[]);
+saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[]);
 setToast({type:'success',message:'✓ Herladen voltooid'});
 }
 }catch(error){
@@ -595,6 +602,55 @@ if(selectedClient===id){setSelectedClient(null);setActiveView('dashboard');}
 setShowDeleteModal(false);
 setClientToDelete(null);
 setToast({type:'success',message:'✓ Verwijderd'});
+};
+
+// DEADLINE FUNCTIONS
+const setDeadline=(key,date)=>{
+if(!isAdmin)return;
+const newDeadlines={...deadlines,[key]:date};
+setDeadlines(newDeadlines);
+saveData({tasks,customItems,planningItems,notes,deadlines:newDeadlines,clients});
+setShowDeadlineModal(false);
+setToast({type:'success',message:'✓ Deadline ingesteld'});
+};
+
+const removeDeadline=(key)=>{
+if(!isAdmin)return;
+const newDeadlines={...deadlines};
+delete newDeadlines[key];
+setDeadlines(newDeadlines);
+saveData({tasks,customItems,planningItems,notes,deadlines:newDeadlines,clients});
+setToast({type:'success',message:'✓ Deadline verwijderd'});
+};
+
+const getDeadlineUrgency=(dateStr)=>{
+if(!dateStr)return{color:'gray',label:'Geen deadline',urgent:false};
+const deadline=new Date(dateStr);
+const now=new Date();
+now.setHours(0,0,0,0);
+deadline.setHours(0,0,0,0);
+const diffDays=Math.ceil((deadline-now)/(1000*60*60*24));
+if(diffDays<0)return{color:'red',label:'Verlopen',urgent:true};
+if(diffDays===0)return{color:'red',label:'Vandaag!',urgent:true};
+if(diffDays===1)return{color:'red',label:'Morgen',urgent:true};
+if(diffDays<=7)return{color:'orange',label:`Over ${diffDays} dagen`,urgent:false};
+return{color:'green',label:`Over ${diffDays} dagen`,urgent:false};
+};
+
+const getAllUpcomingDeadlines=()=>{
+const upcoming=[];
+Object.keys(deadlines).forEach(key=>{
+const urgency=getDeadlineUrgency(deadlines[key]);
+if(urgency.urgent){
+const parts=key.split('-');
+const clientId=parts[0];
+const client=clients.find(c=>c.id===clientId);
+if(client){
+upcoming.push({key,date:deadlines[key],urgency,clientName:client.name});
+}
+}
+});
+return upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
 };
 
 // NOTE FUNCTIONS
@@ -854,6 +910,35 @@ return(
 <h1 className="title">Klanten Dashboard</h1>
 <p className="subtitle">Overzicht van alle SEO projecten</p>
 </header>
+
+{(()=>{
+const upcoming=getAllUpcomingDeadlines();
+if(upcoming.length===0)return null;
+return(
+<div style={{background:'#fef3c7',border:'1px solid #fbbf24',borderRadius:'8px',padding:'16px',marginBottom:'24px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px',fontWeight:'600',fontSize:'14px',color:'#92400e'}}>
+<span>⚠️</span>
+<span>Urgente Deadlines ({upcoming.length})</span>
+</div>
+{upcoming.slice(0,5).map(item=>(
+<div key={item.key} style={{background:'white',border:'1px solid #fbbf24',borderRadius:'6px',padding:'10px',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<div>
+<div style={{fontWeight:'600',fontSize:'13px',color:'#333'}}>{item.clientName}</div>
+<div style={{fontSize:'12px',color:'#666',marginTop:'2px'}}>
+📅 {new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})} - {item.urgency.label}
+</div>
+</div>
+<div style={{fontSize:'20px'}}>{item.urgency.color==='red'?'🔴':'🟡'}</div>
+</div>
+))}
+{upcoming.length>5&&(
+<div style={{fontSize:'12px',color:'#92400e',fontStyle:'italic',marginTop:'8px'}}>
++ {upcoming.length-5} meer urgente deadline(s)
+</div>
+)}
+</div>
+);
+})()}
 
 <div className="status-overview">
 {STATUS_OPTIONS.map(status=>(
@@ -1258,13 +1343,27 @@ isAdmin={isAdmin}
 {section.tasks.map(task=>{
 const key=`${selectedClient}-${currentStep.id}-${task.id}`;
 const isChecked=!!tasks[key];
+const taskDeadline=deadlines[key];
+const urgency=getDeadlineUrgency(taskDeadline);
 return(
-<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleTask(currentStep.id,task.id);}}>
+<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isAdmin?'clickable':''}`} style={{position:'relative'}}>
+<div onClick={()=>{if(isAdmin)toggleTask(currentStep.id,task.id);}} style={{display:'flex',alignItems:'center',gap:'16px',flex:1}}>
 <div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`}/>
-<div className="task-content">
+<div className="task-content" style={{flex:1}}>
 <div className="task-title">{task.title}</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
+{taskDeadline&&(
+<div style={{fontSize:'12px',marginTop:'4px',color:urgency.color==='red'?'#d73a49':urgency.color==='orange'?'#f59e0b':'#10b981',fontWeight:'500'}}>
+📅 {new Date(taskDeadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})} ({urgency.label})
 </div>
+)}
+</div>
+</div>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();setDeadlineModalTask({key,title:task.title,currentDeadline:taskDeadline});setShowDeadlineModal(true);}} style={{background:taskDeadline?'#6366f1':'#e5e7eb',color:taskDeadline?'white':'#6b7280',border:'none',borderRadius:'6px',padding:'6px 12px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background=taskDeadline?'#4f46e5':'#d1d5db'} onMouseLeave={(e)=>e.target.style.background=taskDeadline?'#6366f1':'#e5e7eb'}>
+{taskDeadline?'⏰ Wijzig':'⏰ Zet'}
+</button>
+)}
 </div>
 );
 })}
@@ -1409,6 +1508,26 @@ return(
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={()=>{addNote(selectedClient,itemModalData.noteText||'');setItemModalData({});}}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowNoteModal(false);setItemModalData({});}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{isAdmin&&showDeadlineModal&&deadlineModalTask&&(
+<div className="modal-overlay" onClick={()=>setShowDeadlineModal(false)}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">Deadline Instellen</h2>
+<p style={{fontSize:'14px',color:'#666',marginBottom:'16px'}}>{deadlineModalTask.title}</p>
+<div className="input-group">
+<label className="input-label">Deadline</label>
+<input type="date" className="modal-input" value={itemModalData.deadlineDate||deadlineModalTask.currentDeadline||''} onChange={(e)=>setItemModalData({...itemModalData,deadlineDate:e.target.value})} autoFocus/>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={()=>{setDeadline(deadlineModalTask.key,itemModalData.deadlineDate||deadlineModalTask.currentDeadline);setItemModalData({});}}>Opslaan</button>
+{deadlineModalTask.currentDeadline&&(
+<button className="btn" style={{background:'#ef4444',color:'white'}} onClick={()=>{removeDeadline(deadlineModalTask.key);setItemModalData({});setShowDeadlineModal(false);}}>Verwijderen</button>
+)}
+<button className="btn btn-secondary" onClick={()=>{setShowDeadlineModal(false);setItemModalData({});}}>Annuleren</button>
 </div>
 </div>
 </div>
