@@ -613,6 +613,15 @@ const getClientNotes=(clientId)=>{
 return Object.values(notes).filter(n=>n.clientId===clientId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
 };
 
+const deleteNote=(noteKey)=>{
+if(!isAdmin)return;
+const newNotes={...notes};
+delete newNotes[noteKey];
+setNotes(newNotes);
+saveData({tasks,customItems,planningItems,notes:newNotes,clients});
+setToast({type:'success',message:'✓ Notitie verwijderd'});
+};
+
 // TASK FUNCTIONS
 const toggleTask=(stepId,taskId)=>{
 if(!isAdmin)return;
@@ -1202,9 +1211,16 @@ return(
 <span>Notities ({clientNotes.length})</span>
 </div>
 {clientNotes.slice(0,3).map(note=>(
-<div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
 <div style={{fontSize:'11px',color:'#666',marginBottom:'6px'}}>
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+</div>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();if(confirm('Notitie verwijderen?'))deleteNote(`${selectedClient}-${note.id}`);}} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',fontSize:'16px',lineHeight:'1',opacity:'0.6',transition:'opacity 0.2s'}} onMouseEnter={(e)=>e.target.style.opacity='1'} onMouseLeave={(e)=>e.target.style.opacity='0.6'}>
+🗑️
+</button>
+)}
 </div>
 <div style={{fontSize:'13px',color:'#333',lineHeight:'1.5'}}>{note.text}</div>
 </div>
