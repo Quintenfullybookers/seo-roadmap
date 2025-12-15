@@ -71,8 +71,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .client-status-badge.aandacht{background:var(--orange-bg)}
 .client-status-badge.schema{background:var(--yellow-bg)}
 .client-status-badge.top{background:var(--green-bg)}
-.client-header{display:flex;justify-content:space-between;align-items:start;margin-bottom:12px}
-.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif;padding-right:50px}
+.client-header{margin-bottom:12px}
+.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px}
 .client-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px}
 .client-link:hover{text-decoration:underline}
@@ -904,8 +904,10 @@ return(
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
 {isAdmin&&(<button className="edit-client-btn" onClick={(e)=>{e.stopPropagation();setEditingClient({...client});setShowEditModal(true);}}>✏️</button>)}
 <div className="client-header">
+<div>
 <h3 className="client-name">{client.name}</h3>
 {pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color}}>{pmInfo.icon} {pmInfo.label}</div>)}
+</div>
 </div>
 <div className="client-meta">
 {client.city&&<span>📍 {client.city}</span>}
@@ -1189,6 +1191,32 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">{currentStep.icon} {currentStep.name}</h1>
 <p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
 </header>
+
+{(()=>{
+const clientNotes=getClientNotes(selectedClient);
+if(clientNotes.length===0)return null;
+return(
+<div className="notes-section" style={{background:'#f8f9fa',border:'1px solid #e1e4e8',borderRadius:'8px',padding:'16px',marginBottom:'24px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px',fontWeight:'600',fontSize:'14px',color:'#444'}}>
+<span>💬</span>
+<span>Notities ({clientNotes.length})</span>
+</div>
+{clientNotes.slice(0,3).map(note=>(
+<div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div style={{fontSize:'11px',color:'#666',marginBottom:'6px'}}>
+{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+</div>
+<div style={{fontSize:'13px',color:'#333',lineHeight:'1.5'}}>{note.text}</div>
+</div>
+))}
+{clientNotes.length>3&&(
+<div style={{fontSize:'12px',color:'#666',fontStyle:'italic',marginTop:'8px'}}>
++ {clientNotes.length-3} meer notitie(s)
+</div>
+)}
+</div>
+);
+})()}
 
 {currentStep.type==='planning'?(
 <>
