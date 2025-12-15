@@ -424,6 +424,7 @@ const [loading,setLoading]=useState(true);
 const [db,setDb]=useState(null);
 const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
+const [showArchive,setShowArchive]=useState(false);
 const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
@@ -446,7 +447,7 @@ const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:''
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
-const [sortOrder,setSortOrder]=useState('default');
+const [sortOrder,setSortOrder]=useState('name-asc');
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [itemModalStep,setItemModalStep]=useState(null);
@@ -617,6 +618,22 @@ const updatedClients=clients.map(c=>c.id===clientId?{...c,status:newStatus}:c);
 setClients(updatedClients);
 saveData({tasks,customItems,planningItems,clients:updatedClients});
 setToast({type:'success',message:'✓ Status bijgewerkt'});
+};
+
+const archiveClient=(clientId)=>{
+if(!isAdmin)return;
+const updatedClients=clients.map(c=>c.id===clientId?{...c,archived:true,archivedDate:new Date().toISOString()}:c);
+setClients(updatedClients);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients:updatedClients});
+setToast({type:'success',message:'✓ Klant gearchiveerd'});
+};
+
+const restoreClient=(clientId)=>{
+if(!isAdmin)return;
+const updatedClients=clients.map(c=>c.id===clientId?{...c,archived:false,archivedDate:null}:c);
+setClients(updatedClients);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients:updatedClients});
+setToast({type:'success',message:'✓ Klant hersteld'});
 };
 
 const deleteClient=(id)=>{
@@ -850,6 +867,12 @@ return counts;
 
 const getFilteredClients=()=>{
 let filtered=clients;
+// Filter by archive status
+if(showArchive){
+filtered=filtered.filter(c=>c.archived===true);
+}else{
+filtered=filtered.filter(c=>!c.archived);
+}
 if(statusFilter!=='all'){
 filtered=filtered.filter(c=>(c.status||'schema')===statusFilter);
 }
@@ -949,11 +972,20 @@ return(
 </aside>
 <main className="main">
 <header className="header">
-<h1 className="title">Klanten Dashboard</h1>
-<p className="subtitle">Overzicht van alle SEO projecten</p>
+<h1 className="title">{showArchive?'Archief':'Klanten Dashboard'}</h1>
+<p className="subtitle">{showArchive?'Gearchiveerde projecten':'Overzicht van alle SEO projecten'}</p>
 </header>
 
-{(()=>{
+<div style={{display:'flex',gap:'12px',marginBottom:'24px'}}>
+<button onClick={()=>setShowArchive(false)} style={{flex:1,padding:'12px 24px',background:!showArchive?'var(--blue)':'white',color:!showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
+📊 Actieve Projecten ({clients.filter(c=>!c.archived).length})
+</button>
+<button onClick={()=>setShowArchive(true)} style={{flex:1,padding:'12px 24px',background:showArchive?'var(--blue)':'white',color:showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
+📦 Archief ({clients.filter(c=>c.archived).length})
+</button>
+</div>
+
+{!showArchive&&(()=>{
 const upcoming=getAllUpcomingDeadlines();
 if(upcoming.length===0)return null;
 return(
@@ -983,6 +1015,7 @@ return(
 );
 })()}
 
+{!showArchive&&(
 <div className="status-overview">
 {STATUS_OPTIONS.map(status=>(
 <div key={status.key} className={`status-card ${status.key} ${statusFilter===status.key?'active':''}`} onClick={()=>setStatusFilter(statusFilter===status.key?'all':status.key)}>
@@ -1028,6 +1061,7 @@ Alle PMs
 <span style={{marginLeft:'4px'}}>×</span>
 </button>
 </div>
+)}
 )}
 
 <div className="dashboard-grid">
@@ -1103,7 +1137,27 @@ return(
 </div>
 );
 })()}
+{showArchive?(
+<div style={{marginTop:'12px',padding:'12px',background:'var(--bg)',borderRadius:'6px'}}>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'8px'}}>
+✅ Gearchiveerd: {client.archivedDate?new Date(client.archivedDate).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):''}
+</div>
+<div style={{display:'flex',gap:'8px'}}>
+<button onClick={(e)=>{e.stopPropagation();setSelectedClient(client.id);setActiveView('roadmap');}} style={{flex:1,padding:'8px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>
+👁️ Bekijken
+</button>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();restoreClient(client.id);}} style={{flex:1,padding:'8px',background:'var(--green)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>
+↩️ Herstellen
+</button>
+)}
+</div>
+</div>
+):(
+<>
 {isAdmin&&<button className="delete-btn" onClick={(e)=>{e.stopPropagation();setClientToDelete(client.id);setShowDeleteModal(true);}}>🗑️</button>}
+</>
+)}
 </div>
 );
 })}
@@ -1319,6 +1373,11 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <div className="banner-buttons">
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
+{clients.find(c=>c.id===selectedClient)?.archived?(
+<button className="banner-btn" style={{background:'var(--green)',color:'white'}} onClick={()=>{restoreClient(selectedClient);setActiveView('dashboard');}}>↩️ Herstellen</button>
+):(
+<button className="banner-btn" style={{background:'var(--orange)',color:'white'}} onClick={()=>{if(confirm('Client archiveren?'))archiveClient(selectedClient);}}>📦 Archiveren</button>
+)}
 <button className="banner-btn danger" onClick={()=>{setClientToDelete(selectedClient);setShowDeleteModal(true);}}>Verwijderen</button>
 </div>
 )}
