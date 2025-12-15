@@ -1231,7 +1231,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 
 <header className="header">
-<h1 className="title">{activeStep==='notes'?'💬 Notities':currentStep.icon+' '+currentStep.name}</h1>
+<h1 className="title">{activeStep==='notes'?'💬 Notities':(currentStep?currentStep.icon+' '+currentStep.name:'')}</h1>
 <p className="subtitle">{activeStep==='notes'?`${getClientNotes(selectedClient).length} notitie(s)`:`Voortgang: ${stats.completed} / ${stats.total} taken (${progress}%)`}</p>
 </header>
 
@@ -1272,7 +1272,8 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 ):(
 <>
-
+{currentStep?(
+<>
 {currentStep.type==='planning'?(
 <>
 {currentStep.months.map(month=>(
@@ -1329,6 +1330,8 @@ return(
 )}
 </>
 )}
+</>
+):null}
 )}
 </main>
 
