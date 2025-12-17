@@ -708,6 +708,100 @@ upcoming.push({key,date:deadlines[key],urgency,clientName:client.name,itemText})
 return upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
 };
 
+// AGENDA FUNCTIONS
+const getAllAgendaItems=()=>{
+const agenda=[];
+
+// Collect planning items with deadlines
+Object.keys(deadlines).forEach(key=>{
+if(!key.includes('planning'))return;
+const parts=key.split('-');
+const clientId=parts[0];
+const monthKey=parts[2];
+const itemId=parts[3];
+const client=clients.find(c=>c.id===clientId);
+if(client){
+const monthItems=planningItems[`${clientId}-${monthKey}`]||[];
+const item=monthItems.find(i=>i.id===itemId);
+if(item&&!item.completed){
+agenda.push({
+type:'planning',
+key,
+clientId,
+clientName:client.name,
+text:item.text,
+date:deadlines[key],
+completed:false,
+monthKey,
+itemId
+});
+}
+}
+});
+
+// Collect content items with deadlines (step 4)
+const contentKey=`${selectedClient||Object.keys(customItems)[0]?.split('-')[0]||''}-4`;
+clients.forEach(client=>{
+const items=customItems[`${client.id}-4`]||[];
+items.forEach(item=>{
+if(item.deadline&&!item.completed){
+agenda.push({
+type:'content',
+key:`${client.id}-4-${item.id}`,
+clientId:client.id,
+clientName:client.name,
+text:item.keyword||item.url||item.text||'Content item',
+date:item.deadline,
+completed:false,
+stepId:4,
+itemId:item.id
+});
+}
+});
+});
+
+// Sort by date
+agenda.sort((a,b)=>{
+const parseDate=(d)=>{
+if(d.includes('-'))return new Date(d);
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=d.split(' ');
+const month=months[parts[0]]||0;
+const year=parseInt(parts[1])||new Date().getFullYear();
+return new Date(year,month,1);
+};
+return parseDate(a.date)-parseDate(b.date);
+});
+
+// Group by urgency
+const now=new Date();
+const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
+const weekFromNow=new Date(today.getTime()+7*24*60*60*1000);
+
+const grouped={overdue:[],thisWeek:[],later:[]};
+agenda.forEach(item=>{
+const itemDate=item.date.includes('-')?new Date(item.date):new Date(2099,0,1);
+if(itemDate<today){
+grouped.overdue.push(item);
+}else if(itemDate<=weekFromNow){
+grouped.thisWeek.push(item);
+}else{
+grouped.later.push(item);
+}
+});
+
+return grouped;
+};
+
+const toggleAgendaItem=(item)=>{
+if(!isAdmin)return;
+if(item.type==='planning'){
+togglePlanningItem(item.monthKey,item.itemId);
+}else if(item.type==='content'){
+toggleCustomItem(item.stepId,item.itemId);
+}
+};
+
 // NOTE FUNCTIONS
 const addNote=(clientId,text)=>{
 if(!isAdmin||!text.trim())return;
@@ -1166,11 +1260,21 @@ return(
 </div>
 )}
 <nav>
-<div className="nav-item active">
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
-<span className="nav-count">{clients.length}</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
+{isAdmin&&(
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+<span className="nav-count">{(()=>{
+const ag=getAllAgendaItems();
+return ag.overdue.length+ag.thisWeek.length+ag.later.length;
+})()}</span>
+</div>
+)}
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -1519,6 +1623,172 @@ return(
 )}
 
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</div>
+);
+}
+
+// AGENDA VIEW
+if(activeView==='agenda'){
+const agendaItems=getAllAgendaItems();
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+</div>
+{isAdmin&&(
+<div className="save-status">
+<div className={`save-status-dot ${saveStatus}`}/>
+<span>
+{saveStatus==='saving'&&'Opslaan...'}
+{saveStatus==='success'&&'Opgeslagen'}
+{saveStatus==='error'&&'Fout'}
+</span>
+</div>
+)}
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+{isAdmin&&(
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+<span className="nav-count">{agendaItems.overdue.length+agendaItems.thisWeek.length+agendaItems.later.length}</span>
+</div>
+)}
+</nav>
+{isAdmin&&(
+<button className="export-btn" onClick={exportData}>
+💾 Export Data
+</button>
+)}
+</aside>
+
+<main className="main">
+<header className="header">
+<h1 className="title">📅 Agenda</h1>
+<p className="subtitle">Alle taken met deadlines op volgorde</p>
+</header>
+
+{agendaItems.overdue.length===0&&agendaItems.thisWeek.length===0&&agendaItems.later.length===0&&(
+<div style={{textAlign:'center',padding:'64px 24px',color:'var(--text-light)'}}>
+<div style={{fontSize:'48px',marginBottom:'16px'}}>✓</div>
+<div style={{fontSize:'18px',fontWeight:'600',marginBottom:'8px'}}>Geen openstaande deadlines!</div>
+<div style={{fontSize:'14px'}}>Alle taken met deadlines zijn voltooid</div>
+</div>
+)}
+
+{agendaItems.overdue.length>0&&(
+<div style={{marginBottom:'32px'}}>
+<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'20px'}}>🔴</span>
+<div style={{flex:1}}>
+<div style={{fontWeight:'600',color:'#991b1b'}}>VERLOPEN / VANDAAG ({agendaItems.overdue.length})</div>
+<div style={{fontSize:'12px',color:'#991b1b',marginTop:'2px'}}>Deze taken hebben prioriteit!</div>
+</div>
+</div>
+{agendaItems.overdue.map(item=>(
+<div key={item.key} className="task-card" style={{marginBottom:'12px',background:'#fef2f2',borderLeft:'4px solid #dc2626'}}>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className="task-content" style={{flex:1}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+</div>
+<div className="task-title">{item.text}</div>
+<div style={{fontSize:'12px',color:'#dc2626',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<span>📅</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+</div>
+</div>
+<button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
+→ Open
+</button>
+</div>
+))}
+</div>
+)}
+
+{agendaItems.thisWeek.length>0&&(
+<div style={{marginBottom:'32px'}}>
+<div style={{background:'#fef9c3',border:'1px solid #fde047',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'20px'}}>🟡</span>
+<div style={{flex:1}}>
+<div style={{fontWeight:'600',color:'#854d0e'}}>DEZE WEEK ({agendaItems.thisWeek.length})</div>
+<div style={{fontSize:'12px',color:'#854d0e',marginTop:'2px'}}>Binnenkort af te ronden</div>
+</div>
+</div>
+{agendaItems.thisWeek.map(item=>(
+<div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #eab308'}}>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className="task-content" style={{flex:1}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+</div>
+<div className="task-title">{item.text}</div>
+<div style={{fontSize:'12px',color:'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<span>📅</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+</div>
+</div>
+<button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
+→ Open
+</button>
+</div>
+))}
+</div>
+)}
+
+{agendaItems.later.length>0&&(
+<div style={{marginBottom:'32px'}}>
+<div style={{background:'#f0fdf4',border:'1px solid #86efac',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'20px'}}>🟢</span>
+<div style={{flex:1}}>
+<div style={{fontWeight:'600',color:'#166534'}}>VOLGENDE PERIODE ({agendaItems.later.length})</div>
+<div style={{fontSize:'12px',color:'#166534',marginTop:'2px'}}>Geen haast, maar wel plannen</div>
+</div>
+</div>
+{agendaItems.later.map(item=>(
+<div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #10b981'}}>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className="task-content" style={{flex:1}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+</div>
+<div className="task-title">{item.text}</div>
+<div style={{fontSize:'12px',color:'#166534',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<span>📅</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+</div>
+</div>
+<button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
+→ Open
+</button>
+</div>
+))}
+</div>
+)}
+
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
 </div>
 );
 }
