@@ -188,6 +188,7 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 <script src="https://unpkg.com/@babel/standalone/babel.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
 <div id="root"></div>
@@ -738,6 +739,155 @@ saveData({tasks,customItems,planningItems,notes:newNotes,clients});
 setToast({type:'success',message:'✓ Notitie verwijderd'});
 };
 
+// PDF EXPORT FUNCTION
+const exportToPDF=()=>{
+const client=clients.find(c=>c.id===selectedClient);
+if(!client)return;
+
+const {jsPDF}=window.jspdf;
+const doc=new jsPDF();
+let y=20;
+
+// Title
+doc.setFontSize(20);
+doc.setFont(undefined,'bold');
+doc.text(`SEO ROADMAP - ${client.name}`,20,y);
+y+=10;
+
+// Line
+doc.setLineWidth(0.5);
+doc.line(20,y,190,y);
+y+=15;
+
+// Client Info
+doc.setFontSize(12);
+doc.setFont(undefined,'bold');
+doc.text('CLIENT INFORMATIE',20,y);
+y+=8;
+doc.setFont(undefined,'normal');
+doc.setFontSize(10);
+if(client.website)doc.text(`Website: ${client.website}`,20,y),y+=6;
+if(client.city)doc.text(`Locatie: ${client.city}`,20,y),y+=6;
+const statusInfo=getStatusInfo(client.status||'schema');
+doc.text(`Status: ${statusInfo.label}`,20,y);
+y+=6;
+const pmInfo=getPMInfo(client.projectManager||'none');
+if(pmInfo.key!=='none')doc.text(`Projectmanager: ${pmInfo.label}`,20,y),y+=6;
+
+// Progress
+const stats=getClientStats(client.id);
+const progress=getClientProgress(client.id);
+doc.setFont(undefined,'bold');
+doc.text(`Voortgang: ${stats.completed}/${stats.total} taken (${progress}%)`,20,y);
+y+=12;
+
+// Steps
+ROADMAP_STEPS.forEach((step,index)=>{
+if(y>260){doc.addPage();y=20;}
+doc.setFontSize(12);
+doc.setFont(undefined,'bold');
+doc.text(`${step.icon} ${step.name}`,20,y);
+y+=8;
+
+if(step.type==='tasks'||step.type==='hybrid'){
+step.sections?.forEach(section=>{
+section.tasks.forEach(task=>{
+if(y>270){doc.addPage();y=20;}
+const key=`${selectedClient}-${step.id}-${task.id}`;
+const isChecked=!!tasks[key];
+doc.setFontSize(9);
+doc.setFont(undefined,'normal');
+doc.text(isChecked?'✓':'☐',25,y);
+doc.text(task.title,32,y);
+y+=5;
+});
+});
+}
+
+if(step.type==='custom'||step.type==='hybrid'){
+const items=customItems[`${selectedClient}-${step.id}`]||[];
+items.forEach(item=>{
+if(y>270){doc.addPage();y=20;}
+doc.setFontSize(9);
+doc.text(item.completed?'✓':'☐',25,y);
+doc.text(item.text,32,y);
+y+=5;
+});
+}
+
+y+=5;
+});
+
+// Planning
+if(y>250){doc.addPage();y=20;}
+doc.setFontSize(12);
+doc.setFont(undefined,'bold');
+doc.text('PLANNING',20,y);
+y+=8;
+ROADMAP_STEPS[7].months.forEach(month=>{
+const items=planningItems[`${selectedClient}-${month.key}`]||[];
+if(items.length>0){
+if(y>260){doc.addPage();y=20;}
+doc.setFontSize(10);
+doc.setFont(undefined,'bold');
+doc.text(month.label,25,y);
+y+=6;
+items.forEach(item=>{
+if(y>270){doc.addPage();y=20;}
+doc.setFontSize(9);
+doc.setFont(undefined,'normal');
+const itemKey=`${selectedClient}-planning-${month.key}-${item.id}`;
+const deadline=deadlines[itemKey];
+const deadlineText=deadline?` (📅 ${new Date(deadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})})':'';
+doc.text(`• ${item.text}${deadlineText}`,30,y);
+y+=5;
+});
+y+=3;
+}
+});
+
+// Notes
+const clientNotes=getClientNotes(selectedClient);
+if(clientNotes.length>0){
+if(y>240){doc.addPage();y=20;}
+y+=5;
+doc.setFontSize(12);
+doc.setFont(undefined,'bold');
+doc.text('NOTITIES',20,y);
+y+=8;
+clientNotes.forEach(note=>{
+if(y>260){doc.addPage();y=20;}
+doc.setFontSize(9);
+doc.setFont(undefined,'bold');
+doc.text(`${new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - ${note.author}`,25,y);
+y+=5;
+doc.setFont(undefined,'normal');
+const lines=doc.splitTextToSize(note.text,160);
+lines.forEach(line=>{
+if(y>270){doc.addPage();y=20;}
+doc.text(line,25,y);
+y+=5;
+});
+y+=3;
+});
+}
+
+// Footer
+const pageCount=doc.internal.getNumberOfPages();
+for(let i=1;i<=pageCount;i++){
+doc.setPage(i);
+doc.setFontSize(8);
+doc.setFont(undefined,'normal');
+doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}`,20,287);
+doc.text(`Pagina ${i} van ${pageCount}`,170,287);
+}
+
+// Download
+const filename=`SEO-Roadmap-${client.name.replace(/[^a-z0-9]/gi,'-')}.pdf`;
+doc.save(filename);
+setToast({type:'success',message:'✓ PDF gedownload'});
+};
+
 // TASK FUNCTIONS
 const toggleTask=(stepId,taskId)=>{
 if(!isAdmin)return;
@@ -1028,7 +1178,8 @@ return(
 ))}
 </div>
 
-<div className="pm-overview">
+<div style={{display:'flex',gap:'24px',alignItems:'center',marginBottom:'24px'}}>
+<div className="pm-overview" style={{flex:1}}>
 <div className="pm-label">Projectmanagers:</div>
 {PROJECT_MANAGERS.filter(pm=>pm.key!=='none').map(pm=>(
 <div key={pm.key} className={`pm-filter-btn ${pmFilter===pm.key?'active':''}`} onClick={()=>setPmFilter(pmFilter===pm.key?'all':pm.key)}>
@@ -1044,7 +1195,7 @@ Alle PMs
 )}
 </div>
 
-<div className="sort-section">
+<div className="sort-section" style={{minWidth:'250px'}}>
 <div className="sort-label">Sorteren:</div>
 <select className="sort-dropdown" value={sortOrder} onChange={(e)=>setSortOrder(e.target.value)}>
 <option value="default">Standaard (nieuwste eerst)</option>
@@ -1053,6 +1204,7 @@ Alle PMs
 <option value="progress-asc">📊 Laag → Hoog (Voortgang)</option>
 <option value="progress-desc">📊 Hoog → Laag (Voortgang)</option>
 </select>
+</div>
 </div>
 
 {statusFilter!=='all'&&(
@@ -1384,6 +1536,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <div className="banner-buttons">
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
+<button className="banner-btn" style={{background:'var(--red)',color:'white'}} onClick={exportToPDF}>📄 PDF Export</button>
 {clients.find(c=>c.id===selectedClient)?.archived?(
 <button className="banner-btn" style={{background:'var(--green)',color:'white'}} onClick={()=>{restoreClient(selectedClient);setActiveView('dashboard');}}>↩️ Herstellen</button>
 ):(
