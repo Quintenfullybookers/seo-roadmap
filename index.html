@@ -278,7 +278,7 @@ const STEPS=[
 {title:'Techniek',tasks:[{id:'4-4',title:'SSL-certificaat',desc:'HTTPS'},{id:'4-5',title:'301 redirects',desc:'Oude urls'},{id:'4-6',title:'404 oplossen',desc:'Check GSC'},{id:'4-7',title:'Broken links',desc:'Screaming Frog'},{id:'4-8',title:'Structured data',desc:'Schema.org'}]},
 {title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
 ]},
-{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'}]},
+{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']}]},
 {id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
 {id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
 {id:7,name:'Planning',icon:'📅',type:'planning',months:[
@@ -742,127 +742,179 @@ const {jsPDF}=window.jspdf;
 const doc=new jsPDF();
 let y=20;
 
-// Title
-doc.setFontSize(20);
+// Title - centered and uppercase
+doc.setFontSize(18);
 doc.setFont(undefined,'bold');
-doc.text(`SEO ROADMAP - ${client.name}`,20,y);
-y+=10;
-
-// Line
+doc.text(`SEO ROADMAP - ${client.name.toUpperCase()}`,105,y,{align:'center'});
+y+=5;
 doc.setLineWidth(0.5);
 doc.line(20,y,190,y);
-y+=15;
+y+=12;
 
-// Client Info
-doc.setFontSize(12);
+// Client Info with better formatting
+doc.setFontSize(11);
 doc.setFont(undefined,'bold');
 doc.text('CLIENT INFORMATIE',20,y);
-y+=8;
+y+=7;
 doc.setFont(undefined,'normal');
-doc.setFontSize(10);
-if(client.website)doc.text(`Website: ${client.website}`,20,y),y+=6;
-if(client.city)doc.text(`Locatie: ${client.city}`,20,y),y+=6;
+doc.setFontSize(9);
+if(client.website){
+doc.text('Website:',20,y);
+doc.setFont(undefined,'bold');
+doc.text(client.website,45,y);
+doc.setFont(undefined,'normal');
+y+=5;
+}
+if(client.city){
+doc.text('Locatie:',20,y);
+doc.setFont(undefined,'bold');
+doc.text(client.city,45,y);
+doc.setFont(undefined,'normal');
+y+=5;
+}
 const statusInfo=getStatusInfo(client.status||'schema');
-doc.text(`Status: ${statusInfo.label}`,20,y);
-y+=6;
+doc.text('Status:',20,y);
+doc.setFont(undefined,'bold');
+doc.text(statusInfo.label,45,y);
+doc.setFont(undefined,'normal');
+y+=5;
 const pmInfo=getPMInfo(client.projectManager||'none');
-if(pmInfo.key!=='none')doc.text(`Projectmanager: ${pmInfo.label}`,20,y),y+=6;
-
-// Progress
+if(pmInfo.key!=='none'){
+doc.text('Projectmanager:',20,y);
+doc.setFont(undefined,'bold');
+doc.text(pmInfo.label,45,y);
+doc.setFont(undefined,'normal');
+y+=5;
+}
+doc.text('Voortgang:',20,y);
 const stats=getClientStats(client.id);
 const progress=getClientProgress(client.id);
 doc.setFont(undefined,'bold');
-doc.text(`Voortgang: ${stats.completed}/${stats.total} taken (${progress}%)`,20,y);
-y+=12;
+doc.text(`${stats.completed}/${stats.total} taken (${progress}%)`,45,y);
+doc.setFont(undefined,'normal');
+y+=10;
 
-// Steps
+// Steps with gray headers
 STEPS.forEach((step,index)=>{
-if(y>260){doc.addPage();y=20;}
-doc.setFontSize(12);
+if(y>255){doc.addPage();y=20;}
+doc.setFillColor(240,240,240);
+doc.rect(20,y-4,170,8,'F');
+doc.setFontSize(11);
 doc.setFont(undefined,'bold');
-doc.text(`${step.icon} ${step.name}`,20,y);
-y+=8;
+doc.text(`STAP ${index+1}: ${step.name.toUpperCase()}`,22,y+1);
+y+=10;
 
 if(step.type==='tasks'||step.type==='hybrid'){
 step.sections?.forEach(section=>{
+if(y>260){doc.addPage();y=20;}
+doc.setFontSize(9);
+doc.setFont(undefined,'bold');
+doc.text(section.title,25,y);
+y+=5;
 section.tasks.forEach(task=>{
-if(y>270){doc.addPage();y=20;}
+if(y>268){doc.addPage();y=20;}
 const key=`${selectedClient}-${step.id}-${task.id}`;
 const isChecked=!!tasks[key];
-doc.setFontSize(9);
+doc.setFontSize(8);
 doc.setFont(undefined,'normal');
-doc.text(isChecked?'✓':'☐',25,y);
-doc.text(task.title,32,y);
-y+=5;
+doc.text(isChecked?'[X]':'[ ]',30,y);
+doc.text(task.title,37,y);
+y+=4;
 });
+y+=2;
 });
 }
 
 if(step.type==='custom'||step.type==='hybrid'){
 const items=customItems[`${selectedClient}-${step.id}`]||[];
-items.forEach(item=>{
-if(y>270){doc.addPage();y=20;}
+if(items.length>0){
+if(y>260){doc.addPage();y=20;}
 doc.setFontSize(9);
-doc.text(item.completed?'✓':'☐',25,y);
-doc.text(item.text,32,y);
-y+=5;
-});
-}
-
-y+=5;
-});
-
-// Planning
-if(y>250){doc.addPage();y=20;}
-doc.setFontSize(12);
 doc.setFont(undefined,'bold');
-doc.text('PLANNING',20,y);
-y+=8;
+if(step.type==='hybrid'){
+doc.text(step.customSection?.title||'Custom Items',25,y);
+}
+y+=5;
+items.forEach(item=>{
+if(y>268){doc.addPage();y=20;}
+doc.setFontSize(8);
+doc.setFont(undefined,'normal');
+const checkbox=item.completed?'[X]':'[ ]';
+const itemText=step.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text;
+doc.text(`${checkbox} ${itemText}`,30,y);
+if(item.deadline){
+doc.setTextColor(200,0,0);
+doc.text(`(${item.deadline})`,120,y);
+doc.setTextColor(0,0,0);
+}
+y+=4;
+});
+y+=2;
+}
+}
+y+=3;
+});
+
+// Planning section
+if(y>240){doc.addPage();y=20;}
+doc.setFillColor(240,240,240);
+doc.rect(20,y-4,170,8,'F');
+doc.setFontSize(11);
+doc.setFont(undefined,'bold');
+doc.text('PLANNING',22,y+1);
+y+=10;
 STEPS[6].months.forEach(month=>{
 const items=planningItems[`${selectedClient}-${month.key}`]||[];
 if(items.length>0){
-if(y>260){doc.addPage();y=20;}
-doc.setFontSize(10);
+if(y>255){doc.addPage();y=20;}
+doc.setFontSize(9);
 doc.setFont(undefined,'bold');
 doc.text(month.label,25,y);
-y+=6;
+y+=5;
 items.forEach(item=>{
-if(y>270){doc.addPage();y=20;}
-doc.setFontSize(9);
+if(y>268){doc.addPage();y=20;}
+doc.setFontSize(8);
 doc.setFont(undefined,'normal');
 const itemKey=`${selectedClient}-planning-${month.key}-${item.id}`;
 const deadline=deadlines[itemKey];
-const deadlineText=deadline?` (📅 ${new Date(deadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})})`:'';
-doc.text(`• ${item.text}${deadlineText}`,30,y);
-y+=5;
+let text=item.text;
+if(deadline){
+const dd=new Date(deadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'});
+text=`${item.text} (${dd})`;
+}
+doc.text(`- ${text}`,30,y);
+y+=4;
 });
-y+=3;
+y+=2;
 }
 });
 
-// Notes
+// Notes section
 const clientNotes=getClientNotes(selectedClient);
 if(clientNotes.length>0){
-if(y>240){doc.addPage();y=20;}
+if(y>235){doc.addPage();y=20;}
 y+=5;
-doc.setFontSize(12);
+doc.setFillColor(240,240,240);
+doc.rect(20,y-4,170,8,'F');
+doc.setFontSize(11);
 doc.setFont(undefined,'bold');
-doc.text('NOTITIES',20,y);
-y+=8;
+doc.text('NOTITIES',22,y+1);
+y+=10;
 clientNotes.forEach(note=>{
-if(y>260){doc.addPage();y=20;}
-doc.setFontSize(9);
+if(y>255){doc.addPage();y=20;}
+doc.setFontSize(8);
 doc.setFont(undefined,'bold');
-doc.text(`${new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - ${note.author}`,25,y);
-y+=5;
+const nd=new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'});
+doc.text(`${nd} - ${note.author}`,25,y);
+y+=4;
 doc.setFont(undefined,'normal');
 const lines=doc.splitTextToSize(note.text,160);
 lines.forEach(line=>{
-if(y>270){doc.addPage();y=20;}
+if(y>268){doc.addPage();y=20;}
 doc.text(line,25,y);
-y+=5;
+y+=4;
 });
-y+=3;
+y+=2;
 });
 }
 
@@ -870,13 +922,14 @@ y+=3;
 const pageCount=doc.internal.getNumberOfPages();
 for(let i=1;i<=pageCount;i++){
 doc.setPage(i);
-doc.setFontSize(8);
+doc.setFontSize(7);
 doc.setFont(undefined,'normal');
+doc.setTextColor(100,100,100);
 doc.text(`Gegenereerd: ${new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}`,20,287);
-doc.text(`Pagina ${i} van ${pageCount}`,170,287);
+doc.text(`Pagina ${i} van ${pageCount}`,170,287,{align:'right'});
+doc.setTextColor(0,0,0);
 }
 
-// Download
 const filename=`SEO-Roadmap-${client.name.replace(/[^a-z0-9]/gi,'-')}.pdf`;
 doc.save(filename);
 setToast({type:'success',message:'✓ PDF gedownload'});
@@ -899,6 +952,16 @@ const newItem={id:Date.now(),text:text.trim(),completed:false};
 const newCustomItems={...customItems,[key]:[...items,newItem]};
 setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,clients});
+};
+
+const addCustomItemWithFields=(stepId,fieldData)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}`;
+const items=customItems[key]||[];
+const newItem={id:Date.now(),...fieldData,completed:false};
+const newCustomItems={...customItems,[key]:[...items,newItem]};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients});
 };
 
 const toggleCustomItem=(stepId,itemId)=>{
@@ -1629,7 +1692,14 @@ return(
 <div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
 <div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}/>
 <div className="task-content">
-<div className="task-title">{item.text}</div>
+<div className="task-title">
+{currentStep.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text}
+</div>
+{item.deadline&&(
+<div style={{fontSize:'12px',color:'#666',marginTop:'4px'}}>
+📅 {item.deadline}
+</div>
+)}
 </div>
 {isAdmin&&<button className="delete-item-btn" onClick={()=>deleteCustomItem(currentStep.id,item.id)}>🗑️</button>}
 </div>
@@ -1733,14 +1803,53 @@ return(
 {isAdmin&&showItemModal&&(
 <div className="modal-overlay" onClick={()=>setShowItemModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">Custom Item Toevoegen</h2>
+<h2 className="modal-title">
+{(()=>{
+const step=STEPS.find(s=>s.id===itemModalStep);
+return step?.type==='hybrid'?`${step.customSection.title} Toevoegen`:'Custom Item Toevoegen';
+})()}
+</h2>
+{(()=>{
+const step=STEPS.find(s=>s.id===itemModalStep);
+if(step?.customFields){
+return step.customFields.map((field,idx)=>(
+<div key={field.key} className="input-group">
+<label className="input-label">{field.label}</label>
+{field.type==='select'?(
+<select className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0}>
+<option value="">Selecteer...</option>
+{field.options.map(opt=>(
+<option key={opt} value={opt}>{opt}</option>
+))}
+</select>
+):(
+<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}/>
+)}
+</div>
+));
+}else{
+return(
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
-<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}}/>
+<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);setItemModalData({});}}}/>
 </div>
+);
+}
+})()}
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);}}>Toevoegen</button>
-<button className="btn btn-secondary" onClick={()=>setShowItemModal(false)}>Annuleren</button>
+<button className="btn btn-primary" onClick={()=>{
+const step=STEPS.find(s=>s.id===itemModalStep);
+if(step?.customFields){
+const itemData={};
+step.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});
+addCustomItemWithFields(itemModalStep,itemData);
+}else{
+addCustomItem(itemModalStep,itemModalData.text||'');
+}
+setShowItemModal(false);
+setItemModalData({});
+}}>Toevoegen</button>
+<button className="btn btn-secondary" onClick={()=>{setShowItemModal(false);setItemModalData({});}}>Annuleren</button>
 </div>
 </div>
 </div>
