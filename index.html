@@ -7,7 +7,7 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--blue:#0066CC;--blue-dark:#004C99;--blue-light:#E6F2FF;--green:#10B981;--green-bg:#D1FAE5;--orange:#F59E0B;--orange-bg:#FEF3C7;--yellow:#EAB308;--yellow-bg:#FEF9C3;--red:#DC2626;--red-bg:#FEE2E2;--lightblue:#3B82F6;--lightblue-bg:#DBEAFE;--gray:#6B7280;--gray-bg:#F3F4F6;--text:#111827;--text-light:#6B7280;--border:#E5E7EB;--bg:#FAFAFA;--white:#FFFFFF;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);--shadow:0 4px 6px -1px rgb(0 0 0/.1);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.1)}
-body.dark-mode{--text:#F9FAFB;--text-light:#9CA3AF;--border:#374151;--bg:#111827;--white:#1F2937;--gray-bg:#374151;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.3);--shadow:0 4px 6px -1px rgb(0 0 0/.3);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.3);--blue-light:#1E3A8A;--green-bg:#065F46;--orange-bg:#78350F;--yellow-bg:#713F12;--red-bg:#7F1D1D;--lightblue-bg:#1E3A8A}
+body.dark-mode{--text:#FFFFFF;--text-light:#B4B9C5;--border:#3d4354;--bg:#1a1d29;--white:#252938;--gray-bg:#2f3342;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.5);--shadow:0 4px 6px -1px rgb(0 0 0/.5);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.5);--blue-light:#2d3e5f;--green-bg:#1e4d3c;--orange-bg:#4d3617;--yellow-bg:#4d4017;--red-bg:#4d2020;--lightblue-bg:#2d4a7c;--blue:#3b82f6;--green:#34d399;--orange:#fbbf24;--yellow:#fde047;--red:#f87171}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
@@ -488,12 +488,42 @@ setActiveView('roadmap');
 },[clients]);
 
 const copyClientLink=(clientId)=>{
+console.log('🔗 Copy link clicked for client:',clientId);
 const url=`${window.location.origin}${window.location.pathname}?client=${clientId}`;
+console.log('📋 URL to copy:',url);
+if(navigator.clipboard&&navigator.clipboard.writeText){
 navigator.clipboard.writeText(url).then(()=>{
+console.log('✅ Link copied successfully');
+setToast({type:'success',message:'✓ Link gekopieerd! ' + url});
+setTimeout(()=>setToast(null),5000);
+}).catch((err)=>{
+console.error('❌ Clipboard error:',err);
+const textarea=document.createElement('textarea');
+textarea.value=url;
+document.body.appendChild(textarea);
+textarea.select();
+try{
+document.execCommand('copy');
 setToast({type:'success',message:'✓ Link gekopieerd!'});
-}).catch(()=>{
-setToast({type:'error',message:'❌ Kopiëren mislukt'});
+}catch(e){
+setToast({type:'error',message:'Kopieer handmatig: '+url});
+}
+document.body.removeChild(textarea);
 });
+}else{
+console.log('⚠️ Clipboard API not available, using fallback');
+const textarea=document.createElement('textarea');
+textarea.value=url;
+document.body.appendChild(textarea);
+textarea.select();
+try{
+document.execCommand('copy');
+setToast({type:'success',message:'✓ Link gekopieerd!'});
+}catch(e){
+alert('Kopieer deze link: '+url);
+}
+document.body.removeChild(textarea);
+}
 };
 
 // FIREBASE INIT
@@ -1528,8 +1558,35 @@ return(
 {(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'#666'}}>💬 {nc}</span>:null;})()}
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();copyClientLink(client.id);}} style={{width:'100%',marginTop:'12px',padding:'8px',background:'var(--blue-light)',color:'var(--blue)',border:'1px solid var(--blue)',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}>
-<span>🔗</span><span>Copy Link voor Client</span>
+<button 
+onClick={(e)=>{
+console.log('Button clicked!');
+e.stopPropagation();
+e.preventDefault();
+copyClientLink(client.id);
+}} 
+style={{
+width:'100%',
+marginTop:'12px',
+padding:'10px',
+background:'var(--blue-light)',
+color:'var(--blue)',
+border:'2px solid var(--blue)',
+borderRadius:'6px',
+fontSize:'13px',
+fontWeight:'700',
+cursor:'pointer',
+display:'flex',
+alignItems:'center',
+justifyContent:'center',
+gap:'8px',
+transition:'all 0.2s'
+}}
+onMouseEnter={(e)=>{e.target.style.background='var(--blue)';e.target.style.color='white';}}
+onMouseLeave={(e)=>{e.target.style.background='var(--blue-light)';e.target.style.color='var(--blue)';}}
+>
+<span style={{fontSize:'16px'}}>🔗</span>
+<span>Copy Link voor Client</span>
 </button>
 )}
 <div className="client-stats">
