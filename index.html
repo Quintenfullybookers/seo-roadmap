@@ -267,27 +267,21 @@ const PROJECT_MANAGERS=[
 
 // ORIGINELE STAPPEN MET SUBKOPJES
 const STEPS=[
-{id:1,name:'Indexatie & Setup',icon:'🔍',sections:[
-{title:'Search Console',tasks:[{id:'1-1',title:'GSC aanmaken',desc:'Verifieer via DNS'},{id:'1-2',title:'Sitemap aanmaken',desc:''},{id:'1-3',title:'Sitemap indienen',desc:'In GSC'}]},
-{title:'Analytics',tasks:[{id:'1-4',title:'GA4 installeren',desc:'Via GTM'},{id:'1-5',title:'GA4 koppelen',desc:'Aan GSC'}]},
-{title:'Robots',tasks:[{id:'1-6',title:'Robots.txt check',desc:'Check blokkades'},{id:'1-7',title:'Indexering check',desc:'URL-inspectie'},{id:'1-8',title:'Indexering aanvragen',desc:'Nieuwe paginas'}]}
+{id:1,name:'SEO Plan',icon:'📋',sections:[
+{title:'Zoekwoorden onderzoek',tasks:[{id:'1-1',title:'Website',desc:''},{id:'1-2',title:'Concurrentie',desc:''},{id:'1-3',title:'Search Console',desc:''},{id:'1-4',title:'SE Ranking',desc:''}]},
+{title:'Zoekwoorden voorstel',tasks:[{id:'1-5',title:'Gestuurd',desc:''},{id:'1-6',title:'Feedback ontvangen',desc:''},{id:'1-7',title:'Verwerkt',desc:''},{id:'1-8',title:'Voltooid',desc:''}]}
 ]},
 {id:2,name:'GMB',icon:'📍',sections:[{title:'Google My Business',tasks:[{id:'2-1',title:'GMB koppelen',desc:''},{id:'2-2',title:'GMB Locaties',desc:'Alle locaties toegevoegd'},{id:'2-3',title:'GMB Automations Reviews',desc:'Ingesteld'},{id:'2-4',title:'GMB Questionaire',desc:'Ingevuld door klant'}]}]},
-{id:3,name:'Zoekwoord Onderzoek',icon:'🎯',sections:[
-{title:'Tools',tasks:[{id:'3-1',title:'Toevoegen in SE Ranking',desc:''},{id:'3-2',title:'Toevoegen in Localfalcon',desc:''},{id:'3-3',title:'Toevoegen Zoekwoorden SE Ranking',desc:''}]},
-{title:'Zoekwoorden Voorstel',tasks:[{id:'3-4',title:'Zoekwoorden voorstel',desc:''},{id:'3-5',title:'Feedback klant',desc:''},{id:'3-6',title:'Verwerkt in SE Ranking',desc:''}]},
-{title:'0-meting',tasks:[{id:'3-7',title:'0-Meting',desc:''},{id:'3-8',title:'0-Meting Lokaal',desc:''},{id:'3-9',title:'Pagespeed test',desc:''}]}
-]},
-{id:4,name:'Technische Optimalisatie',icon:'🔧',sections:[
+{id:3,name:'Technische Optimalisatie',icon:'🔧',sections:[
 {title:'Snelheid',tasks:[{id:'4-1',title:'PageSpeed test',desc:'Streef 80+'},{id:'4-2',title:'Afbeeldingen',desc:'Comprimeer'}]},
 {title:'Mobile',tasks:[{id:'4-3',title:'Mobile test',desc:'Check mobile'}]},
 {title:'Techniek',tasks:[{id:'4-4',title:'SSL-certificaat',desc:'HTTPS'},{id:'4-5',title:'301 redirects',desc:'Oude urls'},{id:'4-6',title:'404 oplossen',desc:'Check GSC'},{id:'4-7',title:'Broken links',desc:'Screaming Frog'},{id:'4-8',title:'Structured data',desc:'Schema.org'}]},
 {title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
 ]},
-{id:5,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'}]},
-{id:6,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
-{id:7,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
-{id:8,name:'Planning',icon:'📅',type:'planning',months:[
+{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'}]},
+{id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
+{id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
+{id:7,name:'Planning',icon:'📅',type:'planning',months:[
 {key:'2025-12',label:'December 2025'},{key:'2026-01',label:'Januari 2026'},{key:'2026-02',label:'Februari 2026'},
 {key:'2026-03',label:'Maart 2026'},{key:'2026-04',label:'April 2026'},{key:'2026-05',label:'Mei 2026'},
 {key:'2026-06',label:'Juni 2026'},{key:'2026-07',label:'Juli 2026'},{key:'2026-08',label:'Augustus 2026'},
@@ -782,7 +776,7 @@ doc.text(`Voortgang: ${stats.completed}/${stats.total} taken (${progress}%)`,20,
 y+=12;
 
 // Steps
-ROADMAP_STEPS.forEach((step,index)=>{
+STEPS.forEach((step,index)=>{
 if(y>260){doc.addPage();y=20;}
 doc.setFontSize(12);
 doc.setFont(undefined,'bold');
@@ -824,7 +818,7 @@ doc.setFontSize(12);
 doc.setFont(undefined,'bold');
 doc.text('PLANNING',20,y);
 y+=8;
-ROADMAP_STEPS[7].months.forEach(month=>{
+STEPS[6].months.forEach(month=>{
 const items=planningItems[`${selectedClient}-${month.key}`]||[];
 if(items.length>0){
 if(y>260){doc.addPage();y=20;}
@@ -838,7 +832,7 @@ doc.setFontSize(9);
 doc.setFont(undefined,'normal');
 const itemKey=`${selectedClient}-planning-${month.key}-${item.id}`;
 const deadline=deadlines[itemKey];
-const deadlineText=deadline?` (📅 ${new Date(deadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})})':'';
+const deadlineText=deadline?` (📅 ${new Date(deadline).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})})`:'';
 doc.text(`• ${item.text}${deadlineText}`,30,y);
 y+=5;
 });
