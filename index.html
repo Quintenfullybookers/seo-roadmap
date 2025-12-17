@@ -7,8 +7,9 @@
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
 <style>
 :root{--blue:#0066CC;--blue-dark:#004C99;--blue-light:#E6F2FF;--green:#10B981;--green-bg:#D1FAE5;--orange:#F59E0B;--orange-bg:#FEF3C7;--yellow:#EAB308;--yellow-bg:#FEF9C3;--red:#DC2626;--red-bg:#FEE2E2;--lightblue:#3B82F6;--lightblue-bg:#DBEAFE;--gray:#6B7280;--gray-bg:#F3F4F6;--text:#111827;--text-light:#6B7280;--border:#E5E7EB;--bg:#FAFAFA;--white:#FFFFFF;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.05);--shadow:0 4px 6px -1px rgb(0 0 0/.1);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.1)}
+body.dark-mode{--text:#F9FAFB;--text-light:#9CA3AF;--border:#374151;--bg:#111827;--white:#1F2937;--gray-bg:#374151;--shadow-sm:0 1px 2px 0 rgb(0 0 0/.3);--shadow:0 4px 6px -1px rgb(0 0 0/.3);--shadow-lg:0 10px 15px -3px rgb(0 0 0/.3);--blue-light:#1E3A8A;--green-bg:#065F46;--orange-bg:#78350F;--yellow-bg:#713F12;--red-bg:#7F1D1D;--lightblue-bg:#1E3A8A}
 *{margin:0;padding:0;box-sizing:border-box}
-body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6}
+body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:var(--bg);color:var(--text);line-height:1.6;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
 .sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:24px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100}
 .logo{padding:0 24px 24px;border-bottom:1px solid var(--border);margin-bottom:24px}
@@ -27,6 +28,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .mode-badge{padding:4px 8px;border-radius:4px;font-weight:600;font-size:10px}
 .mode-badge.viewer{background:var(--blue-light);color:var(--blue)}
 .mode-badge.admin{background:var(--green-bg);color:var(--green)}
+.dark-toggle{margin-left:auto;padding:4px 8px;background:var(--gray-bg);border:1px solid var(--border);borderRadius:6px;cursor:pointer;fontSize:16px;transition:all 0.2s}
+.dark-toggle:hover{background:var(--border)}
 .save-status{padding:0 24px 8px;font-size:11px;color:var(--text-light);display:flex;align-items:center;gap:6px}
 .save-status-dot{width:6px;height:6px;border-radius:50%;background:var(--gray)}
 .save-status-dot.saving{background:var(--orange);animation:pulse 1s infinite}
@@ -438,6 +441,7 @@ const [showDeadlineModal,setShowDeadlineModal]=useState(false);
 const [deadlineModalTask,setDeadlineModalTask]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
+const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
 const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none'});
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
@@ -455,6 +459,42 @@ useEffect(()=>{
 console.log('🚀 APP STARTING (Viewer Mode)');
 initFirebase(VIEWER_FIREBASE_CONFIG);
 },[]);
+
+// DARK MODE
+useEffect(()=>{
+if(darkMode){
+document.body.classList.add('dark-mode');
+}else{
+document.body.classList.remove('dark-mode');
+}
+localStorage.setItem('darkMode',darkMode);
+},[darkMode]);
+
+const toggleDarkMode=()=>{
+setDarkMode(!darkMode);
+};
+
+// CLIENT VIEWER LINK HANDLING
+useEffect(()=>{
+const params=new URLSearchParams(window.location.search);
+const clientParam=params.get('client');
+if(clientParam&&clients.length>0){
+const client=clients.find(c=>c.id===clientParam);
+if(client){
+setSelectedClient(clientParam);
+setActiveView('roadmap');
+}
+}
+},[clients]);
+
+const copyClientLink=(clientId)=>{
+const url=`${window.location.origin}${window.location.pathname}?client=${clientId}`;
+navigator.clipboard.writeText(url).then(()=>{
+setToast({type:'success',message:'✓ Link gekopieerd!'});
+}).catch(()=>{
+setToast({type:'error',message:'❌ Kopiëren mislukt'});
+});
+};
 
 // FIREBASE INIT
 const initFirebase=async(config)=>{
@@ -800,6 +840,84 @@ togglePlanningItem(item.monthKey,item.itemId);
 }else if(item.type==='content'){
 toggleCustomItem(item.stepId,item.itemId);
 }
+};
+
+// RAPPORTAGE FUNCTIONS
+const getRapportageStats=()=>{
+const stats={
+totalClients:clients.filter(c=>!c.archived).length,
+totalTasks:0,
+completedTasks:0,
+totalContent:0,
+completedContent:0,
+totalPlanning:0,
+completedPlanning:0,
+totalNotes:Object.keys(notes).length,
+totalDeadlines:Object.keys(deadlines).length,
+stepProgress:{}
+};
+
+// Tasks per step
+STEPS.forEach(step=>{
+let stepTotal=0;
+let stepCompleted=0;
+if(step.type==='tasks'||step.type==='hybrid'){
+step.sections?.forEach(section=>{
+section.tasks.forEach(task=>{
+clients.forEach(client=>{
+if(client.archived)return;
+stepTotal++;
+const key=`${client.id}-${step.id}-${task.id}`;
+if(tasks[key])stepCompleted++;
+});
+});
+});
+}
+if(step.type==='custom'||step.type==='hybrid'){
+clients.forEach(client=>{
+if(client.archived)return;
+const items=customItems[`${client.id}-${step.id}`]||[];
+stepTotal+=items.length;
+stepCompleted+=items.filter(i=>i.completed).length;
+if(step.id===4){
+stats.totalContent+=items.length;
+stats.completedContent+=items.filter(i=>i.completed).length;
+}
+});
+}
+stats.totalTasks+=stepTotal;
+stats.completedTasks+=stepCompleted;
+stats.stepProgress[step.id]={
+name:step.name,
+total:stepTotal,
+completed:stepCompleted,
+percentage:stepTotal>0?Math.round((stepCompleted/stepTotal)*100):0
+};
+});
+
+// Planning items
+clients.forEach(client=>{
+if(client.archived)return;
+STEPS[6]?.months?.forEach(month=>{
+const items=planningItems[`${client.id}-${month.key}`]||[];
+stats.totalPlanning+=items.length;
+stats.completedPlanning+=items.filter(i=>i.completed).length;
+});
+});
+
+return stats;
+};
+
+const getTopPerformers=()=>{
+return clients
+.filter(c=>!c.archived)
+.map(c=>({
+id:c.id,
+name:c.name,
+progress:getClientProgress(c.id)
+}))
+.sort((a,b)=>b.progress-a.progress)
+.slice(0,5);
 };
 
 // NOTE FUNCTIONS
@@ -1248,6 +1366,7 @@ return(
 <div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
 {isAdmin?'🔓 Admin':'👁️ Viewer'}
 </div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 {isAdmin&&(
 <div className="save-status">
@@ -1273,6 +1392,12 @@ return(
 const ag=getAllAgendaItems();
 return ag.overdue.length+ag.thisWeek.length+ag.later.length;
 })()}</span>
+</div>
+)}
+{isAdmin&&(
+<div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Rapportage</span>
 </div>
 )}
 </nav>
@@ -1402,6 +1527,11 @@ return(
 {client.seRanking&&(<a href={client.seRanking} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📊 SE Ranking</a>)}
 {(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'#666'}}>💬 {nc}</span>:null;})()}
 </div>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();copyClientLink(client.id);}} style={{width:'100%',marginTop:'12px',padding:'8px',background:'var(--blue-light)',color:'var(--blue)',border:'1px solid var(--blue)',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',gap:'6px'}}>
+<span>🔗</span><span>Copy Link voor Client</span>
+</button>
+)}
 <div className="client-stats">
 <div className="stat-box">
 <div className="stat-number">{stats.total}</div>
@@ -1648,6 +1778,7 @@ return(
 <div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
 {isAdmin?'🔓 Admin':'👁️ Viewer'}
 </div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 {isAdmin&&(
 <div className="save-status">
@@ -1793,6 +1924,129 @@ return(
 );
 }
 
+// RAPPORTAGE VIEW
+if(activeView==='rapportage'){
+const stats=getRapportageStats();
+const topPerformers=getTopPerformers();
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
+</div>
+{isAdmin&&(
+<div className="save-status">
+<div className={`save-status-dot ${saveStatus}`}/>
+<span>
+{saveStatus==='saving'&&'Opslaan...'}
+{saveStatus==='success'&&'Opgeslagen'}
+{saveStatus==='error'&&'Fout'}
+</span>
+</div>
+)}
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+{isAdmin&&(
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+<span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.later.length;})()}</span>
+</div>
+)}
+{isAdmin&&(
+<div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Rapportage</span>
+</div>
+)}
+</nav>
+{isAdmin&&(<button className="export-btn" onClick={exportData}>💾 Export Data</button>)}
+</aside>
+
+<main className="main">
+<header className="header">
+<h1 className="title">📈 Rapportage</h1>
+<p className="subtitle">Overzicht van alle statistieken en voortgang</p>
+</header>
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(200px,1fr))',gap:'16px',marginBottom:'32px'}}>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--blue)',marginBottom:'4px'}}>{stats.totalClients}</div>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>Actieve Clients</div>
+</div>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--green)',marginBottom:'4px'}}>{stats.completedTasks}</div>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>Taken Voltooid</div>
+</div>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--orange)',marginBottom:'4px'}}>{stats.completedContent}</div>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>Content Items</div>
+</div>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--red)',marginBottom:'4px'}}>{stats.totalDeadlines}</div>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>Actieve Deadlines</div>
+</div>
+</div>
+
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'24px',marginBottom:'32px'}}>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>🏆</span><span>Top Performers</span>
+</h2>
+{topPerformers.map((client,idx)=>(
+<div key={client.id} style={{display:'flex',justifyContent:'space-between',alignItems:'center',padding:'12px',background:idx===0?'var(--yellow-bg)':idx===1?'var(--blue-light)':idx===2?'var(--orange-bg)':'var(--bg)',borderRadius:'6px',marginBottom:'8px',cursor:'pointer'}} onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'20px'}}>{idx===0?'🥇':idx===1?'🥈':idx===2?'🥉':`${idx+1}.`}</span>
+<span style={{fontWeight:'600'}}>{client.name}</span>
+</div>
+<span style={{fontWeight:'700',color:'var(--green)'}}>{client.progress}%</span>
+</div>
+))}
+</div>
+
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>📊</span><span>Voortgang per Stap</span>
+</h2>
+{Object.values(stats.stepProgress).map(step=>(
+<div key={step.name} style={{marginBottom:'16px'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
+<span style={{fontSize:'13px',fontWeight:'600'}}>{step.name}</span>
+<span style={{fontSize:'13px',fontWeight:'700',color:step.percentage>75?'var(--green)':step.percentage>50?'var(--orange)':'var(--red)'}}>{step.percentage}%</span>
+</div>
+<div style={{height:'8px',background:'var(--bg)',borderRadius:'4px',overflow:'hidden'}}>
+<div style={{height:'100%',width:`${step.percentage}%`,background:step.percentage>75?'var(--green)':step.percentage>50?'var(--orange)':'var(--red)',transition:'width 0.3s'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px'}}>{step.completed} / {step.total} voltooid</div>
+</div>
+))}
+</div>
+</div>
+
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
+</div>
+);
+}
+
 // ROADMAP VIEW
 const currentClient=clients.find(c=>c.id===selectedClient);
 if(!currentClient)return null;
@@ -1819,6 +2073,7 @@ return(
 <div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
 {isAdmin?'🔓 Admin':'👁️ Viewer'}
 </div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 {isAdmin&&(
 <div className="save-status">
@@ -1858,6 +2113,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <span className="banner-status-icon">{statusInfo.icon}</span>
 <span>{statusInfo.label}</span>
 </div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 {isAdmin&&(
 <div className="banner-buttons">
