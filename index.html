@@ -478,23 +478,34 @@ setDarkMode(!darkMode);
 useEffect(()=>{
 const params=new URLSearchParams(window.location.search);
 const clientParam=params.get('client');
+console.log('🔍 URL param check - clientParam:',clientParam,'clients loaded:',clients.length);
 if(clientParam&&clients.length>0){
-const client=clients.find(c=>c.id===clientParam);
+// Convert both to string for comparison since URL params are strings
+const client=clients.find(c=>String(c.id)===String(clientParam));
+console.log('🔍 Found client:',client);
 if(client){
-setSelectedClient(clientParam);
+console.log('✅ Opening client roadmap:',client.name);
+setSelectedClient(client.id);
 setActiveView('roadmap');
+}else{
+console.log('❌ Client not found for ID:',clientParam);
 }
 }
 },[clients]);
 
 const copyClientLink=(clientId)=>{
 console.log('🔗 Copy link clicked for client:',clientId);
+if(!clientId||clientId==='undefined'){
+console.error('❌ Invalid client ID:',clientId);
+setToast({type:'error',message:'❌ Ongeldige client ID'});
+return;
+}
 const url=`${window.location.origin}${window.location.pathname}?client=${clientId}`;
 console.log('📋 URL to copy:',url);
 if(navigator.clipboard&&navigator.clipboard.writeText){
 navigator.clipboard.writeText(url).then(()=>{
 console.log('✅ Link copied successfully');
-setToast({type:'success',message:'✓ Link gekopieerd! ' + url});
+setToast({type:'success',message:'✓ Link gekopieerd!'});
 setTimeout(()=>setToast(null),5000);
 }).catch((err)=>{
 console.error('❌ Clipboard error:',err);
@@ -550,25 +561,29 @@ setSyncStatus('connected');
 
 if(testDoc.exists){
 const data=testDoc.data();
+// Ensure all clients have IDs
+const clientsWithIds=(data.clients||[]).map(c=>c.id?c:{...c,id:Date.now()+Math.random()});
 setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
 setDeadlines(data.deadlines||{});
-setClients(data.clients||[]);
-saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[]);
+setClients(clientsWithIds);
+saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 
 firestore.collection('roadmaps').doc('main').onSnapshot((doc)=>{
 if(doc.exists){
 const data=doc.data();
+// Ensure all clients have IDs
+const clientsWithIds=(data.clients||[]).map(c=>c.id?c:{...c,id:Date.now()+Math.random()});
 setTasks(data.tasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
 setDeadlines(data.deadlines||{});
-setClients(data.clients||[]);
-saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[]);
+setClients(clientsWithIds);
+saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 });
 
@@ -1560,9 +1575,15 @@ return(
 {isAdmin&&(
 <button 
 onClick={(e)=>{
-console.log('Button clicked!');
+console.log('🔵 Button clicked! Client object:',client);
+console.log('🔵 Client ID:',client.id,'Type:',typeof client.id);
 e.stopPropagation();
 e.preventDefault();
+if(!client.id){
+console.error('❌ NO CLIENT ID!');
+setToast({type:'error',message:'❌ Client heeft geen ID'});
+return;
+}
 copyClientLink(client.id);
 }} 
 style={{
