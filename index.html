@@ -2420,6 +2420,66 @@ return(
 
 {currentStep.type==='planning'?(
 <>
+{clients.find(c=>c.id===selectedClient)?.budget>0&&(
+<div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
+⏱️ Tijd Tracking
+</h3>
+<div style={{fontSize:'14px',color:'#64748b'}}>
+Budget: <span style={{fontWeight:'700',color:'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
+</div>
+</div>
+{(()=>{
+const client=clients.find(c=>c.id===selectedClient);
+if(!client)return null;
+const monthNames=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+const now=new Date();
+const currentYear=now.getFullYear();
+const currentMonthIndex=now.getMonth();
+const monthsToShow=[];
+for(let i=0;i<6;i++){
+const monthIndex=(currentMonthIndex-i+12)%12;
+const year=currentMonthIndex-i<0?currentYear-1:currentYear;
+const monthKey=`${year}-${(monthIndex+1).toString().padStart(2,'0')}`;
+const monthLabel=`${monthNames[monthIndex]} ${year}`;
+const hours=timeTracking[`${client.id}-${monthKey}`]||0;
+const isCurrent=i===0;
+monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
+}
+return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
+const percentage=client.budget>0?Math.round((hours/client.budget)*100):0;
+const barColor=percentage>=90?'#dc2626':percentage>=70?'#f59e0b':'#10b981';
+return(
+<div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'14px',fontWeight:'600',color:'#1e293b'}}>{monthLabel}</span>
+{isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'13px',color:'#64748b'}}>
+<span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {client.budget}u
+</span>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();openTimeModal(client);}} style={{padding:'4px 12px',background:'#10b981',color:'white',border:'none',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#059669'} onMouseLeave={(e)=>e.target.style.background='#10b981'}>
++ Toevoegen
+</button>
+)}
+</div>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{flex:1,height:'6px',background:'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
+</div>
+<span style={{fontSize:'12px',fontWeight:'600',color:barColor,minWidth:'40px',textAlign:'right'}}>{percentage}%</span>
+</div>
+</div>
+);
+});
+})()}
+</div>
+)}
 {currentStep.months.map(month=>(
 <PlanningMonth
 key={month.key}
