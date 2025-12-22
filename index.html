@@ -797,36 +797,37 @@ return upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
 const getAllAgendaItems=()=>{
 const agenda=[];
 
-// Collect planning items with deadlines
-Object.keys(deadlines).forEach(key=>{
-if(!key.includes('planning'))return;
-const parts=key.split('-');
-const clientId=parts[0];
-const monthKey=parts[2];
-const itemId=parts[3];
-const client=clients.find(c=>c.id===clientId);
-if(client){
-const monthItems=planningItems[`${clientId}-${monthKey}`]||[];
-const item=monthItems.find(i=>i.id===itemId);
-if(item&&!item.completed){
+// Collect ALL planning items (from step 7 - Planning)
+const planningStep=STEPS.find(s=>s.id===7);
+if(planningStep&&planningStep.months){
+clients.forEach(client=>{
+if(client.archived)return;
+planningStep.months.forEach(month=>{
+const items=planningItems[`${client.id}-${month.key}`]||[];
+items.forEach(item=>{
+if(item.completed)return;
+// Check if item has explicit deadline
+const itemKey=`${client.id}-planning-${month.key}-${item.id}`;
+const explicitDeadline=deadlines[itemKey];
 agenda.push({
 type:'planning',
-key,
-clientId,
+key:itemKey,
+clientId:client.id,
 clientName:client.name,
 text:item.text,
-date:deadlines[key],
+date:explicitDeadline||month.label,
 completed:false,
-monthKey,
-itemId
+monthKey:month.key,
+itemId:item.id
+});
+});
+});
 });
 }
-}
-});
 
 // Collect content items with deadlines (step 4)
-const contentKey=`${selectedClient||Object.keys(customItems)[0]?.split('-')[0]||''}-4`;
 clients.forEach(client=>{
+if(client.archived)return;
 const items=customItems[`${client.id}-4`]||[];
 items.forEach(item=>{
 if(item.deadline&&!item.completed){
@@ -853,7 +854,7 @@ const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:
 const parts=d.split(' ');
 const month=months[parts[0]]||0;
 const year=parseInt(parts[1])||new Date().getFullYear();
-return new Date(year,month,1);
+return new Date(year,month,15);
 };
 return parseDate(a.date)-parseDate(b.date);
 });
@@ -861,15 +862,26 @@ return parseDate(a.date)-parseDate(b.date);
 // Group by urgency
 const now=new Date();
 const today=new Date(now.getFullYear(),now.getMonth(),now.getDate());
-const weekFromNow=new Date(today.getTime()+7*24*60*60*1000);
+const endOfThisMonth=new Date(now.getFullYear(),now.getMonth()+1,0);
 
-const grouped={overdue:[],thisWeek:[],later:[]};
+const grouped={overdue:[],thisWeek:[],thisMonth:[],later:[]};
 agenda.forEach(item=>{
-const itemDate=item.date.includes('-')?new Date(item.date):new Date(2099,0,1);
+const parseDate=(d)=>{
+if(d.includes('-'))return new Date(d);
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=d.split(' ');
+const month=months[parts[0]]||0;
+const year=parseInt(parts[1])||new Date().getFullYear();
+return new Date(year,month,15);
+};
+const itemDate=parseDate(item.date);
+const weekFromNow=new Date(today.getTime()+7*24*60*60*1000);
 if(itemDate<today){
 grouped.overdue.push(item);
 }else if(itemDate<=weekFromNow){
 grouped.thisWeek.push(item);
+}else if(itemDate<=endOfThisMonth){
+grouped.thisMonth.push(item);
 }else{
 grouped.later.push(item);
 }
@@ -1435,7 +1447,7 @@ return(
 <span className="nav-text">Agenda</span>
 <span className="nav-count">{(()=>{
 const ag=getAllAgendaItems();
-return ag.overdue.length+ag.thisWeek.length+ag.later.length;
+return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
 })()}</span>
 </div>
 )}
@@ -1895,7 +1907,7 @@ return(
 <p className="subtitle">Alle taken met deadlines op volgorde</p>
 </header>
 
-{agendaItems.overdue.length===0&&agendaItems.thisWeek.length===0&&agendaItems.later.length===0&&(
+{agendaItems.overdue.length===0&&agendaItems.thisWeek.length===0&&agendaItems.thisMonth.length===0&&agendaItems.later.length===0&&(
 <div style={{textAlign:'center',padding:'64px 24px',color:'var(--text-light)'}}>
 <div style={{fontSize:'48px',marginBottom:'16px'}}>✓</div>
 <div style={{fontSize:'18px',fontWeight:'600',marginBottom:'8px'}}>Geen openstaande deadlines!</div>
@@ -1953,6 +1965,37 @@ return(
 </div>
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<span>📅</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+</div>
+</div>
+<button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
+→ Open
+</button>
+</div>
+))}
+</div>
+)}
+
+{agendaItems.thisMonth.length>0&&(
+<div style={{marginBottom:'32px'}}>
+<div style={{background:'#dbeafe',border:'1px solid #3b82f6',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'20px'}}>🔵</span>
+<div style={{flex:1}}>
+<div style={{fontWeight:'600',color:'#1e40af'}}>DEZE MAAND ({agendaItems.thisMonth.length})</div>
+<div style={{fontSize:'12px',color:'#1e40af',marginTop:'2px'}}>Deze maand afronden</div>
+</div>
+</div>
+{agendaItems.thisMonth.map(item=>(
+<div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #3b82f6'}}>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className="task-content" style={{flex:1}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+</div>
+<div className="task-title">{item.text}</div>
+<div style={{fontSize:'12px',color:'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
 </div>
@@ -2046,7 +2089,7 @@ return(
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
-<span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.later.length;})()}</span>
+<span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;})()}</span>
 </div>
 )}
 {isAdmin&&(
