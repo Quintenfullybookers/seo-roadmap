@@ -892,10 +892,13 @@ return grouped;
 
 const toggleAgendaItem=(item)=>{
 if(!isAdmin)return;
+console.log('🔄 Toggle agenda item:',item);
 if(item.type==='planning'){
-togglePlanningItem(item.monthKey,item.itemId);
+console.log('📅 Toggling planning item for client:',item.clientId);
+togglePlanningItem(item.monthKey,item.itemId,item.clientId);
 }else if(item.type==='content'){
-toggleCustomItem(item.stepId,item.itemId);
+console.log('✍️ Toggling content item for client:',item.clientId);
+toggleCustomItem(item.stepId,item.itemId,item.clientId);
 }
 };
 
@@ -1233,14 +1236,20 @@ setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients});
 };
 
-const toggleCustomItem=(stepId,itemId)=>{
+const toggleCustomItem=(stepId,itemId,clientId=null)=>{
 if(!isAdmin)return;
-const key=`${selectedClient}-${stepId}`;
+const targetClientId=clientId||selectedClient;
+if(!targetClientId){
+console.error('❌ No client ID for toggleCustomItem');
+return;
+}
+const key=`${targetClientId}-${stepId}`;
 const items=customItems[key]||[];
 const newItems=items.map(item=>item.id===itemId?{...item,completed:!item.completed}:item);
 const newCustomItems={...customItems,[key]:newItems};
 setCustomItems(newCustomItems);
-saveData({tasks,customItems:newCustomItems,planningItems,clients});
+saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients});
+console.log('✅ Custom item toggled:',key,itemId);
 };
 
 const deleteCustomItem=(stepId,itemId)=>{
@@ -1264,14 +1273,20 @@ setPlanningItems(newPlanningItems);
 saveData({tasks,customItems,planningItems:newPlanningItems,clients});
 };
 
-const togglePlanningItem=(monthKey,itemId)=>{
+const togglePlanningItem=(monthKey,itemId,clientId=null)=>{
 if(!isAdmin)return;
-const key=`${selectedClient}-${monthKey}`;
+const targetClientId=clientId||selectedClient;
+if(!targetClientId){
+console.error('❌ No client ID for togglePlanningItem');
+return;
+}
+const key=`${targetClientId}-${monthKey}`;
 const items=planningItems[key]||[];
 const newItems=items.map(item=>item.id===itemId?{...item,completed:!item.completed}:item);
 const newPlanningItems={...planningItems,[key]:newItems};
 setPlanningItems(newPlanningItems);
-saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+saveData({tasks,customItems,planningItems:newPlanningItems,notes,deadlines,clients});
+console.log('✅ Planning item toggled:',key,itemId);
 };
 
 const deletePlanningItem=(monthKey,itemId)=>{
