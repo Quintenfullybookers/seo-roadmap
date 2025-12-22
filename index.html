@@ -451,6 +451,7 @@ const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:''
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
+const [budgetFilter,setBudgetFilter]=useState('all');
 const [sortOrder,setSortOrder]=useState('name-asc');
 const [expandedPlanning,setExpandedPlanning]=useState({});
 const [clientToDelete,setClientToDelete]=useState(null);
@@ -1411,6 +1412,11 @@ filtered=filtered.filter(c=>(c.status||'schema')===statusFilter);
 if(pmFilter!=='all'){
 filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
 }
+if(budgetFilter==='with-budget'){
+filtered=filtered.filter(c=>c.budget>0);
+}else if(budgetFilter==='without-budget'){
+filtered=filtered.filter(c=>!c.budget||c.budget===0);
+}
 // Sorting
 if(sortOrder==='name-asc'){
 filtered=[...filtered].sort((a,b)=>a.name.localeCompare(b.name));
@@ -1420,6 +1426,14 @@ filtered=[...filtered].sort((a,b)=>b.name.localeCompare(a.name));
 filtered=[...filtered].sort((a,b)=>getClientProgress(a.id)-getClientProgress(b.id));
 }else if(sortOrder==='progress-desc'){
 filtered=[...filtered].sort((a,b)=>getClientProgress(b.id)-getClientProgress(a.id));
+}else if(sortOrder==='hours-asc'){
+filtered=[...filtered].sort((a,b)=>getClientHours(a.id)-getClientHours(b.id));
+}else if(sortOrder==='hours-desc'){
+filtered=[...filtered].sort((a,b)=>getClientHours(b.id)-getClientHours(a.id));
+}else if(sortOrder==='budget-asc'){
+filtered=[...filtered].sort((a,b)=>(a.budget||0)-(b.budget||0));
+}else if(sortOrder==='budget-desc'){
+filtered=[...filtered].sort((a,b)=>(b.budget||0)-(a.budget||0));
 }
 return filtered;
 };
@@ -1593,6 +1607,24 @@ Alle PMs
 )}
 </div>
 
+<div className="pm-overview" style={{flex:1}}>
+<div className="pm-label">Budget:</div>
+<div className={`pm-filter-btn ${budgetFilter==='all'?'active':''}`} onClick={()=>setBudgetFilter('all')}>
+Alle
+{budgetFilter==='all'&&<span style={{marginLeft:'6px'}}>×</span>}
+</div>
+<div className={`pm-filter-btn ${budgetFilter==='with-budget'?'active':''}`} onClick={()=>setBudgetFilter('with-budget')}>
+<span style={{marginRight:'4px'}}>💰</span>
+Met budget
+{budgetFilter==='with-budget'&&<span style={{marginLeft:'6px'}}>×</span>}
+</div>
+<div className={`pm-filter-btn ${budgetFilter==='without-budget'?'active':''}`} onClick={()=>setBudgetFilter('without-budget')}>
+<span style={{marginRight:'4px'}}>📭</span>
+Zonder budget
+{budgetFilter==='without-budget'&&<span style={{marginLeft:'6px'}}>×</span>}
+</div>
+</div>
+
 <div className="sort-section" style={{minWidth:'250px'}}>
 <div className="sort-label">Sorteren:</div>
 <select className="sort-dropdown" value={sortOrder} onChange={(e)=>setSortOrder(e.target.value)}>
@@ -1601,6 +1633,10 @@ Alle PMs
 <option value="name-desc">📝 Z → A (Naam)</option>
 <option value="progress-asc">📊 Laag → Hoog (Voortgang)</option>
 <option value="progress-desc">📊 Hoog → Laag (Voortgang)</option>
+<option value="hours-asc">⏱️ Min → Max (Uren deze maand)</option>
+<option value="hours-desc">⏱️ Max → Min (Uren deze maand)</option>
+<option value="budget-asc">💰 Laag → Hoog (Budget)</option>
+<option value="budget-desc">💰 Hoog → Laag (Budget)</option>
 </select>
 </div>
 </div>
