@@ -949,16 +949,10 @@ console.log('✅ Hours added:',clientId,hours,'Total:',newHours);
 };
 
 const openTimeModal=(client)=>{
-console.log('🕐 openTimeModal called with client:',client?.name);
-if(!isAdmin){
-console.log('❌ Not admin, returning');
-return;
-}
-console.log('✅ Setting time modal state');
+if(!isAdmin)return;
 setTimeModalClient(client);
 setTimeModalHours('');
 setShowTimeModal(true);
-console.log('✅ Time modal should now be visible');
 };
 
 // RAPPORTAGE FUNCTIONS
@@ -1526,7 +1520,6 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 
 // DASHBOARD
 if(activeView==='dashboard'){
-console.log('📊 Dashboard rendered, isAdmin:',isAdmin);
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
 
@@ -1750,7 +1743,7 @@ return(
 <span style={{fontSize:'12px',fontWeight:'600',color:remaining<budget*0.3?'#dc2626':'var(--text)'}}>{remaining}u</span>
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{console.log('🖱️ Dashboard hours button clicked for:',client.name);e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'6px',background:'var(--green-bg)',color:'var(--green)',border:'1px solid var(--green)',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>{e.target.style.background='var(--green)';e.target.style.color='white';}} onMouseLeave={(e)=>{e.target.style.background='var(--green-bg)';e.target.style.color='var(--green)';}}>
+<button onClick={(e)=>{e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'6px',background:'var(--green-bg)',color:'var(--green)',border:'1px solid var(--green)',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>{e.target.style.background='var(--green)';e.target.style.color='white';}} onMouseLeave={(e)=>{e.target.style.background='var(--green-bg)';e.target.style.color='var(--green)';}}>
 + Uren toevoegen
 </button>
 )}
@@ -2026,6 +2019,34 @@ return(
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={editClient}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowEditModal(false);setEditingClient(null);}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{showTimeModal&&timeModalClient&&(
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">⏱️ Uren Toevoegen</h2>
+<p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{timeModalClient.name}</p>
+<div className="input-group">
+<label className="input-label">Aantal uren</label>
+<input type="number" className="modal-input" min="0" step="0.5" placeholder="2.5" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours){const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}}}}/>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>Gebruik decimalen voor halve uren (bijv. 2.5)</div>
+</div>
+<div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Huidige stand:</span>
+<span style={{fontSize:'13px',fontWeight:'600'}}>{getClientHours(timeModalClient.id)}u</span>
+</div>
+<div style={{display:'flex',justifyContent:'space-between'}}>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Budget:</span>
+<span style={{fontSize:'13px',fontWeight:'600'}}>{timeModalClient.budget}u</span>
+</div>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}else{setToast({type:'error',message:'Voer geldig aantal uren in'});}}}>Toevoegen</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>Annuleren</button>
 </div>
 </div>
 </div>
