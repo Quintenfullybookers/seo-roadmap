@@ -2321,8 +2321,14 @@ return(
 }
 
 // ROADMAP VIEW
+if(activeView==='roadmap'||selectedClient){
 const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
+if(!currentClient){
+// Fallback to dashboard if client not found
+setActiveView('dashboard');
+setSelectedClient(null);
+return null;
+}
 
 const currentStep=activeStep==='overview'?null:STEPS.find(s=>s.id===activeStep);
 const stats=getClientStats(selectedClient);
@@ -2985,6 +2991,10 @@ setItemModalData({});
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
 );
+}
+
+// Return null if no view matches (shouldn't happen)
+return null;
 }
 
 ReactDOM.render(<App/>,document.getElementById('root'));
