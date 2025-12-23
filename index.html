@@ -424,7 +424,7 @@ const [db,setDb]=useState(null);
 const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
 const [showArchive,setShowArchive]=useState(false);
-const [activeStep,setActiveStep]=useState(1);
+const [activeStep,setActiveStep]=useState('overview');
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
 const [customItems,setCustomItems]=useState({});
@@ -492,11 +492,19 @@ if(client){
 console.log('✅ Opening client roadmap:',client.name);
 setSelectedClient(client.id);
 setActiveView('roadmap');
+setActiveStep('overview');
 }else{
 console.log('❌ Client not found for ID:',clientParam);
 }
 }
 },[clients]);
+
+// Reset to overview when client changes
+useEffect(()=>{
+if(selectedClient){
+setActiveStep('overview');
+}
+},[selectedClient]);
 
 const copyClientLink=(clientId)=>{
 console.log('🔗 Copy link clicked for client:',clientId);
@@ -1385,6 +1393,27 @@ totalTasks+=customList.length;
 customList.forEach(item=>{if(item.completed)completedTasks++;});
 });
 return{total:totalTasks,completed:completedTasks,custom:customCount};
+};
+
+const getStepStats=(clientId,stepId)=>{
+const step=STEPS.find(s=>s.id===stepId);
+if(!step||step.type==='planning')return{total:0,completed:0};
+let totalTasks=0;
+let completedTasks=0;
+if(step.sections){
+step.sections.forEach(section=>{
+section.tasks.forEach(task=>{
+totalTasks++;
+const key=`${clientId}-${step.id}-${task.id}`;
+if(tasks[key])completedTasks++;
+});
+});
+}
+const customKey=`${clientId}-${step.id}`;
+const customList=customItems[customKey]||[];
+totalTasks+=customList.length;
+customList.forEach(item=>{if(item.completed)completedTasks++;});
+return{total:totalTasks,completed:completedTasks};
 };
 
 const getStatusCounts=()=>{
@@ -2295,7 +2324,7 @@ return(
 const currentClient=clients.find(c=>c.id===selectedClient);
 if(!currentClient)return null;
 
-const currentStep=STEPS.find(s=>s.id===activeStep);
+const currentStep=activeStep==='overview'?null:STEPS.find(s=>s.id===activeStep);
 const stats=getClientStats(selectedClient);
 const progress=getClientProgress(selectedClient);
 const statusInfo=getStatusInfo(currentClient.status||'schema');
@@ -2333,6 +2362,10 @@ return(
 <div className="nav-item" onClick={()=>setActiveView('dashboard')}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
+</div>
+<div className={`nav-item ${activeStep==='overview'?'active':''}`} onClick={()=>setActiveStep('overview')}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Overzicht</span>
 </div>
 {STEPS.map(step=>(
 <div key={step.id} className={`nav-item ${activeStep===step.id?'active':''}`} onClick={()=>setActiveStep(step.id)}>
@@ -2375,9 +2408,205 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 
 <header className="header">
+{activeStep==='overview'?(
+<>
+<h1 className="title">📋 Overzicht</h1>
+<p className="subtitle">Complete status van {currentClient.name}</p>
+</>
+):(
+<>
 <h1 className="title">{currentStep.icon} {currentStep.name}</h1>
 <p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
+</>
+)}
 </header>
+
+{activeStep==='overview'&&(
+<div className="overview-content" style={{maxWidth:'900px'}}>
+
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(300px,1fr))',gap:'20px',marginBottom:'24px'}}>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>ℹ️</span> Client Informatie
+</h3>
+<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+{currentClient.city&&(
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>📍</span>
+<span style={{color:'var(--text)'}}>{currentClient.city}</span>
+</div>
+)}
+{currentClient.website&&(
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>🌐</span>
+<a href={currentClient.website} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',textDecoration:'none'}} onMouseEnter={(e)=>e.target.style.textDecoration='underline'} onMouseLeave={(e)=>e.target.style.textDecoration='none'}>
+Website
+</a>
+</div>
+)}
+{currentClient.seRanking&&(
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>📊</span>
+<a href={currentClient.seRanking} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',textDecoration:'none'}} onMouseEnter={(e)=>e.target.style.textDecoration='underline'} onMouseLeave={(e)=>e.target.style.textDecoration='none'}>
+SE Ranking
+</a>
+</div>
+)}
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>👤</span>
+<span style={{color:'var(--text)'}}>{getPMInfo(currentClient.projectManager||'none').label}</span>
+</div>
+</div>
+</div>
+
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>📈</span> Project Status
+</h3>
+<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>Status:</span>
+<div style={{display:'flex',alignItems:'center',gap:'6px',padding:'4px 12px',background:`var(--${statusInfo.color})`,color:'white',borderRadius:'12px',fontSize:'13px',fontWeight:'600'}}>
+<span>{statusInfo.icon}</span>
+<span>{statusInfo.label}</span>
+</div>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>Voortgang:</span>
+<span style={{color:'var(--text)',fontWeight:'600'}}>{progress}%</span>
+<span style={{color:'var(--text-light)'}}>({stats.completed}/{stats.total} taken)</span>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>Aangemaakt:</span>
+<span style={{color:'var(--text)'}}>{new Date(currentClient.id).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</span>
+</div>
+</div>
+</div>
+</div>
+
+{currentClient.budget>0&&(
+<div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
+⏱️ Tijd & Budget
+</h3>
+<div style={{fontSize:'14px',color:'#64748b'}}>
+Budget: <span style={{fontWeight:'700',color:'#3b82f6'}}>{currentClient.budget} uren</span>
+</div>
+</div>
+{(()=>{
+const monthNames=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+const now=new Date();
+const currentYear=now.getFullYear();
+const currentMonthIndex=now.getMonth();
+const monthsToShow=[];
+for(let i=0;i<6;i++){
+const monthIndex=(currentMonthIndex-i+12)%12;
+const year=currentMonthIndex-i<0?currentYear-1:currentYear;
+const monthKey=`${year}-${(monthIndex+1).toString().padStart(2,'0')}`;
+const monthLabel=`${monthNames[monthIndex]} ${year}`;
+const hours=timeTracking[`${currentClient.id}-${monthKey}`]||0;
+const isCurrent=i===0;
+monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
+}
+return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
+const percentage=currentClient.budget>0?Math.round((hours/currentClient.budget)*100):0;
+const barColor=percentage>=90?'#dc2626':percentage>=70?'#f59e0b':'#10b981';
+return(
+<div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'14px',fontWeight:'600',color:'#1e293b'}}>{monthLabel}</span>
+{isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'13px',color:'#64748b'}}>
+<span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {currentClient.budget}u
+</span>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();openTimeModal(currentClient);}} style={{padding:'4px 12px',background:'#10b981',color:'white',border:'none',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#059669'} onMouseLeave={(e)=>e.target.style.background='#10b981'}>
++ Toevoegen
+</button>
+)}
+</div>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{flex:1,height:'6px',background:'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
+</div>
+<span style={{fontSize:'12px',fontWeight:'600',color:barColor,minWidth:'40px',textAlign:'right'}}>{percentage}%</span>
+</div>
+</div>
+);
+});
+})()}
+</div>
+)}
+
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>📋</span> Voortgang per Stap
+</h3>
+<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+{STEPS.map(step=>{
+const stepStats=getStepStats(selectedClient,step.id);
+const stepProgress=stepStats.total>0?Math.round((stepStats.completed/stepStats.total)*100):0;
+const barColor=stepProgress===100?'#10b981':stepProgress>=70?'#3b82f6':stepProgress>=30?'#f59e0b':'#e2e8f0';
+return(
+<div key={step.id} style={{cursor:'pointer',padding:'12px',background:'var(--bg)',border:'1px solid var(--border)',borderRadius:'6px',transition:'all 0.2s'}} onClick={()=>setActiveStep(step.id)} onMouseEnter={(e)=>e.target.style.borderColor='var(--blue)'} onMouseLeave={(e)=>e.target.style.borderColor='var(--border)'}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'18px'}}>{step.icon}</span>
+<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{step.name}</span>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>{stepStats.completed}/{stepStats.total}</span>
+<span style={{fontSize:'14px',fontWeight:'700',color:stepProgress===100?'#10b981':'var(--text)'}}>{stepProgress}%</span>
+</div>
+</div>
+<div style={{width:'100%',height:'6px',background:'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{width:`${stepProgress}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
+</div>
+</div>
+);
+})}
+</div>
+</div>
+
+{(()=>{
+const clientNotes=getClientNotes(selectedClient);
+if(clientNotes.length===0)return null;
+return(
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>💬</span> Recente Notities ({clientNotes.length})
+</h3>
+{clientNotes.slice(0,5).map(note=>(
+<div key={note.id} style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
+{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+</div>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();if(confirm('Notitie verwijderen?'))deleteNote(`${selectedClient}-${note.id}`);}} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',fontSize:'16px',lineHeight:'1',opacity:'0.6',transition:'opacity 0.2s'}} onMouseEnter={(e)=>e.target.style.opacity='1'} onMouseLeave={(e)=>e.target.style.opacity='0.6'}>
+🗑️
+</button>
+)}
+</div>
+<div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
+</div>
+))}
+{clientNotes.length>5&&(
+<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginTop:'8px'}}>
++ {clientNotes.length-5} meer notitie(s)
+</div>
+)}
+</div>
+);
+})()}
+
+</div>
+)}
 
 {(()=>{
 const clientNotes=getClientNotes(selectedClient);
