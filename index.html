@@ -1963,6 +1963,10 @@ return(
 ))}
 </div>
 </div>
+<div className="input-group">
+<label className="input-label">Budget (uren)</label>
+<input type="number" className="modal-input" min="0" step="1" placeholder="0" value={editingClient.budget||''} onChange={(e)=>setEditingClient({...editingClient,budget:parseInt(e.target.value)||0})}/>
+</div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={editClient}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowEditModal(false);setEditingClient(null);}}>Annuleren</button>
