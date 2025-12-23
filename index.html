@@ -1506,7 +1506,9 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 }
 
 // DASHBOARD
+console.log('🔍 View check - activeView:',activeView,'selectedClient:',selectedClient);
 if(activeView==='dashboard'){
+console.log('✅ Rendering DASHBOARD view');
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
 
@@ -1679,7 +1681,7 @@ const progress=getClientProgress(client.id);
 const statusInfo=getStatusInfo(client.status||'schema');
 const pmInfo=getPMInfo(client.projectManager||'none');
 return(
-<div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
+<div key={client.id} className="client-card" onClick={()=>{console.log('🖱️ Client card clicked:',client.name,'ID:',client.id);setSelectedClient(client.id);setActiveView('roadmap');console.log('✅ State set - activeView: roadmap, selectedClient:',client.id);}}>
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
 {isAdmin&&(<button className="edit-client-btn" onClick={(e)=>{e.stopPropagation();setEditingClient({...client});setShowEditModal(true);}}>✏️</button>)}
 <div className="client-header">
@@ -2321,7 +2323,9 @@ return(
 }
 
 // ROADMAP VIEW
+console.log('🔍 Roadmap check - activeView:',activeView,'selectedClient:',selectedClient);
 if(activeView==='roadmap'||selectedClient){
+console.log('✅ Rendering ROADMAP view for client:',selectedClient);
 const currentClient=clients.find(c=>c.id===selectedClient);
 if(!currentClient){
 // Fallback to dashboard if client not found
