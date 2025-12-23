@@ -424,7 +424,7 @@ const [db,setDb]=useState(null);
 const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
 const [showArchive,setShowArchive]=useState(false);
-const [activeStep,setActiveStep]=useState('overview');
+const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
 const [customItems,setCustomItems]=useState({});
@@ -1506,9 +1506,7 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 }
 
 // DASHBOARD
-console.log('🔍 View check - activeView:',activeView,'selectedClient:',selectedClient);
 if(activeView==='dashboard'){
-console.log('✅ Rendering DASHBOARD view');
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
 
@@ -1681,7 +1679,7 @@ const progress=getClientProgress(client.id);
 const statusInfo=getStatusInfo(client.status||'schema');
 const pmInfo=getPMInfo(client.projectManager||'none');
 return(
-<div key={client.id} className="client-card" onClick={()=>{console.log('🖱️ Client card clicked:',client.name,'ID:',client.id);setSelectedClient(client.id);setActiveView('roadmap');console.log('✅ State set - activeView: roadmap, selectedClient:',client.id);}}>
+<div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
 {isAdmin&&(<button className="edit-client-btn" onClick={(e)=>{e.stopPropagation();setEditingClient({...client});setShowEditModal(true);}}>✏️</button>)}
 <div className="client-header">
@@ -2323,16 +2321,8 @@ return(
 }
 
 // ROADMAP VIEW
-console.log('🔍 Roadmap check - activeView:',activeView,'selectedClient:',selectedClient);
-if(activeView==='roadmap'||selectedClient){
-console.log('✅ Rendering ROADMAP view for client:',selectedClient);
 const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient){
-// Fallback to dashboard if client not found
-setActiveView('dashboard');
-setSelectedClient(null);
-return null;
-}
+if(!currentClient)return null;
 
 const currentStep=activeStep==='overview'?null:STEPS.find(s=>s.id===activeStep);
 const stats=getClientStats(selectedClient);
@@ -2424,12 +2414,10 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <p className="subtitle">Complete status van {currentClient.name}</p>
 </>
 ):(
-currentStep&&(
 <>
-<h1 className="title">{currentStep.icon} {currentStep.name}</h1>
+<h1 className="title">{currentStep?.icon} {currentStep?.name}</h1>
 <p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
 </>
-)
 )}
 </header>
 
@@ -2653,7 +2641,7 @@ return(
 );
 })()}
 
-{currentStep&&currentStep.type==='planning'?(
+{currentStep?.type==='planning'?(
 <>
 {clients.find(c=>c.id===selectedClient)?.budget>0&&(
 <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
@@ -2715,7 +2703,7 @@ return(
 })()}
 </div>
 )}
-{currentStep.months.map(month=>(
+{currentStep?.months?.map(month=>(
 <PlanningMonth
 key={month.key}
 month={month}
@@ -2734,7 +2722,7 @@ onShowDeadlineModal={(key,title,currentDeadline)=>{setDeadlineModalTask({key,tit
 </>
 ):(
 <>
-{currentStep.sections&&currentStep.sections.map(section=>(
+{currentStep?.sections&&currentStep.sections.map(section=>(
 <div key={section.title} className="section">
 <div className="section-header">{section.title}</div>
 {section.tasks.map(task=>{
@@ -2753,7 +2741,7 @@ return(
 </div>
 ))}
 
-{currentStep&&(currentStep.type==='custom'||currentStep.type==='hybrid')&&(
+{(currentStep?.type==='custom'||currentStep?.type==='hybrid')&&(
 <div className="section">
 <div className="section-header">
 {currentStep.type==='hybrid'?currentStep.customSection.title:'Custom Items'}
@@ -2997,10 +2985,6 @@ setItemModalData({});
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
 );
-}
-
-// Return null if no view matches (shouldn't happen)
-return null;
 }
 
 ReactDOM.render(<App/>,document.getElementById('root'));
