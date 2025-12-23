@@ -949,10 +949,16 @@ console.log('✅ Hours added:',clientId,hours,'Total:',newHours);
 };
 
 const openTimeModal=(client)=>{
-if(!isAdmin)return;
+console.log('🕐 openTimeModal called with client:',client?.name);
+if(!isAdmin){
+console.log('❌ Not admin, returning');
+return;
+}
+console.log('✅ Setting time modal state');
 setTimeModalClient(client);
 setTimeModalHours('');
 setShowTimeModal(true);
+console.log('✅ Time modal should now be visible');
 };
 
 // RAPPORTAGE FUNCTIONS
@@ -1520,6 +1526,7 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 
 // DASHBOARD
 if(activeView==='dashboard'){
+console.log('📊 Dashboard rendered, isAdmin:',isAdmin);
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
 
@@ -1743,7 +1750,7 @@ return(
 <span style={{fontSize:'12px',fontWeight:'600',color:remaining<budget*0.3?'#dc2626':'var(--text)'}}>{remaining}u</span>
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'6px',background:'var(--green-bg)',color:'var(--green)',border:'1px solid var(--green)',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>{e.target.style.background='var(--green)';e.target.style.color='white';}} onMouseLeave={(e)=>{e.target.style.background='var(--green-bg)';e.target.style.color='var(--green)';}}>
+<button onClick={(e)=>{console.log('🖱️ Dashboard hours button clicked for:',client.name);e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'6px',background:'var(--green-bg)',color:'var(--green)',border:'1px solid var(--green)',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>{e.target.style.background='var(--green)';e.target.style.color='white';}} onMouseLeave={(e)=>{e.target.style.background='var(--green-bg)';e.target.style.color='var(--green)';}}>
 + Uren toevoegen
 </button>
 )}
