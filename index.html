@@ -2424,10 +2424,12 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <p className="subtitle">Complete status van {currentClient.name}</p>
 </>
 ):(
+currentStep&&(
 <>
 <h1 className="title">{currentStep.icon} {currentStep.name}</h1>
 <p className="subtitle">Voortgang: {stats.completed} / {stats.total} taken ({progress}%)</p>
 </>
+)
 )}
 </header>
 
@@ -2618,7 +2620,7 @@ return(
 </div>
 )}
 
-{(()=>{
+{activeStep!=='overview'&&(()=>{
 const clientNotes=getClientNotes(selectedClient);
 if(clientNotes.length===0)return null;
 return(
@@ -2651,7 +2653,7 @@ return(
 );
 })()}
 
-{currentStep.type==='planning'?(
+{currentStep&&currentStep.type==='planning'?(
 <>
 {clients.find(c=>c.id===selectedClient)?.budget>0&&(
 <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
@@ -2751,7 +2753,7 @@ return(
 </div>
 ))}
 
-{(currentStep.type==='custom'||currentStep.type==='hybrid')&&(
+{currentStep&&(currentStep.type==='custom'||currentStep.type==='hybrid')&&(
 <div className="section">
 <div className="section-header">
 {currentStep.type==='hybrid'?currentStep.customSection.title:'Custom Items'}
