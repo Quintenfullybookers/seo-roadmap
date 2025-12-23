@@ -1419,7 +1419,20 @@ return{total:totalTasks,completed:completedTasks};
 const getStatusCounts=()=>{
 const counts={};
 STATUS_OPTIONS.forEach(opt=>counts[opt.key]=0);
-clients.forEach(client=>{
+// Start with all clients
+let filtered=clients;
+// Filter by archive status
+if(showArchive){
+filtered=filtered.filter(c=>c.archived===true);
+}else{
+filtered=filtered.filter(c=>!c.archived);
+}
+// Apply PM filter if active
+if(pmFilter!=='all'){
+filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
+}
+// Count statuses in filtered clients
+filtered.forEach(client=>{
 const status=client.status||'schema';
 counts[status]=(counts[status]||0)+1;
 });
@@ -1576,10 +1589,18 @@ return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
 
 <div style={{display:'flex',gap:'12px',marginBottom:'24px'}}>
 <button onClick={()=>setShowArchive(false)} style={{flex:1,padding:'12px 24px',background:!showArchive?'var(--blue)':'white',color:!showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
-📊 Actieve Projecten ({clients.filter(c=>!c.archived).length})
+📊 Actieve Projecten ({(()=>{
+let filtered=clients.filter(c=>!c.archived);
+if(pmFilter!=='all')filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
+return filtered.length;
+})()})
 </button>
 <button onClick={()=>setShowArchive(true)} style={{flex:1,padding:'12px 24px',background:showArchive?'var(--blue)':'white',color:showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
-📦 Archief ({clients.filter(c=>c.archived).length})
+📦 Archief ({(()=>{
+let filtered=clients.filter(c=>c.archived);
+if(pmFilter!=='all')filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
+return filtered.length;
+})()})
 </button>
 </div>
 
