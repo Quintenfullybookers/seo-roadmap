@@ -447,7 +447,7 @@ const [timeModalHours,setTimeModalHours]=useState('');
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
-const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none',budget:0});
+const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
@@ -694,7 +694,7 @@ const updatedClients=[...clients,client];
 setClients(updatedClients);
 saveData({tasks,customItems,planningItems,clients:updatedClients});
 setShowModal(false);
-setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none',budget:0});
+setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
 setToast({type:'success',message:'✓ Klant toegevoegd'});
 };
 
@@ -1692,6 +1692,7 @@ return(
 {client.city&&<span>📍 {client.city}</span>}
 {client.website&&(<><br/><a href={client.website} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>🌐 Website</a></>)}
 {client.seRanking&&(<a href={client.seRanking} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📊 SE Ranking</a>)}
+{client.lookerStudio&&(<a href={client.lookerStudio} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📈 Looker Studio</a>)}
 {(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'#666'}}>💬 {nc}</span>:null;})()}
 </div>
 {client.budget>0&&(()=>{
@@ -1903,6 +1904,10 @@ return(
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.seRanking} onChange={(e)=>setNewClient({...newClient,seRanking:e.target.value})}/>
 </div>
 <div className="input-group">
+<label className="input-label">Looker Studio Link</label>
+<input type="text" className="modal-input" placeholder="https://..." value={newClient.lookerStudio} onChange={(e)=>setNewClient({...newClient,lookerStudio:e.target.value})}/>
+</div>
+<div className="input-group">
 <label className="input-label">Plaats</label>
 <input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
 </div>
@@ -1934,7 +1939,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -1955,6 +1960,10 @@ return(
 <div className="input-group">
 <label className="input-label">SE Ranking Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={editingClient.seRanking||''} onChange={(e)=>setEditingClient({...editingClient,seRanking:e.target.value})}/>
+</div>
+<div className="input-group">
+<label className="input-label">Looker Studio Link</label>
+<input type="text" className="modal-input" placeholder="https://..." value={editingClient.lookerStudio||''} onChange={(e)=>setEditingClient({...editingClient,lookerStudio:e.target.value})}/>
 </div>
 <div className="input-group">
 <label className="input-label">Plaats</label>
@@ -2452,6 +2461,14 @@ SE Ranking
 </a>
 </div>
 )}
+{currentClient.lookerStudio&&(
+<div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
+<span style={{color:'var(--text-light)'}}>📈</span>
+<a href={currentClient.lookerStudio} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',textDecoration:'none'}} onMouseEnter={(e)=>e.target.style.textDecoration='underline'} onMouseLeave={(e)=>e.target.style.textDecoration='none'}>
+Looker Studio
+</a>
+</div>
+)}
 <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
 <span style={{color:'var(--text-light)'}}>👤</span>
 <span style={{color:'var(--text)'}}>{getPMInfo(currentClient.projectManager||'none').label}</span>
@@ -2825,7 +2842,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
 </div>
 </div>
 </div>
