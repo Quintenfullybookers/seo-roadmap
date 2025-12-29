@@ -1605,22 +1605,67 @@ return Object.values(notes).filter(n=>n.clientId===clientId).sort((a,b)=>new Dat
 };
 
 const deleteNote=(noteKey)=>{
-console.log('🗑️ DELETE NOTE CALLED');
-console.log('noteKey:', noteKey);
-console.log('isAdmin:', isAdmin);
+console.log('');
+console.log('═══════════════════════════════════════');
+console.log('🗑️ DELETE NOTE FUNCTION CALLED');
+console.log('═══════════════════════════════════════');
+console.log('📋 Input noteKey:', noteKey);
+console.log('👤 isAdmin:', isAdmin);
+console.log('📝 Total notes in state:', Object.keys(notes).length);
+console.log('🔑 All note keys:', Object.keys(notes));
+console.log('');
+
 if(!isAdmin){
-console.log('❌ Not admin, cannot delete');
+console.log('❌ FAILED: Not admin');
+setToast({type:'error',message:'❌ Alleen admin kan notities verwijderen'});
 return;
 }
-console.log('Current notes before delete:', Object.keys(notes));
+
+console.log('✅ Admin check passed');
+console.log('🔍 Looking for note with key:', noteKey);
+console.log('📊 Note exists?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
+
+if(!notes[noteKey]){
+console.log('');
+console.log('❌❌❌ NOTE NOT FOUND! ❌❌❌');
+console.log('Requested key:', noteKey);
+console.log('Available keys:', Object.keys(notes));
+console.log('');
+setToast({type:'error',message:'❌ Notitie niet gevonden (key mismatch)'});
+return;
+}
+
+console.log('✅ Note found:', notes[noteKey]);
+console.log('');
+console.log('🔄 Creating new notes object without this note...');
 const newNotes={...notes};
 delete newNotes[noteKey];
-console.log('Current notes after delete:', Object.keys(newNotes));
+console.log('✅ Note removed from new object');
+console.log('📊 New notes count:', Object.keys(newNotes).length, '(was', Object.keys(notes).length + ')');
+console.log('');
+
+console.log('💾 Updating state...');
 setNotes(newNotes);
-console.log('Saving to Firebase...');
+console.log('✅ State updated');
+console.log('');
+
+console.log('☁️ Saving to Firebase...');
+try{
 saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
-console.log('✅ Note deleted successfully');
+console.log('✅ Firebase save initiated');
+console.log('');
+console.log('═══════════════════════════════════════');
+console.log('✅ DELETE COMPLETED SUCCESSFULLY');
+console.log('═══════════════════════════════════════');
+console.log('');
 setToast({type:'success',message:'✓ Notitie verwijderd'});
+}catch(err){
+console.log('');
+console.log('❌❌❌ ERROR DURING SAVE ❌❌❌');
+console.error('Error details:', err);
+console.log('');
+setToast({type:'error',message:'❌ Fout bij opslaan: ' + err.message});
+}
 };
 
 // PDF EXPORT FUNCTION
@@ -2436,7 +2481,7 @@ return(
 + Uren toevoegen
 </button>
 )}
-{isAdmin&&(()=>{
+{(()=>{
 const entries=getClientTimeEntries(client.id);
 if(entries.length===0)return null;
 const isExpanded=expandedTimeClient===client.id;
@@ -2457,7 +2502,9 @@ return(
 <div className="time-entry-desc">{entry.description}</div>
 <div className="time-entry-date">{new Date(entry.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
 </div>
+{isAdmin&&(
 <button className="time-entry-delete" onClick={(e)=>{e.stopPropagation();deleteTimeEntry(client.id,entry.id);}}>🗑️</button>
+)}
 </div>
 ))}
 </div>
@@ -3519,7 +3566,7 @@ return(
 </div>
 <span style={{fontSize:'12px',fontWeight:'600',color:barColor,minWidth:'40px',textAlign:'right'}}>{percentage}%</span>
 </div>
-{isAdmin&&(()=>{
+{(()=>{
 const entries=getClientTimeEntriesForMonth(currentClient.id,monthKey);
 if(entries.length===0)return null;
 const isExpanded=expandedMonth===monthKey;
@@ -3546,9 +3593,11 @@ return step?<span style={{marginLeft:'8px'}}>• {step.icon} {step.name}</span>:
 })()}
 </div>
 </div>
+{isAdmin&&(
 <button style={{padding:'4px 8px',background:'#94a3b8',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',fontSize:'11px',transition:'all 0.2s',flexShrink:0}} onClick={(e)=>{e.stopPropagation();deleteTimeEntry(currentClient.id,entry.id);}} onMouseEnter={(e)=>e.target.style.background='#64748b'} onMouseLeave={(e)=>e.target.style.background='#94a3b8'}>
 🗑️
 </button>
+)}
 </div>
 ))}
 </div>
@@ -3618,16 +3667,35 @@ return(
 <button onClick={(e)=>{
 e.stopPropagation();
 const noteKey=`${selectedClient}-${note.id}`;
-console.log('🗑️ Delete button clicked');
-console.log('Note key:', noteKey);
-console.log('Note text:', note.text);
-const confirmed=confirm('Notitie verwijderen?');
+console.log('🗑️ DELETE BUTTON CLICKED');
+console.log('selectedClient:', selectedClient);
+console.log('note.id:', note.id);
+console.log('noteKey:', noteKey);
+console.log('All notes keys:', Object.keys(notes));
+console.log('Does note exist in notes?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
+if(notes[noteKey]){
+console.log('✅ Note found:', notes[noteKey]);
+}else{
+console.log('❌ Note NOT found! Available keys:', Object.keys(notes));
+}
+alert(`🔍 DEBUG INFO:
+
+Client: ${selectedClient}
+Note ID: ${note.id}
+Note Key: ${noteKey}
+Note exists: ${notes[noteKey] ? '✅ YES' : '❌ NO'}
+
+Total notes in system: ${Object.keys(notes).length}
+
+Check console (F12) for all keys`);
+const confirmed=confirm('Weet je zeker dat je deze notitie wilt verwijderen?');
 console.log('User confirmed:', confirmed);
 if(confirmed){
+console.log('🔥 Calling deleteNote with key:', noteKey);
 deleteNote(noteKey);
 }
-}} style={{background:'#94a3b8',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#64748b'} onMouseLeave={(e)=>e.target.style.background='#94a3b8'} title="Verwijderen">
-🗑️
+}} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
+🗑️ <span>Verwijder</span>
 </button>
 )}
 </div>
@@ -3665,16 +3733,35 @@ return(
 <button onClick={(e)=>{
 e.stopPropagation();
 const noteKey=`${selectedClient}-${note.id}`;
-console.log('🗑️ Delete button clicked');
-console.log('Note key:', noteKey);
-console.log('Note text:', note.text);
-const confirmed=confirm('Notitie verwijderen?');
+console.log('🗑️ DELETE BUTTON CLICKED');
+console.log('selectedClient:', selectedClient);
+console.log('note.id:', note.id);
+console.log('noteKey:', noteKey);
+console.log('All notes keys:', Object.keys(notes));
+console.log('Does note exist in notes?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
+if(notes[noteKey]){
+console.log('✅ Note found:', notes[noteKey]);
+}else{
+console.log('❌ Note NOT found! Available keys:', Object.keys(notes));
+}
+alert(`🔍 DEBUG INFO:
+
+Client: ${selectedClient}
+Note ID: ${note.id}
+Note Key: ${noteKey}
+Note exists: ${notes[noteKey] ? '✅ YES' : '❌ NO'}
+
+Total notes in system: ${Object.keys(notes).length}
+
+Check console (F12) for all keys`);
+const confirmed=confirm('Weet je zeker dat je deze notitie wilt verwijderen?');
 console.log('User confirmed:', confirmed);
 if(confirmed){
+console.log('🔥 Calling deleteNote with key:', noteKey);
 deleteNote(noteKey);
 }
-}} style={{background:'#94a3b8',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#64748b'} onMouseLeave={(e)=>e.target.style.background='#94a3b8'} title="Verwijderen">
-🗑️
+}} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
+🗑️ <span>Verwijder</span>
 </button>
 )}
 </div>
