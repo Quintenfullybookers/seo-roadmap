@@ -595,11 +595,11 @@ const key=`${client.id}-${month.key}`;
 const items=updatedPlanningItems[key]||[];
 
 // Check if "Maandelijkse SEO Check" already exists
-const exists=items.some(item=>item.text==='Maandelijkse SEO Check');
-
-if(!exists){
-// Add it with special ID format so we can identify it
+const existingItem=items.find(item=>item.text==='Maandelijkse SEO Check');
 const lastWorkday=getLastWorkdayOfMonth(month.key);
+
+if(!existingItem){
+// Add new monthly check
 const newItem={
 id:`monthly-check-${month.key}`,
 text:'Maandelijkse SEO Check',
@@ -613,6 +613,14 @@ updatedDeadlines[deadlineKey]=lastWorkday;
 
 hasChanges=true;
 console.log(`✅ Added monthly check for ${client.name} - ${month.label} (${lastWorkday})`);
+}else{
+// Item exists, ensure deadline is set to last workday
+const deadlineKey=`${client.id}-planning-${month.key}-${existingItem.id}`;
+if(!updatedDeadlines[deadlineKey]||updatedDeadlines[deadlineKey]!==lastWorkday){
+updatedDeadlines[deadlineKey]=lastWorkday;
+hasChanges=true;
+console.log(`✅ Updated deadline for ${client.name} - ${month.label} to ${lastWorkday}`);
+}
 }
 });
 });
@@ -621,7 +629,7 @@ if(hasChanges){
 setPlanningItems(updatedPlanningItems);
 setDeadlines(updatedDeadlines);
 saveData({tasks,customItems,planningItems:updatedPlanningItems,notes,deadlines:updatedDeadlines,clients,timeTracking});
-console.log('✅ Monthly SEO checks initialized');
+console.log('✅ Monthly SEO checks synchronized');
 }
 },[clients.length,isAdmin,db]);
 
@@ -1557,11 +1565,21 @@ return Object.values(notes).filter(n=>n.clientId===clientId).sort((a,b)=>new Dat
 };
 
 const deleteNote=(noteKey)=>{
-if(!isAdmin)return;
+console.log('🗑️ DELETE NOTE CALLED');
+console.log('noteKey:', noteKey);
+console.log('isAdmin:', isAdmin);
+if(!isAdmin){
+console.log('❌ Not admin, cannot delete');
+return;
+}
+console.log('Current notes before delete:', Object.keys(notes));
 const newNotes={...notes};
 delete newNotes[noteKey];
+console.log('Current notes after delete:', Object.keys(newNotes));
 setNotes(newNotes);
-saveData({tasks,customItems,planningItems,notes:newNotes,clients});
+console.log('Saving to Firebase...');
+saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
+console.log('✅ Note deleted successfully');
 setToast({type:'success',message:'✓ Notitie verwijderd'});
 };
 
@@ -3332,7 +3350,18 @@ return(
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();if(confirm('Notitie verwijderen?'))deleteNote(`${selectedClient}-${note.id}`);}} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',fontSize:'16px',lineHeight:'1',opacity:'0.6',transition:'opacity 0.2s'}} onMouseEnter={(e)=>e.target.style.opacity='1'} onMouseLeave={(e)=>e.target.style.opacity='0.6'}>
+<button onClick={(e)=>{
+e.stopPropagation();
+const noteKey=`${selectedClient}-${note.id}`;
+console.log('🗑️ Delete button clicked');
+console.log('Note key:', noteKey);
+console.log('Note text:', note.text);
+const confirmed=confirm('Notitie verwijderen?');
+console.log('User confirmed:', confirmed);
+if(confirmed){
+deleteNote(noteKey);
+}
+}} style={{background:'#94a3b8',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#64748b'} onMouseLeave={(e)=>e.target.style.background='#94a3b8'} title="Verwijderen">
 🗑️
 </button>
 )}
@@ -3368,7 +3397,18 @@ return(
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();if(confirm('Notitie verwijderen?'))deleteNote(`${selectedClient}-${note.id}`);}} style={{background:'none',border:'none',cursor:'pointer',padding:'4px',fontSize:'16px',lineHeight:'1',opacity:'0.6',transition:'opacity 0.2s'}} onMouseEnter={(e)=>e.target.style.opacity='1'} onMouseLeave={(e)=>e.target.style.opacity='0.6'}>
+<button onClick={(e)=>{
+e.stopPropagation();
+const noteKey=`${selectedClient}-${note.id}`;
+console.log('🗑️ Delete button clicked');
+console.log('Note key:', noteKey);
+console.log('Note text:', note.text);
+const confirmed=confirm('Notitie verwijderen?');
+console.log('User confirmed:', confirmed);
+if(confirmed){
+deleteNote(noteKey);
+}
+}} style={{background:'#94a3b8',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600',transition:'all 0.2s'}} onMouseEnter={(e)=>e.target.style.background='#64748b'} onMouseLeave={(e)=>e.target.style.background='#94a3b8'} title="Verwijderen">
 🗑️
 </button>
 )}
