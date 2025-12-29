@@ -47,6 +47,37 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
 .status-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
+.dashboard-stats{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
+.dashboard-stats h3{font-size:20px;margin-bottom:20px;font-weight:700;display:flex;align-items:center;gap:8px}
+.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
+.stat-card{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.2);transition:all 0.3s ease}
+.stat-card:hover{background:rgba(255,255,255,0.25);transform:translateY(-4px)}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1}
+.stat-label{font-size:13px;opacity:0.9;font-weight:500}
+.stat-subtitle{font-size:12px;opacity:0.7;margin-top:4px}
+.stat-icon{font-size:24px;margin-bottom:8px}
+.stat-card.urgent{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4)}
+.stat-card.urgent:hover{background:rgba(239,68,68,0.3)}
+.notification-bell{position:relative;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:8px}
+.notification-bell:hover{background:var(--gray-bg)}
+.notification-badge{position:absolute;top:4px;right:4px;background:var(--red);color:white;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
+@keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
+.notification-dropdown{position:absolute;top:100%;right:0;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);width:380px;max-height:500px;overflow-y:auto;z-index:1000;margin-top:8px}
+.notification-header{padding:16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between}
+.notification-item{padding:16px;border-bottom:1px solid var(--border);transition:background 0.2s;cursor:pointer}
+.notification-item:last-child{border-bottom:none}
+.notification-item:hover{background:var(--gray-bg)}
+.notification-item-header{display:flex;align-items:center;gap:8px;margin-bottom:4px}
+.notification-icon{font-size:18px}
+.notification-title{font-weight:600;font-size:13px;color:var(--text)}
+.notification-message{font-size:13px;color:var(--text-light);line-height:1.4;margin-bottom:8px}
+.notification-actions{display:flex;gap:8px}
+.notification-btn{padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;border:none;cursor:pointer;transition:all 0.2s}
+.notification-btn.dismiss{background:var(--gray-bg);color:var(--text)}
+.notification-btn.dismiss:hover{background:var(--border)}
+.notification-btn.view{background:var(--blue-light);color:var(--blue)}
+.notification-btn.view:hover{background:var(--blue);color:white}
+.notification-empty{padding:40px 20px;text-align:center;color:var(--text-light);font-size:14px}
 .status-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:20px;text-align:center;transition:all .2s;cursor:pointer}
 .status-card:hover{box-shadow:var(--shadow);transform:translateY(-2px)}
 .status-card.active{border-width:2px;box-shadow:var(--shadow)}
@@ -452,6 +483,8 @@ const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerS
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
+const [showNotifications,setShowNotifications]=useState(false);
+const [dismissedNotifications,setDismissedNotifications]=useState(JSON.parse(localStorage.getItem('dismissedNotifications')||'[]'));
 const [sortOrder,setSortOrder]=useState('name-asc');
 const [expandedPlanning,setExpandedPlanning]=useState({});
 const [clientToDelete,setClientToDelete]=useState(null);
@@ -808,6 +841,175 @@ upcoming.push({key,date:deadlines[key],urgency,clientName:client.name,itemText})
 }
 });
 return upcoming.sort((a,b)=>new Date(a.date)-new Date(b.date));
+};
+
+// DASHBOARD STATISTICS
+const getDashboardStats=()=>{
+const now=new Date();
+const currentYear=now.getFullYear();
+const currentMonth=(now.getMonth()+1).toString().padStart(2,'0');
+const currentMonthKey=`${currentYear}-${currentMonth}`;
+
+let totalBudget=0;
+let totalHours=0;
+let totalProgress=0;
+let completedTasks=0;
+let totalTasks=0;
+let urgentDeadlines=0;
+
+const activeClients=clients.filter(c=>!c.archived);
+
+activeClients.forEach(client=>{
+// Budget & hours
+if(client.budget>0){
+totalBudget+=client.budget;
+const monthKey=`${client.id}-${currentMonthKey}`;
+const hours=timeTracking[monthKey]||0;
+totalHours+=hours;
+}
+
+// Progress
+const progress=getClientProgress(client.id);
+totalProgress+=progress;
+
+// Tasks
+const stats=getClientStats(client.id);
+completedTasks+=stats.completed;
+totalTasks+=stats.total;
+});
+
+// Urgent deadlines (next 7 days)
+const upcoming=getAllUpcomingDeadlines();
+const sevenDaysFromNow=new Date();
+sevenDaysFromNow.setDate(sevenDaysFromNow.getDate()+7);
+urgentDeadlines=upcoming.filter(item=>{
+const itemDate=new Date(item.date);
+return itemDate<=sevenDaysFromNow;
+}).length;
+
+const avgProgress=activeClients.length>0?Math.round(totalProgress/activeClients.length):0;
+const budgetPercentage=totalBudget>0?Math.round((totalHours/totalBudget)*100):0;
+
+return{
+totalBudget,
+totalHours,
+budgetPercentage,
+avgProgress,
+completedTasks,
+totalTasks,
+urgentDeadlines,
+activeProjects:activeClients.length
+};
+};
+
+// NOTIFICATIONS SYSTEM
+const getNotifications=()=>{
+const now=new Date();
+const notifications=[];
+const currentYear=now.getFullYear();
+const currentMonth=(now.getMonth()+1).toString().padStart(2,'0');
+const currentMonthKey=`${currentYear}-${currentMonth}`;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+// Budget warnings (>80%)
+if(client.budget>0){
+const monthKey=`${client.id}-${currentMonthKey}`;
+const hours=timeTracking[monthKey]||0;
+const percentage=(hours/client.budget)*100;
+if(percentage>=90){
+const id=`budget-critical-${client.id}`;
+if(!dismissedNotifications.includes(id)){
+notifications.push({
+id,
+type:'budget-critical',
+icon:'🔴',
+title:'Budget kritiek!',
+message:`${client.name}: ${Math.round(percentage)}% verbruikt (${hours}u / ${client.budget}u)`,
+clientId:client.id,
+priority:1
+});
+}
+}else if(percentage>=80){
+const id=`budget-warning-${client.id}`;
+if(!dismissedNotifications.includes(id)){
+notifications.push({
+id,
+type:'budget-warning',
+icon:'⚠️',
+title:'Budget waarschuwing',
+message:`${client.name}: ${Math.round(percentage)}% verbruikt (${hours}u / ${client.budget}u)`,
+clientId:client.id,
+priority:2
+});
+}
+}
+}
+
+// Urgent deadlines (<3 days)
+const upcoming=getAllUpcomingDeadlines().filter(item=>item.clientId===client.id);
+upcoming.forEach(item=>{
+const itemDate=new Date(item.date);
+const daysUntil=Math.ceil((itemDate-now)/(1000*60*60*24));
+if(daysUntil<=0){
+const id=`deadline-overdue-${item.key}`;
+if(!dismissedNotifications.includes(id)){
+notifications.push({
+id,
+type:'deadline-overdue',
+icon:'🔴',
+title:'Deadline gemist!',
+message:`${client.name}: "${item.text}"`,
+clientId:client.id,
+priority:1
+});
+}
+}else if(daysUntil<=3){
+const id=`deadline-urgent-${item.key}`;
+if(!dismissedNotifications.includes(id)){
+notifications.push({
+id,
+type:'deadline-urgent',
+icon:'⚠️',
+title:`Deadline over ${daysUntil} dag${daysUntil>1?'en':''}`,
+message:`${client.name}: "${item.text}"`,
+clientId:client.id,
+priority:2
+});
+}
+}
+});
+
+// No activity for >14 days
+const clientNotes=(notes[client.id]||[]);
+if(clientNotes.length>0){
+const lastNote=clientNotes[clientNotes.length-1];
+const lastActivity=new Date(lastNote.date);
+const daysSince=Math.ceil((now-lastActivity)/(1000*60*60*24));
+if(daysSince>=14){
+const id=`inactive-${client.id}`;
+if(!dismissedNotifications.includes(id)){
+notifications.push({
+id,
+type:'inactive',
+icon:'💤',
+title:'Geen activiteit',
+message:`${client.name}: ${daysSince} dagen geen update`,
+clientId:client.id,
+priority:3
+});
+}
+}
+}
+});
+
+// Sort by priority
+return notifications.sort((a,b)=>a.priority-b.priority);
+};
+
+const dismissNotification=(id)=>{
+const updated=[...dismissedNotifications,id];
+setDismissedNotifications(updated);
+localStorage.setItem('dismissedNotifications',JSON.stringify(updated));
 };
 
 // AGENDA FUNCTIONS
@@ -1483,6 +1685,9 @@ const remainingA=(a.budget||0)-getClientHours(a.id);
 const remainingB=(b.budget||0)-getClientHours(b.id);
 return remainingB-remainingA;
 });
+}else{
+// Fallback: always sort alphabetically if no valid sortOrder
+filtered=[...filtered].sort((a,b)=>a.name.localeCompare(b.name,'nl',{numeric:true,sensitivity:'base'}));
 }
 return filtered;
 };
@@ -1523,6 +1728,8 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 if(activeView==='dashboard'){
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
+console.log('🔍 Dashboard - Current sortOrder:',sortOrder);
+console.log('🔍 Filtered clients order:',filteredClients.map(c=>c.name));
 
 return(
 <div className={`app ${!isAdmin?'viewer-mode':''}`}>
@@ -1553,6 +1760,53 @@ return(
 </span>
 </div>
 )}
+{/* NOTIFICATIONS BELL */}
+{(()=>{
+const allNotifications=getNotifications();
+return(
+<div style={{padding:'0 24px 16px',borderBottom:'1px solid var(--border)',marginBottom:'16px'}}>
+<div style={{position:'relative'}}>
+<div className="notification-bell" onClick={()=>setShowNotifications(!showNotifications)} style={{width:'100%',justifyContent:'flex-start'}}>
+<span style={{fontSize:'20px'}}>🔔</span>
+<span style={{fontSize:'13px',fontWeight:'600',marginLeft:'4px'}}>Notificaties</span>
+{allNotifications.length>0&&<span className="notification-badge">{allNotifications.length}</span>}
+</div>
+{showNotifications&&(
+<div className="notification-dropdown" style={{left:0}}>
+<div className="notification-header">
+<span>🔔 Notificaties</span>
+{allNotifications.length>0&&<span style={{fontSize:'12px',color:'var(--text-light)'}}>{allNotifications.length}</span>}
+</div>
+{allNotifications.length===0?(
+<div className="notification-empty">
+✨ Alles is up-to-date!<br/>
+<span style={{fontSize:'12px'}}>Geen notificaties</span>
+</div>
+):(
+allNotifications.map(notif=>(
+<div key={notif.id} className="notification-item">
+<div className="notification-item-header">
+<span className="notification-icon">{notif.icon}</span>
+<span className="notification-title">{notif.title}</span>
+</div>
+<div className="notification-message">{notif.message}</div>
+<div className="notification-actions">
+<button className="notification-btn dismiss" onClick={(e)=>{e.stopPropagation();dismissNotification(notif.id);setShowNotifications(true);}}>
+Negeren
+</button>
+<button className="notification-btn view" onClick={(e)=>{e.stopPropagation();setSelectedClient(notif.clientId);setActiveView('overview');setShowNotifications(false);}}>
+Bekijken
+</button>
+</div>
+</div>
+))
+)}
+</div>
+)}
+</div>
+</div>
+);
+})()}
 <nav>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
@@ -1637,6 +1891,42 @@ return(
 
 {!showArchive&&(
 <>
+{/* DASHBOARD STATISTICS WIDGET */}
+{(()=>{
+const stats=getDashboardStats();
+return(
+<div className="dashboard-stats">
+<h3>📊 Overzicht deze maand</h3>
+<div className="stats-grid">
+<div className="stat-card">
+<div className="stat-icon">💰</div>
+<div className="stat-value">{stats.totalHours}u</div>
+<div className="stat-label">Gewerkte uren</div>
+<div className="stat-subtitle">van {stats.totalBudget}u budget ({stats.budgetPercentage}%)</div>
+</div>
+<div className="stat-card">
+<div className="stat-icon">📈</div>
+<div className="stat-value">{stats.avgProgress}%</div>
+<div className="stat-label">Gem. voortgang</div>
+<div className="stat-subtitle">{stats.activeProjects} actieve projecten</div>
+</div>
+<div className="stat-card">
+<div className="stat-icon">✅</div>
+<div className="stat-value">{stats.completedTasks}</div>
+<div className="stat-label">Afgeronde taken</div>
+<div className="stat-subtitle">van {stats.totalTasks} totaal</div>
+</div>
+<div className={`stat-card ${stats.urgentDeadlines>0?'urgent':''}`}>
+<div className="stat-icon">{stats.urgentDeadlines>0?'⚠️':'✨'}</div>
+<div className="stat-value">{stats.urgentDeadlines}</div>
+<div className="stat-label">Urgent</div>
+<div className="stat-subtitle">Deadlines komende 7 dagen</div>
+</div>
+</div>
+</div>
+);
+})()}
+
 <div className="status-overview">
 {STATUS_OPTIONS.map(status=>(
 <div key={status.key} className={`status-card ${status.key} ${statusFilter===status.key?'active':''}`} onClick={()=>setStatusFilter(statusFilter===status.key?'all':status.key)}>
@@ -1667,7 +1957,6 @@ Alle PMs
 <div className="sort-section" style={{minWidth:'250px'}}>
 <div className="sort-label">Sorteren:</div>
 <select className="sort-dropdown" value={sortOrder} onChange={(e)=>setSortOrder(e.target.value)}>
-<option value="default">Standaard (nieuwste eerst)</option>
 <option value="name-asc">📝 A → Z (Naam)</option>
 <option value="name-desc">📝 Z → A (Naam)</option>
 <option value="progress-asc">📊 Laag → Hoog (Voortgang)</option>
