@@ -1309,6 +1309,46 @@ grouped.later.push(item);
 return grouped;
 };
 
+const getAllContentItems=()=>{
+const contentItems=[];
+clients.forEach(client=>{
+if(client.archived)return;
+const items=customItems[`${client.id}-4`]||[];
+items.forEach(item=>{
+contentItems.push({
+key:`${client.id}-4-${item.id}`,
+clientId:client.id,
+clientName:client.name,
+keyword:item.keyword||'',
+url:item.url||'',
+words:item.words||'',
+deadline:item.deadline||'',
+completed:item.completed||false,
+stepId:4,
+itemId:item.id
+});
+});
+});
+contentItems.sort((a,b)=>{
+if(!a.deadline&&!b.deadline)return 0;
+if(!a.deadline)return 1;
+if(!b.deadline)return-1;
+const parseDeadline=(dl)=>{
+if(dl.includes('-'))return new Date(dl);
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=dl.split(' ');
+if(parts.length===2&&months[parts[0]]!==undefined){
+const month=months[parts[0]];
+const year=parseInt(parts[1]);
+return new Date(year,month,1);
+}
+return new Date(dl);
+};
+return parseDeadline(a.deadline)-parseDeadline(b.deadline);
+});
+return contentItems;
+};
+
 const toggleAgendaItem=(item)=>{
 if(!isAdmin)return;
 console.log('🔄 Toggle agenda item:',item);
@@ -2171,6 +2211,20 @@ return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
 </div>
 )}
 {isAdmin&&(
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-4`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
+</div>
+)}
+{isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
 <span className="nav-text">Rapportage</span>
@@ -2906,6 +2960,209 @@ return(
 );
 }
 
+// CONTENT CREATIE VIEW
+if(activeView==='content'){
+const contentItems=getAllContentItems();
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
+</div>
+{isAdmin&&(
+<div className="save-status">
+<div className={`save-status-dot ${saveStatus}`}/>
+<span>
+{saveStatus==='saving'&&'Opslaan...'}
+{saveStatus==='success'&&'Opgeslagen'}
+{saveStatus==='error'&&'Fout'}
+</span>
+</div>
+)}
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+{isAdmin&&(
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+<span className="nav-count">{(()=>{
+const ag=getAllAgendaItems();
+return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
+})()}</span>
+</div>
+)}
+{isAdmin&&(
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-4`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
+</div>
+)}
+{isAdmin&&(
+<div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Rapportage</span>
+</div>
+)}
+</nav>
+{isAdmin&&(
+<button className="settings-btn" onClick={()=>setShowAdminLogin(true)}>⚙️</button>
+)}
+</aside>
+<main>
+<div style={{maxWidth:'1400px',margin:'0 auto',padding:'32px'}}>
+<div style={{marginBottom:'32px'}}>
+<h1 style={{fontSize:'32px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>📝</span>
+Content Creatie Overzicht
+</h1>
+<p style={{fontSize:'16px',color:'var(--text-light)'}}>
+Alle content items van alle projecten op volgorde van deadline
+</p>
+</div>
+{contentItems.length===0?(
+<div style={{textAlign:'center',padding:'64px 32px',background:'var(--bg)',borderRadius:'8px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'48px',marginBottom:'16px'}}>📝</div>
+<div style={{fontSize:'18px',fontWeight:'600',color:'var(--text)',marginBottom:'8px'}}>Geen content items</div>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>Er zijn nog geen content items aangemaakt</div>
+</div>
+):(
+<div style={{display:'grid',gap:'12px'}}>
+{contentItems.map(item=>{
+const client=clients.find(c=>c.id===item.clientId);
+const hasDeadline=!!item.deadline;
+const isCompleted=item.completed;
+let urgencyColor='#10b981';
+let urgencyLabel='Geen deadline';
+let urgencyBg='#f0fdf4';
+if(hasDeadline){
+const parseDeadline=(dl)=>{
+if(dl.includes('-'))return new Date(dl);
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=dl.split(' ');
+if(parts.length===2&&months[parts[0]]!==undefined){
+const month=months[parts[0]];
+const year=parseInt(parts[1]);
+return new Date(year,month,1);
+}
+return new Date(dl);
+};
+const deadlineDate=parseDeadline(item.deadline);
+const today=new Date();
+today.setHours(0,0,0,0);
+deadlineDate.setHours(0,0,0,0);
+const diffDays=Math.ceil((deadlineDate-today)/(1000*60*60*24));
+if(diffDays<0){
+urgencyColor='#dc2626';
+urgencyLabel='Verlopen';
+urgencyBg='#fef2f2';
+}else if(diffDays===0){
+urgencyColor='#dc2626';
+urgencyLabel='Vandaag';
+urgencyBg='#fef2f2';
+}else if(diffDays<=7){
+urgencyColor='#f59e0b';
+urgencyLabel=`Over ${diffDays} dag${diffDays===1?'':'en'}`;
+urgencyBg='#fef9c3';
+}else if(diffDays<=30){
+urgencyColor='#3b82f6';
+urgencyLabel=`Over ${diffDays} dagen`;
+urgencyBg='#dbeafe';
+}else{
+urgencyColor='#10b981';
+urgencyLabel=item.deadline;
+urgencyBg='#f0fdf4';
+}
+}
+return(
+<div key={item.key} style={{background:'var(--white)',border:`2px solid ${isCompleted?'var(--border)':urgencyColor}`,borderRadius:'8px',padding:'16px',opacity:isCompleted?0.6:1}}>
+<div style={{display:'flex',alignItems:'start',gap:'16px'}}>
+{isAdmin&&(
+<div className={`checkbox ${isCompleted?'checked':''} clickable`} onClick={()=>{
+const items=customItems[`${item.clientId}-4`]||[];
+const updatedItems=items.map(i=>i.id===item.itemId?{...i,completed:!i.completed}:i);
+const newCustomItems={...customItems,[`${item.clientId}-4`]:updatedItems};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients,timeTracking});
+}}/>
+)}
+<div style={{flex:1}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',flexWrap:'wrap'}}>
+<span style={{fontWeight:'700',fontSize:'16px',color:'var(--text)'}}>{client?.name||'Onbekende client'}</span>
+{client?.city&&(
+<span style={{padding:'2px 8px',background:'var(--blue-light)',color:'var(--blue)',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>
+📍 {client.city}
+</span>
+)}
+{hasDeadline&&(
+<span style={{padding:'4px 10px',background:urgencyBg,color:urgencyColor,borderRadius:'6px',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',gap:'4px'}}>
+<span>📅</span>
+<span>{urgencyLabel}</span>
+</span>
+)}
+</div>
+<div style={{marginBottom:'8px'}}>
+{item.keyword&&(
+<div style={{fontSize:'14px',color:'var(--text)',marginBottom:'4px'}}>
+<span style={{fontWeight:'600'}}>Zoekwoord:</span> {item.keyword}
+</div>
+)}
+{item.url&&(
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px',wordBreak:'break-all'}}>
+<span style={{fontWeight:'600'}}>URL:</span> {item.url}
+</div>
+)}
+{item.words&&(
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>
+<span style={{fontWeight:'600'}}>Woorden:</span> {item.words}
+</div>
+)}
+</div>
+</div>
+<button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap'}} onClick={()=>{
+setSelectedClient(item.clientId);
+setActiveStep(4);
+setActiveView('roadmap');
+}}>
+→ Open Project
+</button>
+</div>
+</div>
+);
+})}
+</div>
+)}
+</div>
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
+</div>
+);
+}
+
 // RAPPORTAGE VIEW
 if(activeView==='rapportage'){
 const stats=getRapportageStats();
@@ -2951,6 +3208,20 @@ return(
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
 <span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;})()}</span>
+</div>
+)}
+{isAdmin&&(
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-4`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
 </div>
 )}
 {isAdmin&&(
