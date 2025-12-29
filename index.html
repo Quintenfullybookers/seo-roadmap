@@ -561,6 +561,54 @@ setActiveStep('overview');
 }
 },[selectedClient]);
 
+// Auto-add "Maandelijkse SEO Check" to all clients and months (only on init)
+useEffect(()=>{
+if(!isAdmin||clients.length===0||!db)return;
+
+let hasChanges=false;
+const updatedPlanningItems={...planningItems};
+const updatedDeadlines={...deadlines};
+
+// Planning months from STEPS
+const planningStep=STEPS.find(s=>s.id===7);
+if(!planningStep||!planningStep.months)return;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+planningStep.months.forEach(month=>{
+const key=`${client.id}-${month.key}`;
+const items=updatedPlanningItems[key]||[];
+
+// Check if "Maandelijkse SEO Check" already exists
+const exists=items.some(item=>item.text==='Maandelijkse SEO Check');
+
+if(!exists){
+// Add it with special ID format so we can identify it
+const lastThursday=getLastThursdayOfMonth(month.key);
+const newItem={
+id:`monthly-check-${month.key}`,
+text:'Maandelijkse SEO Check',
+completed:false
+};
+updatedPlanningItems[key]=[...items,newItem];
+
+// Set deadline to last Thursday
+const deadlineKey=`${client.id}-planning-${month.key}-${newItem.id}`;
+updatedDeadlines[deadlineKey]=lastThursday;
+
+hasChanges=true;
+console.log(`✅ Added monthly check for ${client.name} - ${month.label} (${lastThursday})`);
+}
+});
+});
+
+if(hasChanges){
+setPlanningItems(updatedPlanningItems);
+setDeadlines(updatedDeadlines);
+saveData({tasks,customItems,planningItems:updatedPlanningItems,notes,deadlines:updatedDeadlines,clients,timeTracking});
+console.log('✅ Monthly SEO checks initialized');
+}
+},[clients.length,isAdmin,db]);
+
 const copyClientLink=(clientId)=>{
 console.log('🔗 Copy link clicked for client:',clientId);
 if(!clientId||clientId==='undefined'){
@@ -905,6 +953,24 @@ const [year,month]=monthKey.split('-');
 return`${monthNames[parseInt(month)-1]} ${year}`;
 };
 
+const getLastThursdayOfMonth=(monthKey)=>{
+const [year,month]=monthKey.split('-');
+const y=parseInt(year);
+const m=parseInt(month);
+// Get last day of month
+const lastDay=new Date(y,m,0);
+const lastDate=lastDay.getDate();
+// Find last Thursday (4 = Thursday, Sunday=0)
+for(let day=lastDate;day>=lastDate-6;day--){
+const date=new Date(y,m-1,day);
+if(date.getDay()===4){
+return date.toISOString().split('T')[0];
+}
+}
+// Fallback to last day if no Thursday found
+return new Date(y,m-1,lastDate).toISOString().split('T')[0];
+};
+
 const removeDeadline=(key)=>{
 if(!isAdmin)return;
 const newDeadlines={...deadlines};
@@ -972,8 +1038,7 @@ activeClients.forEach(client=>{
 // Budget & hours
 if(client.budget>0){
 totalBudget+=client.budget;
-const monthKey=`${client.id}-${currentMonthKey}`;
-const hours=timeTracking[monthKey]||0;
+const hours=getClientHours(client.id);
 totalHours+=hours;
 }
 
@@ -1022,8 +1087,7 @@ const currentMonthKey=`${currentYear}-${currentMonth}`;
 clients.filter(c=>!c.archived).forEach(client=>{
 // Budget warnings (>80%)
 if(client.budget>0){
-const monthKey=`${client.id}-${currentMonthKey}`;
-const hours=timeTracking[monthKey]||0;
+const hours=getClientHours(client.id);
 const percentage=(hours/client.budget)*100;
 if(percentage>=90){
 const id=`budget-critical-${client.id}`;
@@ -1240,6 +1304,18 @@ return `${year}-${month.toString().padStart(2,'0')}`;
 
 const getClientHours=(clientId)=>{
 const monthKey=getCurrentMonth();
+const key=`${clientId}-${monthKey}`;
+const entries=timeTracking[key];
+// Backwards compatible: if it's a number, return it
+if(typeof entries==='number')return entries;
+// If it's an array of entries, sum them
+if(Array.isArray(entries)){
+return entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
+}
+return 0;
+};
+
+const getClientHoursForMonth=(clientId,monthKey)=>{
 const key=`${clientId}-${monthKey}`;
 const entries=timeTracking[key];
 // Backwards compatible: if it's a number, return it
@@ -3036,7 +3112,7 @@ const monthIndex=(currentMonthIndex-i+12)%12;
 const year=currentMonthIndex-i<0?currentYear-1:currentYear;
 const monthKey=`${year}-${(monthIndex+1).toString().padStart(2,'0')}`;
 const monthLabel=`${monthNames[monthIndex]} ${year}`;
-const hours=timeTracking[`${currentClient.id}-${monthKey}`]||0;
+const hours=getClientHoursForMonth(currentClient.id,monthKey);
 const isCurrent=i===0;
 monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
 }
@@ -3197,7 +3273,7 @@ const monthIndex=(currentMonthIndex-i+12)%12;
 const year=currentMonthIndex-i<0?currentYear-1:currentYear;
 const monthKey=`${year}-${(monthIndex+1).toString().padStart(2,'0')}`;
 const monthLabel=`${monthNames[monthIndex]} ${year}`;
-const hours=timeTracking[`${client.id}-${monthKey}`]||0;
+const hours=getClientHoursForMonth(client.id,monthKey);
 const isCurrent=i===0;
 monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
 }
