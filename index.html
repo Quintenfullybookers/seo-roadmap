@@ -509,6 +509,7 @@ const [sortOrder,setSortOrder]=useState('name-asc');
 const [expandedPlanning,setExpandedPlanning]=useState({});
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
+const [editingCustomItem,setEditingCustomItem]=useState(null);
 const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
@@ -1673,6 +1674,20 @@ const newItems=items.filter(item=>item.id!==itemId);
 const newCustomItems={...customItems,[key]:newItems};
 setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,clients});
+};
+
+const updateCustomItem=(stepId,itemId,updatedData)=>{
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}`;
+const items=customItems[key]||[];
+const newItems=items.map(item=>item.id===itemId?{...item,...updatedData}:item);
+const newCustomItems={...customItems,[key]:newItems};
+setCustomItems(newCustomItems);
+saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients,timeTracking});
+setShowItemModal(false);
+setEditingCustomItem(null);
+setItemModalData({});
+setToast({type:'success',message:'✓ Item bijgewerkt'});
 };
 
 // PLANNING FUNCTIONS
@@ -3261,7 +3276,7 @@ return(
 <div className="section">
 <div className="section-header">
 {currentStep.type==='hybrid'?currentStep.customSection?.title:(currentStep.type==='custom'?'Custom Items':'Extra Taken')}
-{isAdmin&&<button className="add-item-btn" onClick={()=>{setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Taak Toevoegen</button>}
+{isAdmin&&<button className="add-item-btn" onClick={()=>{setEditingCustomItem(null);setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Taak Toevoegen</button>}
 </div>
 {(customItems[`${selectedClient}-${currentStep.id}`]||[]).map(item=>(
 <div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
@@ -3276,7 +3291,16 @@ return(
 </div>
 )}
 </div>
-{isAdmin&&<button className="delete-item-btn" onClick={()=>deleteCustomItem(currentStep.id,item.id)}>🗑️</button>}
+{isAdmin&&(
+<div style={{display:'flex',gap:'4px'}}>
+<button className="delete-item-btn" onClick={(e)=>{e.stopPropagation();setEditingCustomItem({...item,stepId:currentStep.id});setItemModalStep(currentStep.id);setItemModalData(item);setShowItemModal(true);}} style={{color:'var(--blue)'}} title="Bewerken">
+✏️
+</button>
+<button className="delete-item-btn" onClick={(e)=>{e.stopPropagation();deleteCustomItem(currentStep.id,item.id);}} title="Verwijderen">
+🗑️
+</button>
+</div>
+)}
 </div>
 ))}
 </div>
@@ -3380,15 +3404,16 @@ return(
 )}
 
 {isAdmin&&showItemModal&&(
-<div className="modal-overlay" onClick={()=>setShowItemModal(false)}>
+<div className="modal-overlay" onClick={()=>{setShowItemModal(false);setEditingCustomItem(null);setItemModalData({});}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
 <h2 className="modal-title">
 {(()=>{
 const step=STEPS.find(s=>s.id===itemModalStep);
-if(!step)return'Taak Toevoegen';
-if(step.type==='hybrid')return`${step.customSection.title} Toevoegen`;
-if(step.type==='custom')return'Custom Item Toevoegen';
-return`Extra Taak Toevoegen - ${step.name}`;
+if(!step)return editingCustomItem?'Taak Bewerken':'Taak Toevoegen';
+const action=editingCustomItem?'Bewerken':'Toevoegen';
+if(step.type==='hybrid')return`${step.customSection.title} ${action}`;
+if(step.type==='custom')return`Custom Item ${action}`;
+return`Extra Taak ${action} - ${step.name}`;
 })()}
 </h2>
 {(()=>{
@@ -3405,7 +3430,7 @@ return step.customFields.map((field,idx)=>(
 ))}
 </select>
 ):(
-<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}/>
+<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,itemData);}else{addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}}/>
 )}
 </div>
 ));
@@ -3413,7 +3438,7 @@ return step.customFields.map((field,idx)=>(
 return(
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
-<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);setItemModalData({});}}}/>
+<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''});}else{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);setItemModalData({});}}}}/>
 </div>
 );
 }
@@ -3424,14 +3449,24 @@ const step=STEPS.find(s=>s.id===itemModalStep);
 if(step?.customFields){
 const itemData={};
 step.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});
-addCustomItemWithFields(itemModalStep,itemData);
+if(editingCustomItem){
+updateCustomItem(itemModalStep,editingCustomItem.id,itemData);
 }else{
-addCustomItem(itemModalStep,itemModalData.text||'');
-}
+addCustomItemWithFields(itemModalStep,itemData);
 setShowItemModal(false);
 setItemModalData({});
-}}>Toevoegen</button>
-<button className="btn btn-secondary" onClick={()=>{setShowItemModal(false);setItemModalData({});}}>Annuleren</button>
+}
+}else{
+if(editingCustomItem){
+updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''});
+}else{
+addCustomItem(itemModalStep,itemModalData.text||'');
+setShowItemModal(false);
+setItemModalData({});
+}
+}
+}}>{editingCustomItem?'Bijwerken':'Toevoegen'}</button>
+<button className="btn btn-secondary" onClick={()=>{setShowItemModal(false);setEditingCustomItem(null);setItemModalData({});}}>Annuleren</button>
 </div>
 </div>
 </div>
