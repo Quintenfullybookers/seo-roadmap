@@ -52,9 +52,9 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
 .stat-card{background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.35);transition:all 0.3s ease}
 .stat-card:hover{background:rgba(255,255,255,0.35);transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2)}
-.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.2)}
-.stat-label{font-size:13px;opacity:1;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
-.stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.2);color:white}
+.dashboard-stats .stat-label{font-size:13px;opacity:1;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2);color:white}
+.dashboard-stats .stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2);color:white}
 .stat-icon{font-size:24px;margin-bottom:8px}
 .stat-card.urgent{background:rgba(239,68,68,0.3);border-color:rgba(239,68,68,0.5)}
 .stat-card.urgent:hover{background:rgba(239,68,68,0.4)}
@@ -3060,11 +3060,11 @@ return(
 </div>
 ))}
 
-{(currentStep?.type==='custom'||currentStep?.type==='hybrid')&&(
+{currentStep&&currentStep.type!=='planning'&&(
 <div className="section">
 <div className="section-header">
-{currentStep.type==='hybrid'?currentStep.customSection.title:'Custom Items'}
-{isAdmin&&<button className="add-item-btn" onClick={()=>{setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Toevoegen</button>}
+{currentStep.type==='hybrid'?currentStep.customSection?.title:(currentStep.type==='custom'?'Custom Items':'Extra Taken')}
+{isAdmin&&<button className="add-item-btn" onClick={()=>{setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Taak Toevoegen</button>}
 </div>
 {(customItems[`${selectedClient}-${currentStep.id}`]||[]).map(item=>(
 <div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
@@ -3188,7 +3188,10 @@ return(
 <h2 className="modal-title">
 {(()=>{
 const step=STEPS.find(s=>s.id===itemModalStep);
-return step?.type==='hybrid'?`${step.customSection.title} Toevoegen`:'Custom Item Toevoegen';
+if(!step)return'Taak Toevoegen';
+if(step.type==='hybrid')return`${step.customSection.title} Toevoegen`;
+if(step.type==='custom')return'Custom Item Toevoegen';
+return`Extra Taak Toevoegen - ${step.name}`;
 })()}
 </h2>
 {(()=>{
