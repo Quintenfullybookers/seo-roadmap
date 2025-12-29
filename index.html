@@ -50,14 +50,14 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .dashboard-stats{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
 .dashboard-stats h3{font-size:20px;margin-bottom:20px;font-weight:700;display:flex;align-items:center;gap:8px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
-.stat-card{background:rgba(255,255,255,0.15);backdrop-filter:blur(10px);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.2);transition:all 0.3s ease}
-.stat-card:hover{background:rgba(255,255,255,0.25);transform:translateY(-4px)}
-.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1}
-.stat-label{font-size:13px;opacity:0.9;font-weight:500}
-.stat-subtitle{font-size:12px;opacity:0.7;margin-top:4px}
+.stat-card{background:rgba(255,255,255,0.25);backdrop-filter:blur(10px);border-radius:12px;padding:20px;border:1px solid rgba(255,255,255,0.35);transition:all 0.3s ease}
+.stat-card:hover{background:rgba(255,255,255,0.35);transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2)}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.2)}
+.stat-label{font-size:13px;opacity:1;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
+.stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2)}
 .stat-icon{font-size:24px;margin-bottom:8px}
-.stat-card.urgent{background:rgba(239,68,68,0.2);border-color:rgba(239,68,68,0.4)}
-.stat-card.urgent:hover{background:rgba(239,68,68,0.3)}
+.stat-card.urgent{background:rgba(239,68,68,0.3);border-color:rgba(239,68,68,0.5)}
+.stat-card.urgent:hover{background:rgba(239,68,68,0.4)}
 .notification-bell{position:relative;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:8px}
 .notification-bell:hover{background:var(--gray-bg)}
 .notification-badge{position:absolute;top:4px;right:4px;background:var(--red);color:white;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
@@ -1760,8 +1760,8 @@ return(
 </span>
 </div>
 )}
-{/* NOTIFICATIONS BELL */}
-{(()=>{
+{/* NOTIFICATIONS BELL - ADMIN ONLY */}
+{isAdmin&&(()=>{
 const allNotifications=getNotifications();
 return(
 <div style={{padding:'0 24px 16px',borderBottom:'1px solid var(--border)',marginBottom:'16px'}}>
@@ -1891,8 +1891,8 @@ return(
 
 {!showArchive&&(
 <>
-{/* DASHBOARD STATISTICS WIDGET */}
-{(()=>{
+{/* DASHBOARD STATISTICS WIDGET - ADMIN ONLY */}
+{isAdmin&&(()=>{
 const stats=getDashboardStats();
 return(
 <div className="dashboard-stats">
