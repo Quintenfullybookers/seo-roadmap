@@ -495,7 +495,9 @@ const [showTimeModal,setShowTimeModal]=useState(false);
 const [timeModalClient,setTimeModalClient]=useState(null);
 const [timeModalHours,setTimeModalHours]=useState('');
 const [timeModalDescription,setTimeModalDescription]=useState('');
+const [timeModalStep,setTimeModalStep]=useState('');
 const [expandedTimeClient,setExpandedTimeClient]=useState(null);
+const [expandedBreakdown,setExpandedBreakdown]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
@@ -1341,7 +1343,46 @@ if(Array.isArray(entries))return entries;
 return[];
 };
 
-const addClientHours=(clientId,hours,description='')=>{
+const getClientHoursBreakdown=(clientId)=>{
+const entries=getClientTimeEntries(clientId);
+const breakdown={};
+let unassignedHours=0;
+
+entries.forEach(entry=>{
+if(entry.stepId){
+const step=STEPS.find(s=>s.id===entry.stepId);
+if(step){
+if(!breakdown[step.id]){
+breakdown[step.id]={
+stepId:step.id,
+stepName:step.name,
+stepIcon:step.icon,
+hours:0
+};
+}
+breakdown[step.id].hours+=entry.hours||0;
+}else{
+unassignedHours+=entry.hours||0;
+}
+}else{
+unassignedHours+=entry.hours||0;
+}
+});
+
+const result=Object.values(breakdown);
+if(unassignedHours!==0){
+result.push({
+stepId:null,
+stepName:'Niet toegewezen',
+stepIcon:'❓',
+hours:unassignedHours
+});
+}
+
+return result.sort((a,b)=>Math.abs(b.hours)-Math.abs(a.hours));
+};
+
+const addClientHours=(clientId,hours,description='',stepId=null)=>{
 if(!isAdmin)return;
 const monthKey=getCurrentMonth();
 const key=`${clientId}-${monthKey}`;
@@ -1359,7 +1400,8 @@ const newEntry={
 id:Date.now(),
 hours:parseFloat(hours),
 description:description.trim()||'Geen omschrijving',
-date:new Date().toISOString()
+date:new Date().toISOString(),
+stepId:stepId?parseInt(stepId):null
 };
 const newEntries=[...currentEntries,newEntry];
 const newTimeTracking={...timeTracking,[key]:newEntries};
@@ -1369,6 +1411,7 @@ setShowTimeModal(false);
 setTimeModalClient(null);
 setTimeModalHours('');
 setTimeModalDescription('');
+setTimeModalStep('');
 const total=newEntries.reduce((sum,e)=>sum+e.hours,0);
 setToast({type:'success',message:`✓ ${hours}u ${hours>=0?'toegevoegd':'afgetrokken'} (Totaal: ${total}u)`});
 };
@@ -2317,6 +2360,42 @@ return(
 </div>
 );
 })()}
+{isAdmin&&(()=>{
+const breakdown=getClientHoursBreakdown(client.id);
+if(breakdown.length===0)return null;
+const isExpanded=expandedBreakdown===client.id;
+const totalHours=breakdown.reduce((sum,item)=>sum+item.hours,0);
+return(
+<div className="time-entries-section" onClick={(e)=>e.stopPropagation()} style={{marginTop:'8px'}}>
+<div className="time-entries-toggle" onClick={(e)=>{e.stopPropagation();setExpandedBreakdown(isExpanded?null:client.id);}}>
+<span className="time-entries-toggle-text">📊 Uren per stap</span>
+<span className={`time-entries-toggle-icon ${isExpanded?'expanded':''}`}>▼</span>
+</div>
+{isExpanded&&(
+<div className="time-entries-list">
+{breakdown.map((item,idx)=>{
+const percentage=totalHours>0?Math.round((Math.abs(item.hours)/Math.abs(totalHours))*100):0;
+return(
+<div key={idx} className="time-entry">
+<div className="time-entry-content" style={{flexDirection:'column',alignItems:'flex-start',gap:'4px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',width:'100%'}}>
+<span style={{fontSize:'14px'}}>{item.stepIcon}</span>
+<span style={{fontSize:'13px',fontWeight:'600',flex:1}}>{item.stepName}</span>
+<span style={{fontSize:'13px',fontWeight:'700',color:'var(--blue)'}}>{item.hours}u</span>
+</div>
+<div style={{width:'100%',height:'4px',background:'var(--gray-bg)',borderRadius:'2px',overflow:'hidden'}}>
+<div style={{width:`${percentage}%`,height:'100%',background:'var(--blue)',transition:'width 0.3s'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)'}}>{percentage}% van totaal</div>
+</div>
+</div>
+);
+})}
+</div>
+)}
+</div>
+);
+})()}
 </div>
 );
 })()}  
@@ -2557,22 +2636,34 @@ return(
 )}
 
 {showTimeModal&&timeModalClient&&(
-<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
 <h2 className="modal-title">⏱️ Uren Registreren</h2>
 <p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{timeModalClient.name}</p>
 <div className="input-group">
 <label className="input-label">Aantal uren (positief of negatief)</label>
-<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}}}}/>
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 Positief: uren toevoegen (bijv. 2.5) | Negatief: uren aftrekken (bijv. -1.0)
 </div>
 </div>
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
-<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}}}}/>
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Stap (optioneel)</label>
+<select className="modal-input" value={timeModalStep} onChange={(e)=>setTimeModalStep(e.target.value)}>
+<option value="">-- Geen stap --</option>
+{STEPS.filter(s=>s.type!=='planning').map(step=>(
+<option key={step.id} value={step.id}>{step.icon} {step.name}</option>
+))}
+</select>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Koppel uren aan een specifieke stap voor betere inzichten
 </div>
 </div>
 <div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
@@ -2586,10 +2677,10 @@ Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
 </div>
 </div>
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
 {timeModalHours&&parseFloat(timeModalHours)<0?'Aftrekken':'Toevoegen'}
 </button>
-<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -3153,6 +3244,39 @@ return(
 </div>
 )}
 
+{isAdmin&&(()=>{
+const breakdown=getClientHoursBreakdown(currentClient.id);
+if(breakdown.length===0)return null;
+const totalHours=breakdown.reduce((sum,item)=>sum+item.hours,0);
+return(
+<div style={{background:'#f0f9ff',border:'1px solid #bae6fd',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
+📊 Uren Verdeling per Stap
+</h3>
+<div style={{display:'grid',gap:'12px'}}>
+{breakdown.map((item,idx)=>{
+const percentage=totalHours>0?Math.round((Math.abs(item.hours)/Math.abs(totalHours))*100):0;
+return(
+<div key={idx} style={{background:'white',border:'1px solid #e0f2fe',borderRadius:'6px',padding:'12px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'18px'}}>{item.stepIcon}</span>
+<span style={{fontSize:'14px',fontWeight:'600',color:'#1e293b'}}>{item.stepName}</span>
+</div>
+<span style={{fontSize:'14px',fontWeight:'700',color:'#0284c7'}}>{item.hours}u</span>
+</div>
+<div style={{width:'100%',height:'8px',background:'#e0f2fe',borderRadius:'4px',overflow:'hidden',marginBottom:'6px'}}>
+<div style={{width:`${percentage}%`,height:'100%',background:'linear-gradient(90deg,#0ea5e9,#0284c7)',transition:'width 0.3s'}}/>
+</div>
+<div style={{fontSize:'12px',color:'#64748b'}}>{percentage}% van totaal ({totalHours}u)</div>
+</div>
+);
+})}
+</div>
+</div>
+);
+})()}
+
 <div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 <span>📋</span> Voortgang per Stap
@@ -3617,22 +3741,34 @@ setItemModalData({});
 )}
 
 {showTimeModal&&timeModalClient&&(
-<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
 <h2 className="modal-title">⏱️ Uren Registreren</h2>
 <p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{timeModalClient.name}</p>
 <div className="input-group">
 <label className="input-label">Aantal uren (positief of negatief)</label>
-<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}}}}/>
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 Positief: uren toevoegen (bijv. 2.5) | Negatief: uren aftrekken (bijv. -1.0)
 </div>
 </div>
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
-<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}}}}/>
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Stap (optioneel)</label>
+<select className="modal-input" value={timeModalStep} onChange={(e)=>setTimeModalStep(e.target.value)}>
+<option value="">-- Geen stap --</option>
+{STEPS.filter(s=>s.type!=='planning').map(step=>(
+<option key={step.id} value={step.id}>{step.icon} {step.name}</option>
+))}
+</select>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Koppel uren aan een specifieke stap voor betere inzichten
 </div>
 </div>
 <div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
@@ -3646,10 +3782,10 @@ Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
 </div>
 </div>
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
 {timeModalHours&&parseFloat(timeModalHours)<0?'Aftrekken':'Toevoegen'}
 </button>
-<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');}}>Annuleren</button>
 </div>
 </div>
 </div>
