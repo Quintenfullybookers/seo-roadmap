@@ -3029,8 +3029,8 @@ return count;
 <button className="settings-btn" onClick={()=>setShowAdminLogin(true)}>⚙️</button>
 )}
 </aside>
-<main>
-<div style={{maxWidth:'1400px',margin:'0 auto',padding:'16px'}}>
+<main style={{overflow:'visible'}}>
+<div style={{maxWidth:'1400px',margin:'0 auto',padding:'20px',width:'calc(100% - 40px)',boxSizing:'border-box'}}>
 <div style={{marginBottom:'24px'}}>
 <h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap'}}>
 <span>📝</span>
@@ -3047,7 +3047,7 @@ Alle content items van alle projecten op volgorde van deadline
 <div style={{fontSize:'14px',color:'var(--text-light)'}}>Er zijn nog geen content items aangemaakt</div>
 </div>
 ):(
-<div style={{display:'grid',gap:'12px'}}>
+<div style={{display:'grid',gap:'12px',width:'100%'}}>
 {contentItems.map(item=>{
 const client=clients.find(c=>c.id===item.clientId);
 const hasDeadline=!!item.deadline;
@@ -3095,8 +3095,8 @@ urgencyBg='#f0fdf4';
 }
 }
 return(
-<div key={item.key} style={{background:'var(--white)',border:`2px solid ${isCompleted?'var(--border)':urgencyColor}`,borderRadius:'8px',padding:'16px',opacity:isCompleted?0.6:1,overflow:'hidden'}}>
-<div style={{display:'flex',alignItems:'start',gap:'16px',flexWrap:'wrap'}}>
+<div key={item.key} style={{background:'var(--white)',border:`2px solid ${isCompleted?'var(--border)':urgencyColor}`,borderRadius:'8px',padding:'16px',opacity:isCompleted?0.6:1,width:'100%',boxSizing:'border-box'}}>
+<div style={{display:'flex',alignItems:'start',gap:'16px',flexWrap:'wrap',width:'100%'}}>
 {isAdmin&&(
 <div className={`checkbox ${isCompleted?'checked':''} clickable`} onClick={()=>{
 const items=customItems[`${item.clientId}-4`]||[];
@@ -3106,7 +3106,7 @@ setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients,timeTracking});
 }}/>
 )}
-<div style={{flex:1,minWidth:'0',overflow:'hidden'}}>
+<div style={{flex:1,minWidth:'200px',width:'100%',maxWidth:'100%'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',flexWrap:'wrap'}}>
 <span style={{fontWeight:'700',fontSize:'16px',color:'var(--text)',wordBreak:'break-word'}}>{client?.name||'Onbekende client'}</span>
 {client?.city&&(
