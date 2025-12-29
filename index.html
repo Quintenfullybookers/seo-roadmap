@@ -583,7 +583,7 @@ const exists=items.some(item=>item.text==='Maandelijkse SEO Check');
 
 if(!exists){
 // Add it with special ID format so we can identify it
-const lastThursday=getLastThursdayOfMonth(month.key);
+const lastWorkday=getLastWorkdayOfMonth(month.key);
 const newItem={
 id:`monthly-check-${month.key}`,
 text:'Maandelijkse SEO Check',
@@ -591,12 +591,12 @@ completed:false
 };
 updatedPlanningItems[key]=[...items,newItem];
 
-// Set deadline to last Thursday
+// Set deadline to last workday (Mon-Thu)
 const deadlineKey=`${client.id}-planning-${month.key}-${newItem.id}`;
-updatedDeadlines[deadlineKey]=lastThursday;
+updatedDeadlines[deadlineKey]=lastWorkday;
 
 hasChanges=true;
-console.log(`✅ Added monthly check for ${client.name} - ${month.label} (${lastThursday})`);
+console.log(`✅ Added monthly check for ${client.name} - ${month.label} (${lastWorkday})`);
 }
 });
 });
@@ -953,21 +953,24 @@ const [year,month]=monthKey.split('-');
 return`${monthNames[parseInt(month)-1]} ${year}`;
 };
 
-const getLastThursdayOfMonth=(monthKey)=>{
+const getLastWorkdayOfMonth=(monthKey)=>{
 const [year,month]=monthKey.split('-');
 const y=parseInt(year);
 const m=parseInt(month);
 // Get last day of month
 const lastDay=new Date(y,m,0);
 const lastDate=lastDay.getDate();
-// Find last Thursday (4 = Thursday, Sunday=0)
-for(let day=lastDate;day>=lastDate-6;day--){
+// Find last workday (Mon=1, Tue=2, Wed=3, Thu=4)
+// Not Friday(5), Saturday(6), Sunday(0)
+for(let day=lastDate;day>=1;day--){
 const date=new Date(y,m-1,day);
-if(date.getDay()===4){
+const dayOfWeek=date.getDay();
+// Check if it's a workday (Monday through Thursday)
+if(dayOfWeek>=1&&dayOfWeek<=4){
 return date.toISOString().split('T')[0];
 }
 }
-// Fallback to last day if no Thursday found
+// Fallback to last day if somehow no workday found (shouldn't happen)
 return new Date(y,m-1,lastDate).toISOString().split('T')[0];
 };
 
