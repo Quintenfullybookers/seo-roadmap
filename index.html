@@ -2210,7 +2210,6 @@ return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
 })()}</span>
 </div>
 )}
-{isAdmin&&(
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -2223,7 +2222,6 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
-)}
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
@@ -3008,7 +3006,6 @@ return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
 })()}</span>
 </div>
 )}
-{isAdmin&&(
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -3021,7 +3018,6 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
-)}
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
@@ -3034,13 +3030,13 @@ return count;
 )}
 </aside>
 <main>
-<div style={{maxWidth:'1400px',margin:'0 auto',padding:'32px'}}>
-<div style={{marginBottom:'32px'}}>
-<h1 style={{fontSize:'32px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{maxWidth:'1400px',margin:'0 auto',padding:'16px'}}>
+<div style={{marginBottom:'24px'}}>
+<h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px',flexWrap:'wrap'}}>
 <span>📝</span>
-Content Creatie Overzicht
+<span>Content Creatie Overzicht</span>
 </h1>
-<p style={{fontSize:'16px',color:'var(--text-light)'}}>
+<p style={{fontSize:'14px',color:'var(--text-light)'}}>
 Alle content items van alle projecten op volgorde van deadline
 </p>
 </div>
@@ -3099,8 +3095,8 @@ urgencyBg='#f0fdf4';
 }
 }
 return(
-<div key={item.key} style={{background:'var(--white)',border:`2px solid ${isCompleted?'var(--border)':urgencyColor}`,borderRadius:'8px',padding:'16px',opacity:isCompleted?0.6:1}}>
-<div style={{display:'flex',alignItems:'start',gap:'16px'}}>
+<div key={item.key} style={{background:'var(--white)',border:`2px solid ${isCompleted?'var(--border)':urgencyColor}`,borderRadius:'8px',padding:'16px',opacity:isCompleted?0.6:1,overflow:'hidden'}}>
+<div style={{display:'flex',alignItems:'start',gap:'16px',flexWrap:'wrap'}}>
 {isAdmin&&(
 <div className={`checkbox ${isCompleted?'checked':''} clickable`} onClick={()=>{
 const items=customItems[`${item.clientId}-4`]||[];
@@ -3110,16 +3106,16 @@ setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients,timeTracking});
 }}/>
 )}
-<div style={{flex:1}}>
+<div style={{flex:1,minWidth:'0',overflow:'hidden'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',flexWrap:'wrap'}}>
-<span style={{fontWeight:'700',fontSize:'16px',color:'var(--text)'}}>{client?.name||'Onbekende client'}</span>
+<span style={{fontWeight:'700',fontSize:'16px',color:'var(--text)',wordBreak:'break-word'}}>{client?.name||'Onbekende client'}</span>
 {client?.city&&(
-<span style={{padding:'2px 8px',background:'var(--blue-light)',color:'var(--blue)',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>
+<span style={{padding:'2px 8px',background:'var(--blue-light)',color:'var(--blue)',borderRadius:'4px',fontSize:'11px',fontWeight:'600',whiteSpace:'nowrap'}}>
 📍 {client.city}
 </span>
 )}
 {hasDeadline&&(
-<span style={{padding:'4px 10px',background:urgencyBg,color:urgencyColor,borderRadius:'6px',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',gap:'4px'}}>
+<span style={{padding:'4px 10px',background:urgencyBg,color:urgencyColor,borderRadius:'6px',fontSize:'12px',fontWeight:'600',display:'flex',alignItems:'center',gap:'4px',whiteSpace:'nowrap'}}>
 <span>📅</span>
 <span>{urgencyLabel}</span>
 </span>
@@ -3127,12 +3123,12 @@ saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients
 </div>
 <div style={{marginBottom:'8px'}}>
 {item.keyword&&(
-<div style={{fontSize:'14px',color:'var(--text)',marginBottom:'4px'}}>
+<div style={{fontSize:'14px',color:'var(--text)',marginBottom:'4px',wordBreak:'break-word'}}>
 <span style={{fontWeight:'600'}}>Zoekwoord:</span> {item.keyword}
 </div>
 )}
 {item.url&&(
-<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px',wordBreak:'break-all'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px',wordBreak:'break-all',overflow:'hidden'}}>
 <span style={{fontWeight:'600'}}>URL:</span> {item.url}
 </div>
 )}
@@ -3143,7 +3139,7 @@ saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients
 )}
 </div>
 </div>
-<button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap'}} onClick={()=>{
+<button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap',flexShrink:0}} onClick={()=>{
 setSelectedClient(item.clientId);
 setActiveStep(4);
 setActiveView('roadmap');
@@ -3210,7 +3206,6 @@ return(
 <span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;})()}</span>
 </div>
 )}
-{isAdmin&&(
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -3223,7 +3218,6 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
-)}
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
