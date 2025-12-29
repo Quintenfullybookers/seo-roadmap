@@ -141,6 +141,24 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .add-client-card:hover .add-icon,.add-client-card:hover .add-text{color:var(--white)}
 .add-icon{font-size:48px;color:var(--blue);margin-bottom:12px;transition:all .2s}
 .add-text{font-size:16px;font-weight:600;color:var(--blue);transition:all .2s}
+.time-entries-section{margin-top:12px;border-top:1px solid var(--border);padding-top:12px}
+.time-entries-toggle{display:flex;align-items:center;justify-content:space-between;padding:8px 12px;background:var(--bg);border-radius:6px;cursor:pointer;transition:all 0.2s;margin-bottom:8px}
+.time-entries-toggle:hover{background:var(--border)}
+.time-entries-toggle-text{font-size:12px;font-weight:600;color:var(--text);text-transform:uppercase;letter-spacing:0.5px}
+.time-entries-toggle-icon{font-size:14px;color:var(--text-light);transition:transform 0.2s}
+.time-entries-toggle-icon.expanded{transform:rotate(180deg)}
+.time-entries-list{margin-top:8px}
+.time-entry{display:flex;align-items:flex-start;justify-content:space-between;padding:8px;background:var(--bg);border-radius:6px;margin-bottom:6px;font-size:12px;border:1px solid var(--border)}
+.time-entry.negative{background:rgba(239,68,68,0.05);border-color:rgba(239,68,68,0.2)}
+.time-entry.positive{background:rgba(16,185,129,0.05);border-color:rgba(16,185,129,0.2)}
+.time-entry-content{flex:1}
+.time-entry-hours{font-weight:700;margin-bottom:2px}
+.time-entry-hours.negative{color:var(--red)}
+.time-entry-hours.positive{color:var(--green)}
+.time-entry-desc{color:var(--text-light);line-height:1.4}
+.time-entry-date{font-size:10px;color:var(--text-light);margin-top:2px}
+.time-entry-delete{padding:4px 8px;background:var(--red);color:white;border:none;border-radius:4px;cursor:pointer;font-size:11px;transition:all 0.2s}
+.time-entry-delete:hover{background:#B91C1C}
 .section{margin-bottom:32px}
 .section-header{font-size:14px;font-weight:600;color:var(--text);margin-bottom:12px;display:flex;justify-content:space-between;align-items:center;padding-bottom:8px;border-bottom:2px solid var(--blue-light)}
 .add-item-btn{background:var(--blue);color:var(--white);border:none;padding:6px 12px;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;transition:all .2s}
@@ -476,6 +494,8 @@ const [deadlineModalTask,setDeadlineModalTask]=useState(null);
 const [showTimeModal,setShowTimeModal]=useState(false);
 const [timeModalClient,setTimeModalClient]=useState(null);
 const [timeModalHours,setTimeModalHours]=useState('');
+const [timeModalDescription,setTimeModalDescription]=useState('');
+const [expandedTimeClient,setExpandedTimeClient]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
@@ -791,9 +811,70 @@ const setDeadline=(key,date)=>{
 if(!isAdmin)return;
 const newDeadlines={...deadlines,[key]:date};
 setDeadlines(newDeadlines);
-saveData({tasks,customItems,planningItems,notes,deadlines:newDeadlines,clients});
+
+// Auto-move planning items to correct month based on deadline
+// Key format: clientId-planning-monthKey-itemId
+if(key.includes('-planning-')&&date){
+const parts=key.split('-planning-');
+if(parts.length===2){
+const clientId=parts[0];
+const [oldMonthKey,itemId]=parts[1].split('-').reduce((acc,part,idx,arr)=>{
+if(idx<2)acc[0]=(acc[0]?acc[0]+'-':'')+part;
+else acc[1]=(acc[1]?acc[1]+'-':'')+part;
+return acc;
+},['','']);
+
+// Parse deadline to get new month key
+const deadlineDate=new Date(date);
+const year=deadlineDate.getFullYear();
+const month=(deadlineDate.getMonth()+1).toString().padStart(2,'0');
+const newMonthKey=`${year}-${month}`;
+
+// If month changed, move the item
+if(oldMonthKey!==newMonthKey){
+const oldKey=`${clientId}-${oldMonthKey}`;
+const newKey=`${clientId}-${newMonthKey}`;
+const oldItems=planningItems[oldKey]||[];
+const newItems=planningItems[newKey]||[];
+
+// Find and remove item from old month
+const itemToMove=oldItems.find(item=>item.id===itemId);
+if(itemToMove){
+const updatedOldItems=oldItems.filter(item=>item.id!==itemId);
+const updatedNewItems=[...newItems,itemToMove];
+
+const updatedPlanningItems={
+...planningItems,
+[oldKey]:updatedOldItems,
+[newKey]:updatedNewItems
+};
+
+setPlanningItems(updatedPlanningItems);
+
+// Update deadline key to new month
+const newDeadlineKey=`${clientId}-planning-${newMonthKey}-${itemId}`;
+const finalDeadlines={...deadlines,[newDeadlineKey]:date};
+delete finalDeadlines[key];
+setDeadlines(finalDeadlines);
+
+saveData({tasks,customItems,planningItems:updatedPlanningItems,notes,deadlines:finalDeadlines,clients,timeTracking});
+setShowDeadlineModal(false);
+setToast({type:'success',message:`✓ Verplaatst naar ${getMonthLabel(newMonthKey)}`});
+return;
+}
+}
+}
+}
+
+saveData({tasks,customItems,planningItems,notes,deadlines:newDeadlines,clients,timeTracking});
 setShowDeadlineModal(false);
 setToast({type:'success',message:'✓ Deadline ingesteld'});
+};
+
+const getMonthLabel=(monthKey)=>{
+const monthNames=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+const [year,month]=monthKey.split('-');
+return`${monthNames[parseInt(month)-1]} ${year}`;
 };
 
 const removeDeadline=(key)=>{
@@ -1132,29 +1213,78 @@ return `${year}-${month.toString().padStart(2,'0')}`;
 const getClientHours=(clientId)=>{
 const monthKey=getCurrentMonth();
 const key=`${clientId}-${monthKey}`;
-return timeTracking[key]||0;
+const entries=timeTracking[key];
+// Backwards compatible: if it's a number, return it
+if(typeof entries==='number')return entries;
+// If it's an array of entries, sum them
+if(Array.isArray(entries)){
+return entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
+}
+return 0;
 };
 
-const addClientHours=(clientId,hours)=>{
+const getClientTimeEntries=(clientId)=>{
+const monthKey=getCurrentMonth();
+const key=`${clientId}-${monthKey}`;
+const entries=timeTracking[key];
+// Backwards compatible: if it's a number, return empty array
+if(typeof entries==='number')return[];
+// If it's an array, return it
+if(Array.isArray(entries))return entries;
+return[];
+};
+
+const addClientHours=(clientId,hours,description='')=>{
 if(!isAdmin)return;
 const monthKey=getCurrentMonth();
 const key=`${clientId}-${monthKey}`;
-const currentHours=timeTracking[key]||0;
-const newHours=currentHours+hours;
-const newTimeTracking={...timeTracking,[key]:newHours};
+const entries=timeTracking[key];
+// Convert old format to new format
+let currentEntries=[];
+if(typeof entries==='number'){
+// Migrate old data
+currentEntries=[{id:Date.now()-1000,hours:entries,description:'Migratie oude data',date:new Date().toISOString()}];
+}else if(Array.isArray(entries)){
+currentEntries=entries;
+}
+// Add new entry
+const newEntry={
+id:Date.now(),
+hours:parseFloat(hours),
+description:description.trim()||'Geen omschrijving',
+date:new Date().toISOString()
+};
+const newEntries=[...currentEntries,newEntry];
+const newTimeTracking={...timeTracking,[key]:newEntries};
 setTimeTracking(newTimeTracking);
 saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking:newTimeTracking});
 setShowTimeModal(false);
 setTimeModalClient(null);
 setTimeModalHours('');
-setToast({type:'success',message:`✓ ${hours}u toegevoegd`});
-console.log('✅ Hours added:',clientId,hours,'Total:',newHours);
+setTimeModalDescription('');
+const total=newEntries.reduce((sum,e)=>sum+e.hours,0);
+setToast({type:'success',message:`✓ ${hours}u ${hours>=0?'toegevoegd':'afgetrokken'} (Totaal: ${total}u)`});
+};
+
+const deleteTimeEntry=(clientId,entryId)=>{
+if(!isAdmin)return;
+if(!confirm('Deze tijd entry verwijderen?'))return;
+const monthKey=getCurrentMonth();
+const key=`${clientId}-${monthKey}`;
+const entries=timeTracking[key];
+if(!Array.isArray(entries))return;
+const newEntries=entries.filter(e=>e.id!==entryId);
+const newTimeTracking={...timeTracking,[key]:newEntries};
+setTimeTracking(newTimeTracking);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking:newTimeTracking});
+setToast({type:'success',message:'✓ Entry verwijderd'});
 };
 
 const openTimeModal=(client)=>{
 if(!isAdmin)return;
 setTimeModalClient(client);
 setTimeModalHours('');
+setTimeModalDescription('');
 setShowTimeModal(true);
 };
 
@@ -1526,7 +1656,7 @@ const items=planningItems[key]||[];
 const newItem={id:Date.now(),text:text.trim(),completed:false};
 const newPlanningItems={...planningItems,[key]:[...items,newItem]};
 setPlanningItems(newPlanningItems);
-saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+saveData({tasks,customItems,planningItems:newPlanningItems,notes,deadlines,clients,timeTracking});
 };
 
 const togglePlanningItem=(monthKey,itemId,clientId=null)=>{
@@ -1541,7 +1671,7 @@ const items=planningItems[key]||[];
 const newItems=items.map(item=>item.id===itemId?{...item,completed:!item.completed}:item);
 const newPlanningItems={...planningItems,[key]:newItems};
 setPlanningItems(newPlanningItems);
-saveData({tasks,customItems,planningItems:newPlanningItems,notes,deadlines,clients});
+saveData({tasks,customItems,planningItems:newPlanningItems,notes,deadlines,clients,timeTracking});
 console.log('✅ Planning item toggled:',key,itemId);
 };
 
@@ -1552,7 +1682,7 @@ const items=planningItems[key]||[];
 const newItems=items.filter(item=>item.id!==itemId);
 const newPlanningItems={...planningItems,[key]:newItems};
 setPlanningItems(newPlanningItems);
-saveData({tasks,customItems,planningItems:newPlanningItems,clients});
+saveData({tasks,customItems,planningItems:newPlanningItems,notes,deadlines,clients,timeTracking});
 };
 
 // HELPERS
@@ -2037,6 +2167,35 @@ return(
 + Uren toevoegen
 </button>
 )}
+{isAdmin&&(()=>{
+const entries=getClientTimeEntries(client.id);
+if(entries.length===0)return null;
+const isExpanded=expandedTimeClient===client.id;
+return(
+<div className="time-entries-section" onClick={(e)=>e.stopPropagation()}>
+<div className="time-entries-toggle" onClick={(e)=>{e.stopPropagation();setExpandedTimeClient(isExpanded?null:client.id);}}>
+<span className="time-entries-toggle-text">⏱️ Uren details ({entries.length})</span>
+<span className={`time-entries-toggle-icon ${isExpanded?'expanded':''}`}>▼</span>
+</div>
+{isExpanded&&(
+<div className="time-entries-list">
+{entries.map(entry=>(
+<div key={entry.id} className={`time-entry ${entry.hours<0?'negative':'positive'}`}>
+<div className="time-entry-content">
+<div className={`time-entry-hours ${entry.hours<0?'negative':'positive'}`}>
+{entry.hours>0?'+':''}{entry.hours}u
+</div>
+<div className="time-entry-desc">{entry.description}</div>
+<div className="time-entry-date">{new Date(entry.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}</div>
+</div>
+<button className="time-entry-delete" onClick={(e)=>{e.stopPropagation();deleteTimeEntry(client.id,entry.id);}}>🗑️</button>
+</div>
+))}
+</div>
+)}
+</div>
+);
+})()}
 </div>
 );
 })()}  
@@ -2277,14 +2436,23 @@ return(
 )}
 
 {showTimeModal&&timeModalClient&&(
-<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">⏱️ Uren Toevoegen</h2>
+<h2 className="modal-title">⏱️ Uren Registreren</h2>
 <p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{timeModalClient.name}</p>
 <div className="input-group">
-<label className="input-label">Aantal uren</label>
-<input type="number" className="modal-input" min="0" step="0.5" placeholder="2.5" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours){const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}}}}/>
-<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>Gebruik decimalen voor halve uren (bijv. 2.5)</div>
+<label className="input-label">Aantal uren (positief of negatief)</label>
+<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Positief: uren toevoegen (bijv. 2.5) | Negatief: uren aftrekken (bijv. -1.0)
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Omschrijving</label>
+<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
+</div>
 </div>
 <div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
 <div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
@@ -2297,8 +2465,10 @@ return(
 </div>
 </div>
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}else{setToast({type:'error',message:'Voer geldig aantal uren in'});}}}>Toevoegen</button>
-<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>Annuleren</button>
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
+{timeModalHours&&parseFloat(timeModalHours)<0?'Aftrekken':'Toevoegen'}
+</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -3277,14 +3447,23 @@ setItemModalData({});
 )}
 
 {showTimeModal&&timeModalClient&&(
-<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">⏱️ Uren Toevoegen</h2>
+<h2 className="modal-title">⏱️ Uren Registreren</h2>
 <p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{timeModalClient.name}</p>
 <div className="input-group">
-<label className="input-label">Aantal uren</label>
-<input type="number" className="modal-input" min="0" step="0.5" placeholder="2.5" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours){const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}}}}/>
-<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>Gebruik decimalen voor halve uren (bijv. 2.5)</div>
+<label className="input-label">Aantal uren (positief of negatief)</label>
+<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Positief: uren toevoegen (bijv. 2.5) | Negatief: uren aftrekken (bijv. -1.0)
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Omschrijving</label>
+<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){addClientHours(timeModalClient.id,hours,timeModalDescription);}}}}/>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+Bijvoorbeeld: "SEO audit uitgevoerd" of "Correctie foutieve entry"
+</div>
 </div>
 <div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
 <div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
@@ -3297,8 +3476,10 @@ setItemModalData({});
 </div>
 </div>
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(hours>0){addClientHours(timeModalClient.id,hours);}else{setToast({type:'error',message:'Voer geldig aantal uren in'});}}}>Toevoegen</button>
-<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');}}>Annuleren</button>
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){addClientHours(timeModalClient.id,hours,timeModalDescription);}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
+{timeModalHours&&parseFloat(timeModalHours)<0?'Aftrekken':'Toevoegen'}
+</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');}}>Annuleren</button>
 </div>
 </div>
 </div>
