@@ -3278,7 +3278,36 @@ return(
 {currentStep.type==='hybrid'?currentStep.customSection?.title:(currentStep.type==='custom'?'Custom Items':'Extra Taken')}
 {isAdmin&&<button className="add-item-btn" onClick={()=>{setEditingCustomItem(null);setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Taak Toevoegen</button>}
 </div>
-{(customItems[`${selectedClient}-${currentStep.id}`]||[]).map(item=>(
+{(()=>{
+const items=customItems[`${selectedClient}-${currentStep.id}`]||[];
+// Sort by deadline if content creation (step 4) or linkbuilding (step 5)
+if(currentStep.id===4||currentStep.id===5){
+const sortedItems=[...items].sort((a,b)=>{
+// Items without deadline go to end
+if(!a.deadline&&!b.deadline)return 0;
+if(!a.deadline)return 1;
+if(!b.deadline)return-1;
+// Parse deadline to date for comparison
+const parseDeadline=(dl)=>{
+// If deadline is like "December 2025", convert to date
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=dl.split(' ');
+if(parts.length===2&&months[parts[0]]!==undefined){
+const month=months[parts[0]];
+const year=parseInt(parts[1])||new Date().getFullYear();
+return new Date(year,month,1);
+}
+// If it's ISO format, parse directly
+return new Date(dl);
+};
+const dateA=parseDeadline(a.deadline);
+const dateB=parseDeadline(b.deadline);
+return dateA-dateB;
+});
+return sortedItems;
+}
+return items;
+})().map(item=>(
 <div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
 <div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}/>
 <div className="task-content">
