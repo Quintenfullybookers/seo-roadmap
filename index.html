@@ -95,8 +95,8 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .filter-btn:hover{background:var(--bg)}
 .filter-btn.active{background:var(--blue);color:white;border-color:var(--blue)}
 .dashboard-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(380px,1fr));gap:32px;margin-bottom:48px}
-.client-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:24px;transition:all .2s;position:relative;cursor:pointer}
-.client-card:hover{box-shadow:var(--shadow-lg);transform:translateY(-2px)}
+.client-card{background:linear-gradient(135deg,#ffffff 0%,#fafbfc 100%);border:1px solid #e2e8f0;border-radius:12px;padding:24px;transition:all .3s cubic-bezier(0.4, 0, 0.2, 1);position:relative;cursor:pointer;box-shadow:0 1px 3px rgba(0,0,0,0.05)}
+.client-card:hover{box-shadow:0 4px 12px rgba(0,0,0,0.08),0 0 0 1px rgba(59,130,246,0.1);transform:translateY(-3px);border-color:#cbd5e1}
 .edit-client-btn{position:absolute;top:12px;left:12px;background:var(--blue);color:white;border:none;border-radius:6px;padding:6px 10px;font-size:14px;cursor:pointer;opacity:0;transition:all .2s;z-index:10}
 .client-card:hover .edit-client-btn{opacity:1}
 .edit-client-btn:hover{background:var(--blue-dark);transform:scale(1.05)}
@@ -106,25 +106,25 @@ body{font-family:'Inter',-apple-system,BlinkMacSystemFont,sans-serif;background:
 .client-status-badge.aandacht{background:var(--orange-bg)}
 .client-status-badge.schema{background:var(--yellow-bg)}
 .client-status-badge.top{background:var(--green-bg)}
-.client-header{margin-bottom:12px}
-.client-name{font-size:18px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
-.client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px}
+.client-header{margin-bottom:16px;padding-bottom:12px;border-bottom:1px solid #f1f5f9}
+.client-name{font-size:20px;font-weight:700;color:#1e293b;font-family:'DM Sans',sans-serif;letter-spacing:-0.3px;line-height:1.2}
+.client-meta{font-size:13px;color:#64748b;margin-bottom:14px;margin-top:8px;font-weight:500}
 .client-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px}
 .client-link:hover{text-decoration:underline}
 .delete-btn{background:var(--red-bg);color:var(--red);border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .delete-btn:hover{background:var(--red);color:var(--white)}
-.client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:16px;margin-bottom:16px}
-.stat-box{text-align:center}
-.stat-number{font-size:24px;font-weight:700;color:var(--blue);font-family:'DM Sans',sans-serif}
-.stat-label{font-size:11px;text-transform:uppercase;letter-spacing:.5px;color:var(--text-light);margin-top:4px}
-.progress-section{margin-top:16px}
-.progress-label{display:flex;justify-content:space-between;font-size:12px;color:var(--text-light);margin-bottom:8px}
-.progress-percentage{font-weight:600;color:var(--blue)}
-.progress-bar{height:8px;background:var(--gray-bg);border-radius:4px;overflow:hidden}
-.progress-fill{height:100%;background:linear-gradient(90deg,var(--blue),var(--blue-dark));transition:width .3s ease;border-radius:4px}
-.planning-box{margin-top:16px;padding:12px;background:var(--blue-light);border-radius:6px}
-.planning-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.5px;color:var(--blue);margin-bottom:8px}
-.planning-item{font-size:12px;color:var(--text);margin-bottom:3px;line-height:1.4}
+.client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;margin-bottom:16px;padding:16px 0;border-top:1px solid #e2e8f0;border-bottom:1px solid #e2e8f0}
+.stat-box{text-align:center;padding:8px 0}
+.stat-number{font-size:28px;font-weight:700;color:#3b82f6;font-family:'DM Sans',sans-serif;line-height:1;margin-bottom:6px}
+.stat-label{font-size:10px;text-transform:uppercase;letter-spacing:1px;color:#64748b;font-weight:700}
+.progress-section{margin-top:20px;padding-top:4px}
+.progress-label{display:flex;justify-content:space-between;font-size:11px;color:#64748b;margin-bottom:10px;font-weight:600;text-transform:uppercase;letter-spacing:0.5px}
+.progress-percentage{font-weight:700;color:#3b82f6;font-size:13px}
+.progress-bar{height:8px;background:#f1f5f9;border-radius:4px;overflow:hidden;position:relative}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3b82f6 0%,#2563eb 100%);transition:width .4s cubic-bezier(0.4, 0, 0.2, 1);border-radius:4px;box-shadow:inset 0 1px 2px rgba(255,255,255,0.2)}
+.planning-box{margin-top:16px;padding:14px 16px;background:linear-gradient(135deg,#dbeafe 0%,#e0f2fe 100%);border-radius:8px;border:1px solid #bfdbfe}
+.planning-title{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:1px;color:#3b82f6;margin-bottom:10px}
+.planning-item{font-size:12px;color:#1e293b;margin-bottom:4px;line-height:1.5;font-weight:500}
 .pm-overview{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .pm-label{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
 .pm-filter-btn{padding:8px 16px;border:1px solid var(--border);background:var(--white);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;font-weight:500}
@@ -1123,7 +1123,7 @@ notifications.push({
 id,
 type:'budget-critical',
 icon:'🔴',
-title:'Budget kritiek!',
+title:'Pakket kritiek!',
 message:`${client.name}: ${Math.round(percentage)}% verbruikt (${hours}u / ${client.budget}u)`,
 clientId:client.id,
 priority:1
@@ -1136,7 +1136,7 @@ notifications.push({
 id,
 type:'budget-warning',
 icon:'⚠️',
-title:'Budget waarschuwing',
+title:'Pakket waarschuwing',
 message:`${client.name}: ${Math.round(percentage)}% verbruikt (${hours}u / ${client.budget}u)`,
 clientId:client.id,
 priority:2
@@ -2343,10 +2343,10 @@ return(
 <h3>📊 Overzicht deze maand</h3>
 <div className="stats-grid">
 <div className="stat-card">
-<div className="stat-icon">💰</div>
+<div className="stat-icon">📦</div>
 <div className="stat-value">{stats.totalHours}u</div>
 <div className="stat-label">Gewerkte uren</div>
-<div className="stat-subtitle">van {stats.totalBudget}u budget ({stats.budgetPercentage}%)</div>
+<div className="stat-subtitle">van {stats.totalBudget}u pakket ({stats.budgetPercentage}%)</div>
 </div>
 <div className="stat-card">
 <div className="stat-icon">📈</div>
@@ -2407,8 +2407,8 @@ Alle PMs
 <option value="progress-desc">📊 Hoog → Laag (Voortgang)</option>
 <option value="hours-asc">⏱️ Min → Max (Uren deze maand)</option>
 <option value="hours-desc">⏱️ Max → Min (Uren deze maand)</option>
-<option value="budget-asc">💰 Laag → Hoog (Budget)</option>
-<option value="budget-desc">💰 Hoog → Laag (Budget)</option>
+<option value="budget-asc">📦 Laag → Hoog (Pakket)</option>
+<option value="budget-desc">📦 Hoog → Laag (Pakket)</option>
 <option value="remaining-asc">🔓 Min → Max (Resterend)</option>
 <option value="remaining-desc">🔓 Max → Min (Resterend)</option>
 </select>
@@ -2460,25 +2460,26 @@ const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',
 const now=new Date();
 const currentMonth=monthNames[now.getMonth()+1]+' '+now.getFullYear();
 return(
-<div style={{marginTop:'12px',padding:'12px',background:'var(--bg)',border:'1px solid var(--border)',borderRadius:'6px'}}>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-<span style={{fontSize:'13px',fontWeight:'600',color:'var(--text)'}}>💰 Budget</span>
-<span style={{fontSize:'13px',fontWeight:'700',color:'var(--blue)'}}>{budget} uren</span>
+<div style={{marginTop:'16px',padding:'16px 20px',background:'linear-gradient(135deg, #f8fafc 0%, #ffffff 100%)',border:'1px solid #e2e8f0',borderRadius:'8px',boxShadow:'0 1px 3px rgba(0,0,0,0.05)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+<span style={{fontSize:'11px',fontWeight:'700',color:'#64748b',letterSpacing:'0.5px',textTransform:'uppercase'}}>📦 Pakket</span>
+<span style={{fontSize:'16px',fontWeight:'700',color:'#3b82f6'}}>{budget} uren</span>
 </div>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'6px'}}>
-<span style={{fontSize:'12px',color:'var(--text-light)'}}>⏱️ {currentMonth}</span>
-<span style={{fontSize:'13px',fontWeight:'700',color:barColor}}>{hours}u ({percentage}%)</span>
+<div style={{height:'1px',background:'linear-gradient(90deg, #e2e8f0 0%, transparent 100%)',marginBottom:'12px'}}/>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'10px'}}>
+<span style={{fontSize:'12px',color:'#64748b',fontWeight:'500'}}>🗓 {currentMonth}</span>
+<span style={{fontSize:'14px',fontWeight:'700',color:barColor}}>{hours}u ({percentage}%)</span>
 </div>
-<div style={{width:'100%',height:'6px',background:'var(--gray-bg)',borderRadius:'3px',overflow:'hidden',marginBottom:'8px'}}>
-<div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
+<div style={{width:'100%',height:'8px',background:'#f1f5f9',borderRadius:'4px',overflow:'hidden',marginBottom:'10px'}}>
+<div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:`linear-gradient(90deg, ${barColor} 0%, ${barColor}dd 100%)`,transition:'width 0.3s ease',borderRadius:'4px'}}/>
 </div>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
-<span style={{fontSize:'12px',color:'var(--text-light)'}}>Resterend:</span>
-<span style={{fontSize:'12px',fontWeight:'600',color:remaining<budget*0.3?'#dc2626':'var(--text)'}}>{remaining}u</span>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+<span style={{fontSize:'11px',color:'#64748b',fontWeight:'500',textTransform:'uppercase',letterSpacing:'0.3px'}}>Resterend</span>
+<span style={{fontSize:'13px',fontWeight:'700',color:remaining<budget*0.3?'#dc2626':'#10b981'}}>{remaining}u</span>
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'6px',background:'var(--green-bg)',color:'var(--green)',border:'1px solid var(--green)',borderRadius:'4px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}} onMouseEnter={(e)=>{e.target.style.background='var(--green)';e.target.style.color='white';}} onMouseLeave={(e)=>{e.target.style.background='var(--green-bg)';e.target.style.color='var(--green)';}}>
-+ Uren toevoegen
+<button onClick={(e)=>{e.stopPropagation();openTimeModal(client);}} style={{width:'100%',padding:'8px 12px',background:'linear-gradient(135deg, #10b981 0%, #059669 100%)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s',boxShadow:'0 1px 2px rgba(16,185,129,0.2)',letterSpacing:'0.3px'}} onMouseEnter={(e)=>{e.target.style.transform='translateY(-1px)';e.target.style.boxShadow='0 2px 4px rgba(16,185,129,0.3)';}} onMouseLeave={(e)=>{e.target.style.transform='translateY(0)';e.target.style.boxShadow='0 1px 2px rgba(16,185,129,0.2)';}}>
++ UREN TOEVOEGEN
 </button>
 )}
 {(()=>{
