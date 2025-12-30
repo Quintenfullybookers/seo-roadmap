@@ -1664,14 +1664,23 @@ return;
 
 console.log('Delete note called with key:', noteKey);
 console.log('All note keys:', Object.keys(notes));
-console.log('Note exists?', !!notes[noteKey]);
 
-if(!notes[noteKey]){
-// Probeer alternatieve key formaten
-const allKeys = Object.keys(notes);
-console.log('Looking for alternative key match...');
-const matchingKey = allKeys.find(k => k.includes(noteKey) || noteKey.includes(k));
-if(matchingKey) {
+// Direct match
+if(notes[noteKey]){
+console.log('Direct match found');
+const newNotes={...notes};
+delete newNotes[noteKey];
+setNotes(newNotes);
+saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
+setToast({type:'success',message:'✓ Notitie verwijderd'});
+return;
+}
+
+// Zoek naar key die eindigt met note ID
+const noteId = noteKey.split('-').pop();
+console.log('Looking for note with ID:', noteId);
+const matchingKey = Object.keys(notes).find(k => k.endsWith(noteId) || k.includes(noteId));
+if(matchingKey){
 console.log('Found matching key:', matchingKey);
 const newNotes={...notes};
 delete newNotes[matchingKey];
@@ -1680,20 +1689,9 @@ saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeT
 setToast({type:'success',message:'✓ Notitie verwijderd'});
 return;
 }
+
+console.log('No match found');
 setToast({type:'error',message:'❌ Notitie niet gevonden'});
-return;
-}
-
-const newNotes={...notes};
-delete newNotes[noteKey];
-setNotes(newNotes);
-
-try{
-saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
-setToast({type:'success',message:'✓ Notitie verwijderd'});
-}catch(err){
-setToast({type:'error',message:'❌ Fout bij opslaan'});
-}
 };
 
 // PDF EXPORT FUNCTION
@@ -3754,7 +3752,9 @@ return(
 <h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 <span>💬</span> Recente Notities ({clientNotes.length})
 </h3>
-{clientNotes.slice(0,5).map(note=>(
+{clientNotes.slice(0,5).map(note=>{
+const noteKey = note.key || `${selectedClient}-${note.id}`;
+return(
 <div key={note.id} style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
 <div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
@@ -3763,8 +3763,9 @@ return(
 {isAdmin&&(
 <button onClick={(e)=>{
 e.stopPropagation();
+console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-deleteNote(note.key);
+deleteNote(noteKey);
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3773,7 +3774,7 @@ deleteNote(note.key);
 </div>
 <div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
 </div>
-))}
+);})}
 {clientNotes.length>5&&(
 <div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginTop:'8px'}}>
 + {clientNotes.length-5} meer notitie(s)
@@ -3795,7 +3796,9 @@ return(
 <span>💬</span>
 <span>Notities ({clientNotes.length})</span>
 </div>
-{clientNotes.slice(0,3).map(note=>(
+{clientNotes.slice(0,3).map(note=>{
+const noteKey = note.key || `${selectedClient}-${note.id}`;
+return(
 <div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
 <div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
@@ -3804,8 +3807,9 @@ return(
 {isAdmin&&(
 <button onClick={(e)=>{
 e.stopPropagation();
+console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-deleteNote(note.key);
+deleteNote(noteKey);
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3814,7 +3818,7 @@ deleteNote(note.key);
 </div>
 <div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
 </div>
-))}
+);})}
 {clientNotes.length>3&&(
 <div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginTop:'8px'}}>
 + {clientNotes.length-3} meer notitie(s)
