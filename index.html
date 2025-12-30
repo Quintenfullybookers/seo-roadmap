@@ -16,6 +16,8 @@ body.dark-mode .task-card{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .client-card{background:#1C1C1E}
 body.dark-mode .status-card{background:#1C1C1E;border-color:#38383A}
 body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
+body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
+body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
@@ -138,7 +140,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .pm-filter-btn{padding:8px 16px;border:1px solid var(--border);background:var(--white);border-radius:20px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;font-weight:500}
 .pm-filter-btn:hover{background:var(--bg);transform:translateY(-1px);box-shadow:0 2px 4px rgba(0,0,0,.05)}
 .pm-filter-btn.active{border-width:2px;font-weight:600;box-shadow:0 2px 8px rgba(0,0,0,.1)}
-.pm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:500;color:white;margin-top:6px;opacity:0.85}
+.pm-badge{display:inline-flex;align-items:center;gap:4px;padding:3px 8px;border-radius:10px;font-size:10px;font-weight:500;color:white;margin-top:6px;opacity:0.7}
 .sort-section{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .sort-label{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
 .sort-dropdown{padding:10px 16px;border:1px solid var(--border);border-radius:8px;background:var(--white);font-size:14px;font-weight:500;color:var(--text);cursor:pointer;transition:all .2s;outline:none;min-width:240px}
@@ -321,8 +323,8 @@ const STATUS_OPTIONS=[
 
 // PROJECT MANAGERS
 const PROJECT_MANAGERS=[
-{key:'hugo',label:'Hugo',icon:'👨',color:'#5B7FA3'},
-{key:'michelle',label:'Michelle',icon:'👩',color:'#B37A95'},
+{key:'hugo',label:'Hugo',icon:'👨',color:'#6B7D8A'},
+{key:'michelle',label:'Michelle',icon:'👩',color:'#8A7680'},
 {key:'none',label:'Geen PM',icon:'⚪',color:'#CCCCCC'}
 ];
 
@@ -531,6 +533,10 @@ const [showNotifications,setShowNotifications]=useState(false);
 const [dismissedNotifications,setDismissedNotifications]=useState(JSON.parse(localStorage.getItem('dismissedNotifications')||'[]'));
 const [sortOrder,setSortOrder]=useState('name-asc');
 const [expandedPlanning,setExpandedPlanning]=useState({});
+const [expandedNotes,setExpandedNotes]=useState({});
+const [expandedTodos,setExpandedTodos]=useState({});
+const [todos,setTodos]=useState({});
+const [newTodoInputs,setNewTodoInputs]=useState({});
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [editingCustomItem,setEditingCustomItem]=useState(null);
@@ -718,6 +724,7 @@ setNotes(data.notes||{});
 setDeadlines(data.deadlines||{});
 setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
+setTodos(data.todos||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 
@@ -733,6 +740,7 @@ setNotes(data.notes||{});
 setDeadlines(data.deadlines||{});
 setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
+setTodos(data.todos||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 });
@@ -779,6 +787,7 @@ setNotes(data.notes||{});
 setDeadlines(data.deadlines||{});
 setClients(data.clients||[]);
 setTimeTracking(data.timeTracking||{});
+setTodos(data.todos||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[],data.timeTracking||{});
 setToast({type:'success',message:'✓ Herladen voltooid'});
 }
@@ -1610,6 +1619,40 @@ setToast({type:'success',message:'✓ Notitie toegevoegd'});
 
 const getClientNotes=(clientId)=>{
 return Object.values(notes).filter(n=>n.clientId===clientId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+};
+
+// TODO FUNCTIONS
+const getClientTodos=(clientId)=>{
+return Object.entries(todos).filter(([key,todo])=>todo.clientId===clientId).map(([key,todo])=>({...todo,key})).sort((a,b)=>a.completed-b.completed||new Date(b.createdAt)-new Date(a.createdAt));
+};
+
+const addTodo=(clientId,text)=>{
+if(!isAdmin||!text.trim())return;
+const todoId=Date.now();
+const todoKey=`${clientId}-todo-${todoId}`;
+const newTodo={id:todoId,clientId,text:text.trim(),completed:false,createdAt:new Date().toISOString()};
+const newTodos={...todos,[todoKey]:newTodo};
+setTodos(newTodos);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos:newTodos});
+setToast({type:'success',message:'✓ To-do toegevoegd'});
+};
+
+const toggleTodo=(todoKey)=>{
+if(!isAdmin)return;
+const todo=todos[todoKey];
+if(!todo)return;
+const newTodos={...todos,[todoKey]:{...todo,completed:!todo.completed}};
+setTodos(newTodos);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos:newTodos});
+};
+
+const deleteTodo=(todoKey)=>{
+if(!isAdmin)return;
+const newTodos={...todos};
+delete newTodos[todoKey];
+setTodos(newTodos);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos:newTodos});
+setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
 const deleteNote=(noteKey)=>{
@@ -2558,6 +2601,67 @@ return(
 </div>
 )}
 </>
+)}
+</div>
+);
+})()}
+
+{/* TO DO SECTIE */}
+{(()=>{
+const clientTodos=getClientTodos(client.id);
+const isExpanded=expandedTodos[client.id];
+const newTodoText=newTodoInputs[client.id]||'';
+return(
+<div style={{marginTop:'12px',padding:'12px',background:'#FEF9E7',borderRadius:'12px',border:'1px solid #F4D03F'}}>
+<div onClick={(e)=>{e.stopPropagation();setExpandedTodos({...expandedTodos,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:'#9A7B0A'}}>📋 To-Do ({clientTodos.filter(t=>!t.completed).length})</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:'#9A7B0A'}}>▼</span>
+</div>
+{isExpanded&&(
+<div style={{marginTop:'8px'}}>
+{clientTodos.map(todo=>(
+<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid #F4D03F'}} onClick={(e)=>e.stopPropagation()}>
+<div onClick={()=>toggleTodo(todo.key)} style={{width:'18px',height:'18px',borderRadius:'4px',border:'2px solid #9A7B0A',background:todo.completed?'#9A7B0A':'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+{todo.completed&&<span style={{color:'white',fontSize:'12px'}}>✓</span>}
+</div>
+<span style={{flex:1,fontSize:'12px',color:'#5D4E0A',textDecoration:todo.completed?'line-through':'none',opacity:todo.completed?0.6:1}}>{todo.text}</span>
+{isAdmin&&<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'12px',opacity:0.6}}>✕</button>}
+</div>
+))}
+{isAdmin&&(
+<div style={{display:'flex',gap:'6px',marginTop:'8px'}} onClick={(e)=>e.stopPropagation()}>
+<input type="text" placeholder="Nieuwe to-do..." value={newTodoText} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[client.id]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{flex:1,padding:'6px 10px',border:'1px solid #F4D03F',borderRadius:'6px',fontSize:'12px',background:'white'}}/>
+<button onClick={()=>{if(newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{padding:'6px 12px',background:'#9A7B0A',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+</button>
+</div>
+)}
+{clientTodos.length===0&&!isAdmin&&<div style={{fontSize:'11px',color:'#9A7B0A',fontStyle:'italic',marginTop:'4px'}}>Geen to-do's</div>}
+</div>
+)}
+</div>
+);
+})()}
+
+{/* NOTITIES SECTIE */}
+{(()=>{
+const clientNotes=getClientNotes(client.id);
+if(clientNotes.length===0)return null;
+const isExpanded=expandedNotes[client.id];
+return(
+<div style={{marginTop:'12px',padding:'12px',background:'#E8F4FD',borderRadius:'12px',border:'1px solid #85C1E9'}}>
+<div onClick={(e)=>{e.stopPropagation();setExpandedNotes({...expandedNotes,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:'#2471A3'}}>💬 Notities ({clientNotes.length})</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:'#2471A3'}}>▼</span>
+</div>
+{isExpanded&&(
+<div style={{marginTop:'8px'}}>
+{clientNotes.slice(0,3).map((note,i)=>(
+<div key={i} style={{padding:'8px',background:'white',borderRadius:'6px',marginBottom:'6px',fontSize:'12px',color:'#1A5276',lineHeight:'1.4'}}>
+<div style={{marginBottom:'4px'}}>{note.text}</div>
+<div style={{fontSize:'10px',color:'#85C1E9'}}>{new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>
+</div>
+))}
+{clientNotes.length>3&&<div style={{fontSize:'11px',color:'#2471A3',fontStyle:'italic'}}>+{clientNotes.length-3} meer notities</div>}
+</div>
 )}
 </div>
 );
