@@ -1662,7 +1662,24 @@ setToast({type:'error',message:'❌ Alleen admin kan notities verwijderen'});
 return;
 }
 
+console.log('Delete note called with key:', noteKey);
+console.log('All note keys:', Object.keys(notes));
+console.log('Note exists?', !!notes[noteKey]);
+
 if(!notes[noteKey]){
+// Probeer alternatieve key formaten
+const allKeys = Object.keys(notes);
+console.log('Looking for alternative key match...');
+const matchingKey = allKeys.find(k => k.includes(noteKey) || noteKey.includes(k));
+if(matchingKey) {
+console.log('Found matching key:', matchingKey);
+const newNotes={...notes};
+delete newNotes[matchingKey];
+setNotes(newNotes);
+saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
+setToast({type:'success',message:'✓ Notitie verwijderd'});
+return;
+}
 setToast({type:'error',message:'❌ Notitie niet gevonden'});
 return;
 }
