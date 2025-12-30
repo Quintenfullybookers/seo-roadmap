@@ -18,6 +18,7 @@ body.dark-mode .status-card{background:#1C1C1E;border-color:#38383A}
 body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
 body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
+body.dark-mode .banner-btn{background:#5B8AB5;color:white}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
@@ -179,9 +180,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .banner-client{font-weight:700;color:var(--blue)}
 .banner-status-display{display:flex;align-items:center;gap:8px;padding:8px 16px;background:white;border-radius:6px;font-size:13px;font-weight:600}
 .banner-status-icon{font-size:20px}
-.banner-buttons{display:flex;gap:8px}
-.banner-btn{background:var(--blue);color:var(--white);border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
-.banner-btn:hover{background:var(--blue-dark)}
+.banner-buttons{display:flex;gap:8px;flex-wrap:wrap}
+.banner-btn{background:#4A7BA7;color:white;border:none;padding:8px 16px;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s}
+.banner-btn:hover{background:#3D6A91}
 .banner-btn.danger{background:var(--red)}
 .banner-btn.danger:hover{background:#B91C1C}
 .task-card{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:16px 20px;margin-bottom:8px;display:flex;align-items:center;gap:16px;transition:all .2s}
@@ -1618,7 +1619,7 @@ setToast({type:'success',message:'✓ Notitie toegevoegd'});
 };
 
 const getClientNotes=(clientId)=>{
-return Object.values(notes).filter(n=>n.clientId===clientId).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
+return Object.entries(notes).filter(([key,n])=>n.clientId===clientId).map(([key,n])=>({...n,key})).sort((a,b)=>new Date(b.timestamp)-new Date(a.timestamp));
 };
 
 // TODO FUNCTIONS
@@ -1656,66 +1657,25 @@ setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
 const deleteNote=(noteKey)=>{
-console.log('');
-console.log('═══════════════════════════════════════');
-console.log('🗑️ DELETE NOTE FUNCTION CALLED');
-console.log('═══════════════════════════════════════');
-console.log('📋 Input noteKey:', noteKey);
-console.log('👤 isAdmin:', isAdmin);
-console.log('📝 Total notes in state:', Object.keys(notes).length);
-console.log('🔑 All note keys:', Object.keys(notes));
-console.log('');
-
 if(!isAdmin){
-console.log('❌ FAILED: Not admin');
 setToast({type:'error',message:'❌ Alleen admin kan notities verwijderen'});
 return;
 }
 
-console.log('✅ Admin check passed');
-console.log('🔍 Looking for note with key:', noteKey);
-console.log('📊 Note exists?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
-
 if(!notes[noteKey]){
-console.log('');
-console.log('❌❌❌ NOTE NOT FOUND! ❌❌❌');
-console.log('Requested key:', noteKey);
-console.log('Available keys:', Object.keys(notes));
-console.log('');
-setToast({type:'error',message:'❌ Notitie niet gevonden (key mismatch)'});
+setToast({type:'error',message:'❌ Notitie niet gevonden'});
 return;
 }
 
-console.log('✅ Note found:', notes[noteKey]);
-console.log('');
-console.log('🔄 Creating new notes object without this note...');
 const newNotes={...notes};
 delete newNotes[noteKey];
-console.log('✅ Note removed from new object');
-console.log('📊 New notes count:', Object.keys(newNotes).length, '(was', Object.keys(notes).length + ')');
-console.log('');
-
-console.log('💾 Updating state...');
 setNotes(newNotes);
-console.log('✅ State updated');
-console.log('');
 
-console.log('☁️ Saving to Firebase...');
 try{
 saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
-console.log('✅ Firebase save initiated');
-console.log('');
-console.log('═══════════════════════════════════════');
-console.log('✅ DELETE COMPLETED SUCCESSFULLY');
-console.log('═══════════════════════════════════════');
-console.log('');
 setToast({type:'success',message:'✓ Notitie verwijderd'});
 }catch(err){
-console.log('');
-console.log('❌❌❌ ERROR DURING SAVE ❌❌❌');
-console.error('Error details:', err);
-console.log('');
-setToast({type:'error',message:'❌ Fout bij opslaan: ' + err.message});
+setToast({type:'error',message:'❌ Fout bij opslaan'});
 }
 };
 
@@ -2606,8 +2566,8 @@ return(
 );
 })()}
 
-{/* TO DO SECTIE */}
-{(()=>{
+{/* TO DO SECTIE - alleen admin in dashboard */}
+{isAdmin&&(()=>{
 const clientTodos=getClientTodos(client.id);
 const isExpanded=expandedTodos[client.id];
 const newTodoText=newTodoInputs[client.id]||'';
@@ -2625,24 +2585,21 @@ return(
 {todo.completed&&<span style={{color:'white',fontSize:'12px'}}>✓</span>}
 </div>
 <span style={{flex:1,fontSize:'12px',color:'#5D4E0A',textDecoration:todo.completed?'line-through':'none',opacity:todo.completed?0.6:1}}>{todo.text}</span>
-{isAdmin&&<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'12px',opacity:0.6}}>✕</button>}
+<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'12px',opacity:0.6}}>✕</button>
 </div>
 ))}
-{isAdmin&&(
 <div style={{display:'flex',gap:'6px',marginTop:'8px'}} onClick={(e)=>e.stopPropagation()}>
 <input type="text" placeholder="Nieuwe to-do..." value={newTodoText} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[client.id]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{flex:1,padding:'6px 10px',border:'1px solid #F4D03F',borderRadius:'6px',fontSize:'12px',background:'white'}}/>
 <button onClick={()=>{if(newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{padding:'6px 12px',background:'#9A7B0A',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+</button>
 </div>
-)}
-{clientTodos.length===0&&!isAdmin&&<div style={{fontSize:'11px',color:'#9A7B0A',fontStyle:'italic',marginTop:'4px'}}>Geen to-do's</div>}
 </div>
 )}
 </div>
 );
 })()}
 
-{/* NOTITIES SECTIE */}
-{(()=>{
+{/* NOTITIES SECTIE - alleen admin in dashboard */}
+{isAdmin&&(()=>{
 const clientNotes=getClientNotes(client.id);
 if(clientNotes.length===0)return null;
 const isExpanded=expandedNotes[client.id];
@@ -3540,12 +3497,12 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <div className="banner-buttons">
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
-<button className="banner-btn" style={{background:'var(--blue)',color:'white'}} onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
-<button className="banner-btn" style={{background:'var(--red)',color:'white'}} onClick={exportToPDF}>📄 PDF Export</button>
+<button className="banner-btn" onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
+<button className="banner-btn" style={{background:'#DC2626',color:'white'}} onClick={exportToPDF}>📄 PDF Export</button>
 {clients.find(c=>c.id===selectedClient)?.archived?(
-<button className="banner-btn" style={{background:'var(--green)',color:'white'}} onClick={()=>{restoreClient(selectedClient);setActiveView('dashboard');}}>↩️ Herstellen</button>
+<button className="banner-btn" style={{background:'#16A34A',color:'white'}} onClick={()=>{restoreClient(selectedClient);setActiveView('dashboard');}}>↩️ Herstellen</button>
 ):(
-<button className="banner-btn" style={{background:'var(--orange)',color:'white'}} onClick={()=>{if(confirm('Client archiveren?'))archiveClient(selectedClient);}}>📦 Archiveren</button>
+<button className="banner-btn" style={{background:'#EA580C',color:'white'}} onClick={()=>{if(confirm('Client archiveren?'))archiveClient(selectedClient);}}>📦 Archiveren</button>
 )}
 <button className="banner-btn danger" onClick={()=>{setClientToDelete(selectedClient);setShowDeleteModal(true);}}>Verwijderen</button>
 </div>
@@ -3789,33 +3746,8 @@ return(
 {isAdmin&&(
 <button onClick={(e)=>{
 e.stopPropagation();
-const noteKey=`${selectedClient}-${note.id}`;
-console.log('🗑️ DELETE BUTTON CLICKED');
-console.log('selectedClient:', selectedClient);
-console.log('note.id:', note.id);
-console.log('noteKey:', noteKey);
-console.log('All notes keys:', Object.keys(notes));
-console.log('Does note exist in notes?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
-if(notes[noteKey]){
-console.log('✅ Note found:', notes[noteKey]);
-}else{
-console.log('❌ Note NOT found! Available keys:', Object.keys(notes));
-}
-alert(`🔍 DEBUG INFO:
-
-Client: ${selectedClient}
-Note ID: ${note.id}
-Note Key: ${noteKey}
-Note exists: ${notes[noteKey] ? '✅ YES' : '❌ NO'}
-
-Total notes in system: ${Object.keys(notes).length}
-
-Check console (F12) for all keys`);
-const confirmed=confirm('Weet je zeker dat je deze notitie wilt verwijderen?');
-console.log('User confirmed:', confirmed);
-if(confirmed){
-console.log('🔥 Calling deleteNote with key:', noteKey);
-deleteNote(noteKey);
+if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
+deleteNote(note.key);
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3837,7 +3769,7 @@ deleteNote(noteKey);
 </div>
 )}
 
-{activeStep!=='overview'&&(()=>{
+{currentStep?.type==='planning'&&(()=>{
 const clientNotes=getClientNotes(selectedClient);
 if(clientNotes.length===0)return null;
 return(
@@ -3855,33 +3787,8 @@ return(
 {isAdmin&&(
 <button onClick={(e)=>{
 e.stopPropagation();
-const noteKey=`${selectedClient}-${note.id}`;
-console.log('🗑️ DELETE BUTTON CLICKED');
-console.log('selectedClient:', selectedClient);
-console.log('note.id:', note.id);
-console.log('noteKey:', noteKey);
-console.log('All notes keys:', Object.keys(notes));
-console.log('Does note exist in notes?', notes[noteKey] ? 'YES ✅' : 'NO ❌');
-if(notes[noteKey]){
-console.log('✅ Note found:', notes[noteKey]);
-}else{
-console.log('❌ Note NOT found! Available keys:', Object.keys(notes));
-}
-alert(`🔍 DEBUG INFO:
-
-Client: ${selectedClient}
-Note ID: ${note.id}
-Note Key: ${noteKey}
-Note exists: ${notes[noteKey] ? '✅ YES' : '❌ NO'}
-
-Total notes in system: ${Object.keys(notes).length}
-
-Check console (F12) for all keys`);
-const confirmed=confirm('Weet je zeker dat je deze notitie wilt verwijderen?');
-console.log('User confirmed:', confirmed);
-if(confirmed){
-console.log('🔥 Calling deleteNote with key:', noteKey);
-deleteNote(noteKey);
+if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
+deleteNote(note.key);
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3962,6 +3869,65 @@ return(
 })()}
 </div>
 )}
+
+{/* TO DO SECTIE bij Planning - voor iedereen zichtbaar */}
+<div style={{background:'#FEF9E7',border:'1px solid #F4D03F',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'#9A7B0A',display:'flex',alignItems:'center',gap:'8px'}}>
+📋 To-Do Overzicht
+</h3>
+{(()=>{
+const clientTodos=getClientTodos(selectedClient);
+const planning=getClientPlanning(selectedClient);
+const planningAsTodos=[];
+[planning.current,planning.next].forEach(p=>{
+if(p&&p.items){
+p.items.forEach(item=>{
+if(!item.completed){
+planningAsTodos.push({key:`planning-${p.month}-${item.id}`,text:`[${getMonthName(p.month)}] ${item.text}`,completed:item.completed,isPlanning:true,monthKey:p.month,itemId:item.id});
+}
+});
+}
+});
+const allTodos=[...clientTodos,...planningAsTodos];
+const openTodos=allTodos.filter(t=>!t.completed);
+const completedTodos=clientTodos.filter(t=>t.completed);
+return(
+<div>
+{openTodos.length===0&&<div style={{fontSize:'13px',color:'#9A7B0A',fontStyle:'italic'}}>Geen openstaande to-do's! 🎉</div>}
+{openTodos.map(todo=>(
+<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 0',borderBottom:'1px solid #F4D03F'}}>
+<div onClick={()=>{if(todo.isPlanning){togglePlanningItem(todo.monthKey,todo.itemId,selectedClient);}else if(isAdmin){toggleTodo(todo.key);}}} style={{width:'20px',height:'20px',borderRadius:'4px',border:'2px solid #9A7B0A',background:todo.completed?'#9A7B0A':'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+{todo.completed&&<span style={{color:'white',fontSize:'14px'}}>✓</span>}
+</div>
+<span style={{flex:1,fontSize:'14px',color:'#5D4E0A'}}>{todo.text}</span>
+{todo.isPlanning&&<span style={{fontSize:'11px',background:'#F4D03F',color:'#9A7B0A',padding:'2px 8px',borderRadius:'4px'}}>Planning</span>}
+{!todo.isPlanning&&isAdmin&&<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'14px',opacity:0.6}}>✕</button>}
+</div>
+))}
+{completedTodos.length>0&&(
+<div style={{marginTop:'16px',paddingTop:'12px',borderTop:'2px solid #F4D03F'}}>
+<div style={{fontSize:'12px',color:'#9A7B0A',marginBottom:'8px',fontWeight:'600'}}>Afgerond ({completedTodos.length})</div>
+{completedTodos.slice(0,3).map(todo=>(
+<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'10px',padding:'6px 0',opacity:0.6}}>
+<div onClick={()=>isAdmin&&toggleTodo(todo.key)} style={{width:'20px',height:'20px',borderRadius:'4px',background:'#9A7B0A',cursor:isAdmin?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+<span style={{color:'white',fontSize:'14px'}}>✓</span>
+</div>
+<span style={{flex:1,fontSize:'14px',color:'#5D4E0A',textDecoration:'line-through'}}>{todo.text}</span>
+</div>
+))}
+</div>
+)}
+{isAdmin&&(
+<div style={{display:'flex',gap:'8px',marginTop:'16px'}}>
+<input type="text" placeholder="Nieuwe to-do toevoegen..." value={newTodoInputs[selectedClient]||''} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[selectedClient]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&(newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{flex:1,padding:'10px 14px',border:'1px solid #F4D03F',borderRadius:'8px',fontSize:'14px',background:'white'}}/>
+<button onClick={()=>{if((newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{padding:'10px 20px',background:'#9A7B0A',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Toevoegen</button>
+</div>
+)}
+</div>
+);
+})()}
+</div>
+
 {currentStep?.months?.map(month=>(
 <PlanningMonth
 key={month.key}
