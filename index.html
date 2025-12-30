@@ -46,7 +46,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
 .status-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
-.dashboard-stats{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
+.dashboard-stats{background:linear-gradient(135deg,#0051D5 0%,#003399 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
 .dashboard-stats h3{font-size:20px;margin-bottom:20px;font-weight:700;display:flex;align-items:center;gap:8px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
 .stat-card{background:rgba(255,255,255,0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;padding:20px;border:0.5px solid rgba(255,255,255,0.5);transition:all 0.3s ease}
@@ -2245,16 +2245,14 @@ Bekijken
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-{isAdmin&&(
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
 <span className="nav-count">{(()=>{
 const ag=getAllAgendaItems();
-return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
+return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length;
 })()}</span>
 </div>
-)}
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -2845,13 +2843,11 @@ return(
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-{isAdmin&&(
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
-<span className="nav-count">{agendaItems.overdue.length+agendaItems.thisWeek.length+agendaItems.later.length}</span>
+<span className="nav-count">{agendaItems.overdue.length+agendaItems.thisWeek.length+agendaItems.thisMonth.length}</span>
 </div>
-)}
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -3042,16 +3038,14 @@ return(
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-{isAdmin&&(
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
 <span className="nav-count">{(()=>{
 const ag=getAllAgendaItems();
-return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;
+return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length;
 })()}</span>
 </div>
-)}
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -3245,13 +3239,11 @@ return(
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-{isAdmin&&(
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
-<span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length+ag.later.length;})()}</span>
+<span className="nav-count">{(()=>{const ag=getAllAgendaItems();return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length;})()}</span>
 </div>
-)}
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
