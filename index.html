@@ -1656,7 +1656,7 @@ saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,t
 setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
-const deleteNote=(noteKey)=>{
+const deleteNote=async(noteKey)=>{
 if(!isAdmin){
 setToast({type:'error',message:'❌ Alleen admin kan notities verwijderen'});
 return;
@@ -1665,33 +1665,48 @@ return;
 console.log('Delete note called with key:', noteKey);
 console.log('All note keys:', Object.keys(notes));
 
-// Direct match
-if(notes[noteKey]){
-console.log('Direct match found');
-const newNotes={...notes};
-delete newNotes[noteKey];
-setNotes(newNotes);
-saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
-setToast({type:'success',message:'✓ Notitie verwijderd'});
-return;
-}
+let keyToDelete = noteKey;
 
+// Direct match check
+if(!notes[noteKey]){
 // Zoek naar key die eindigt met note ID
 const noteId = noteKey.split('-').pop();
 console.log('Looking for note with ID:', noteId);
 const matchingKey = Object.keys(notes).find(k => k.endsWith(noteId) || k.includes(noteId));
 if(matchingKey){
 console.log('Found matching key:', matchingKey);
-const newNotes={...notes};
-delete newNotes[matchingKey];
-setNotes(newNotes);
-saveData({tasks,customItems,planningItems,notes:newNotes,deadlines,clients,timeTracking});
-setToast({type:'success',message:'✓ Notitie verwijderd'});
-return;
-}
-
+keyToDelete = matchingKey;
+} else {
 console.log('No match found');
 setToast({type:'error',message:'❌ Notitie niet gevonden'});
+return;
+}
+} else {
+console.log('Direct match found');
+}
+
+const newNotes={...notes};
+delete newNotes[keyToDelete];
+console.log('New notes count:', Object.keys(newNotes).length);
+
+setNotes(newNotes);
+
+try {
+if(!db){
+setToast({type:'error',message:'❌ Geen database verbinding'});
+return;
+}
+console.log('Saving to Firebase...');
+await db.collection('roadmaps').doc('main').update({
+notes: newNotes,
+updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+});
+console.log('Firebase save successful');
+setToast({type:'success',message:'✓ Notitie verwijderd'});
+} catch(err) {
+console.error('Firebase save error:', err);
+setToast({type:'error',message:'❌ Fout bij opslaan: ' + err.message});
+}
 };
 
 // PDF EXPORT FUNCTION
