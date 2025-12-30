@@ -119,11 +119,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-light);font-weight:600}
 .progress-section{margin-top:16px;padding-top:0}
 .progress-label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-light);margin-bottom:8px;font-weight:500}
-.progress-percentage{font-weight:600;color:var(--ios-blue);font-size:15px}
+.progress-percentage{font-weight:600;color:#1D4ED8;font-size:15px}
 .progress-bar{height:6px;background:var(--ios-gray-5);border-radius:3px;overflow:hidden;position:relative}
-.progress-fill{height:100%;background:var(--ios-blue);transition:width .4s cubic-bezier(0.4, 0, 0.2, 1);border-radius:3px}
-.planning-box{margin-top:16px;padding:16px;background:var(--ios-blue-light);border-radius:12px;border:none}
-.planning-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:var(--ios-blue);margin-bottom:10px}
+.progress-fill{height:100%;background:linear-gradient(90deg,#3B82F6,#1D4ED8);transition:width .4s cubic-bezier(0.4, 0, 0.2, 1);border-radius:3px}
+.planning-box{margin-top:16px;padding:16px;background:#F1F5F9;border-radius:12px;border:none}
+.planning-title{font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;color:#475569;margin-bottom:10px}
 .planning-item{font-size:13px;color:var(--text);margin-bottom:4px;line-height:1.5;font-weight:500}
 .pm-overview{display:flex;align-items:center;gap:12px;margin-bottom:24px;flex-wrap:wrap}
 .pm-label{font-size:13px;font-weight:700;color:var(--text);text-transform:uppercase;letter-spacing:.5px}
@@ -2280,28 +2280,11 @@ return count;
 </aside>
 <main className="main">
 <header className="header">
-<h1 className="title">{showArchive?'Archief':'Klanten Dashboard'}</h1>
-<p className="subtitle">{showArchive?'Gearchiveerde projecten':'Overzicht van alle SEO projecten'}</p>
+<h1 className="title">Klanten Dashboard</h1>
+<p className="subtitle">Overzicht van alle SEO projecten</p>
 </header>
 
-<div style={{display:'flex',gap:'12px',marginBottom:'24px'}}>
-<button onClick={()=>setShowArchive(false)} style={{flex:1,padding:'12px 24px',background:!showArchive?'var(--blue)':'white',color:!showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
-📊 Actieve Projecten ({(()=>{
-let filtered=clients.filter(c=>!c.archived);
-if(pmFilter!=='all')filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
-return filtered.length;
-})()})
-</button>
-<button onClick={()=>setShowArchive(true)} style={{flex:1,padding:'12px 24px',background:showArchive?'var(--blue)':'white',color:showArchive?'white':'var(--text)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer',transition:'all 0.2s'}}>
-📦 Archief ({(()=>{
-let filtered=clients.filter(c=>c.archived);
-if(pmFilter!=='all')filtered=filtered.filter(c=>(c.projectManager||'none')===pmFilter);
-return filtered.length;
-})()})
-</button>
-</div>
-
-{!showArchive&&(()=>{
+{(()=>{
 const upcoming=getAllUpcomingDeadlines();
 if(upcoming.length===0)return null;
 return(
@@ -2622,6 +2605,25 @@ return(
 <div className="joke-footer">
 <div className="joke-text">{SEO_JOKES[Math.floor(Math.random()*SEO_JOKES.length)]}</div>
 </div>
+
+{/* Archief link onderin */}
+{(()=>{
+const archivedCount=clients.filter(c=>c.archived).length;
+if(archivedCount===0&&!showArchive)return null;
+return(
+<div style={{marginTop:'24px',paddingTop:'16px',borderTop:'1px solid var(--border)',display:'flex',justifyContent:'center'}}>
+{showArchive?(
+<button onClick={()=>setShowArchive(false)} style={{padding:'8px 16px',background:'none',border:'none',color:'var(--ios-blue)',fontSize:'13px',fontWeight:'500',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}}>
+← Terug naar actieve projecten
+</button>
+):(
+<button onClick={()=>setShowArchive(true)} style={{padding:'8px 16px',background:'none',border:'none',color:'var(--text-light)',fontSize:'13px',cursor:'pointer',display:'flex',alignItems:'center',gap:'6px'}}>
+<span>📦</span> Archief bekijken ({archivedCount})
+</button>
+)}
+</div>
+);
+})()}
 </main>
 
 {!isAdmin&&(
@@ -2848,6 +2850,24 @@ return(
 <span className="nav-text">Agenda</span>
 <span className="nav-count">{agendaItems.overdue.length+agendaItems.thisWeek.length+agendaItems.thisMonth.length}</span>
 </div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-4`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
+</div>
+{isAdmin&&(
+<div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Rapportage</span>
+</div>
+)}
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -2890,7 +2910,7 @@ return(
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:'#dc2626',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
-<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
 </div>
 <button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
@@ -2921,7 +2941,7 @@ return(
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
-<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
 </div>
 <button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
@@ -2952,7 +2972,7 @@ return(
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
-<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
 </div>
 <button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
@@ -2983,7 +3003,7 @@ return(
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:'#166534',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
-<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'}):item.date}</span>
+<span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
 </div>
 <button className="btn" style={{padding:'6px 12px',fontSize:'12px'}} onClick={(e)=>{e.stopPropagation();setSelectedClient(item.clientId);setActiveView('roadmap');}}>
