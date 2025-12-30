@@ -19,6 +19,11 @@ body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
 body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .banner-btn{background:#5B8AB5;color:white}
+body.dark-mode .checkbox{background:#2C2C2E;border-color:#636366}
+body.dark-mode .checkbox.checked{background:#4A7BA7;border-color:#4A7BA7}
+body.dark-mode .notes-section{background:#2C2C2E !important;border-color:#38383A !important}
+body.dark-mode .notes-section div[style*="background:white"]{background:#1C1C1E !important}
+body.dark-mode .notes-section div[style*="background: white"]{background:#1C1C1E !important}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
@@ -189,9 +194,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .task-card.clickable{cursor:pointer}
 .task-card.clickable:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .task-card.completed{background:var(--bg);opacity:.7}
-.checkbox{width:20px;height:20px;border:2px solid var(--border);border-radius:6px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center}
+.checkbox{width:20px;height:20px;border:2px solid #9CA3AF;border-radius:6px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:white}
 .checkbox.clickable{cursor:pointer}
-.checkbox.clickable:hover{border-color:var(--blue)}
+.checkbox.clickable:hover{border-color:var(--blue);background:#f0f9ff}
 .checkbox.checked{background:var(--blue);border-color:var(--blue)}
 .checkbox.checked::after{content:'✓';color:white;font-size:14px;font-weight:bold}
 .task-content{flex:1}
@@ -1657,32 +1662,20 @@ setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
 const deleteNote=async(noteKey)=>{
-console.log('=== DELETE NOTE START ===');
-console.log('1. noteKey:', noteKey);
-console.log('2. isAdmin:', isAdmin);
-
 if(!isAdmin){
 setToast({type:'error',message:'❌ Alleen admin'});
 return;
 }
 
-console.log('3. All keys:', Object.keys(notes));
-console.log('4. Key exists?', noteKey in notes);
-
 let keyToDelete = noteKey;
 if(!(noteKey in notes)){
 const noteId = noteKey.split('-').pop();
-console.log('5. Looking for ID:', noteId);
 keyToDelete = Object.keys(notes).find(k => k.includes(noteId));
-console.log('6. Found key:', keyToDelete);
 if(!keyToDelete){
 setToast({type:'error',message:'❌ Niet gevonden'});
 return;
 }
 }
-
-console.log('7. Will delete:', keyToDelete);
-console.log('8. Creating new notes...');
 
 const newNotes = {};
 for(const k of Object.keys(notes)){
@@ -1691,9 +1684,6 @@ newNotes[k] = notes[k];
 }
 }
 
-console.log('9. New count:', Object.keys(newNotes).length);
-console.log('10. db exists?', !!db);
-
 setNotes(newNotes);
 
 if(!db){
@@ -1701,13 +1691,10 @@ setToast({type:'error',message:'❌ Geen db'});
 return;
 }
 
-console.log('11. Saving...');
 try{
 await db.collection('roadmaps').doc('main').update({notes:newNotes});
-console.log('12. SUCCESS!');
-setToast({type:'success',message:'✓ Verwijderd'});
+setToast({type:'success',message:'✓ Notitie verwijderd'});
 }catch(e){
-console.error('13. ERROR:', e);
 setToast({type:'error',message:'❌ '+e.message});
 }
 };
@@ -2605,25 +2592,25 @@ const clientTodos=getClientTodos(client.id);
 const isExpanded=expandedTodos[client.id];
 const newTodoText=newTodoInputs[client.id]||'';
 return(
-<div style={{marginTop:'12px',padding:'12px',background:'#FEF9E7',borderRadius:'12px',border:'1px solid #F4D03F'}}>
+<div style={{marginTop:'12px',padding:'12px',background:darkMode?'#2C2820':'#FEF9E7',borderRadius:'12px',border:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}}>
 <div onClick={(e)=>{e.stopPropagation();setExpandedTodos({...expandedTodos,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:'#9A7B0A'}}>📋 To-Do ({clientTodos.filter(t=>!t.completed).length})</span>
-<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:'#9A7B0A'}}>▼</span>
+<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:darkMode?'#FDE047':'#9A7B0A'}}>📋 To-Do ({clientTodos.filter(t=>!t.completed).length})</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:darkMode?'#FDE047':'#9A7B0A'}}>▼</span>
 </div>
 {isExpanded&&(
 <div style={{marginTop:'8px'}}>
 {clientTodos.map(todo=>(
-<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid #F4D03F'}} onClick={(e)=>e.stopPropagation()}>
-<div onClick={()=>toggleTodo(todo.key)} style={{width:'18px',height:'18px',borderRadius:'4px',border:'2px solid #9A7B0A',background:todo.completed?'#9A7B0A':'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
-{todo.completed&&<span style={{color:'white',fontSize:'12px'}}>✓</span>}
+<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}} onClick={(e)=>e.stopPropagation()}>
+<div onClick={()=>toggleTodo(todo.key)} style={{width:'18px',height:'18px',borderRadius:'4px',border:`2px solid ${darkMode?'#FDE047':'#9A7B0A'}`,background:todo.completed?(darkMode?'#FDE047':'#9A7B0A'):'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center'}}>
+{todo.completed&&<span style={{color:darkMode?'#1C1C1E':'white',fontSize:'12px'}}>✓</span>}
 </div>
-<span style={{flex:1,fontSize:'12px',color:'#5D4E0A',textDecoration:todo.completed?'line-through':'none',opacity:todo.completed?0.6:1}}>{todo.text}</span>
-<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'12px',opacity:0.6}}>✕</button>
+<span style={{flex:1,fontSize:'12px',color:darkMode?'#FDE047':'#5D4E0A',textDecoration:todo.completed?'line-through':'none',opacity:todo.completed?0.6:1}}>{todo.text}</span>
+<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:darkMode?'#FDE047':'#9A7B0A',cursor:'pointer',fontSize:'12px',opacity:0.6}}>✕</button>
 </div>
 ))}
 <div style={{display:'flex',gap:'6px',marginTop:'8px'}} onClick={(e)=>e.stopPropagation()}>
-<input type="text" placeholder="Nieuwe to-do..." value={newTodoText} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[client.id]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{flex:1,padding:'6px 10px',border:'1px solid #F4D03F',borderRadius:'6px',fontSize:'12px',background:'white'}}/>
-<button onClick={()=>{if(newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{padding:'6px 12px',background:'#9A7B0A',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+</button>
+<input type="text" placeholder="Nieuwe to-do..." value={newTodoText} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[client.id]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{flex:1,padding:'6px 10px',border:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`,borderRadius:'6px',fontSize:'12px',background:darkMode?'#1C1C1E':'white',color:'var(--text)'}}/>
+<button onClick={()=>{if(newTodoText.trim()){addTodo(client.id,newTodoText);setNewTodoInputs({...newTodoInputs,[client.id]:''});}}} style={{padding:'6px 12px',background:darkMode?'#FDE047':'#9A7B0A',color:darkMode?'#1C1C1E':'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+</button>
 </div>
 </div>
 )}
@@ -2637,20 +2624,20 @@ const clientNotes=getClientNotes(client.id);
 if(clientNotes.length===0)return null;
 const isExpanded=expandedNotes[client.id];
 return(
-<div style={{marginTop:'12px',padding:'12px',background:'#E8F4FD',borderRadius:'12px',border:'1px solid #85C1E9'}}>
+<div style={{marginTop:'12px',padding:'12px',background:darkMode?'#1E2D3D':'#E8F4FD',borderRadius:'12px',border:`1px solid ${darkMode?'#2471A3':'#85C1E9'}`}}>
 <div onClick={(e)=>{e.stopPropagation();setExpandedNotes({...expandedNotes,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:'#2471A3'}}>💬 Notities ({clientNotes.length})</span>
-<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:'#2471A3'}}>▼</span>
+<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:darkMode?'#93C5FD':'#2471A3'}}>💬 Notities ({clientNotes.length})</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:darkMode?'#93C5FD':'#2471A3'}}>▼</span>
 </div>
 {isExpanded&&(
 <div style={{marginTop:'8px'}}>
 {clientNotes.slice(0,3).map((note,i)=>(
-<div key={i} style={{padding:'8px',background:'white',borderRadius:'6px',marginBottom:'6px',fontSize:'12px',color:'#1A5276',lineHeight:'1.4'}}>
+<div key={i} style={{padding:'8px',background:darkMode?'#1C1C1E':'white',borderRadius:'6px',marginBottom:'6px',fontSize:'12px',color:darkMode?'#93C5FD':'#1A5276',lineHeight:'1.4'}}>
 <div style={{marginBottom:'4px'}}>{note.text}</div>
-<div style={{fontSize:'10px',color:'#85C1E9'}}>{new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>
+<div style={{fontSize:'10px',color:darkMode?'#60A5FA':'#85C1E9'}}>{new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>
 </div>
 ))}
-{clientNotes.length>3&&<div style={{fontSize:'11px',color:'#2471A3',fontStyle:'italic'}}>+{clientNotes.length-3} meer notities</div>}
+{clientNotes.length>3&&<div style={{fontSize:'11px',color:darkMode?'#93C5FD':'#2471A3',fontStyle:'italic'}}>+{clientNotes.length-3} meer notities</div>}
 </div>
 )}
 </div>
@@ -2994,23 +2981,23 @@ return count;
 
 {agendaItems.overdue.length>0&&(
 <div style={{marginBottom:'32px'}}>
-<div style={{background:'#fef2f2',border:'1px solid #fecaca',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{background:darkMode?'#3D1F1F':'#fef2f2',border:`1px solid ${darkMode?'#7F1D1D':'#fecaca'}`,borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span style={{fontSize:'20px'}}>🔴</span>
 <div style={{flex:1}}>
-<div style={{fontWeight:'600',color:'#991b1b'}}>VERLOPEN / VANDAAG ({agendaItems.overdue.length})</div>
-<div style={{fontSize:'12px',color:'#991b1b',marginTop:'2px'}}>Deze taken hebben prioriteit!</div>
+<div style={{fontWeight:'600',color:darkMode?'#FCA5A5':'#991b1b'}}>VERLOPEN / VANDAAG ({agendaItems.overdue.length})</div>
+<div style={{fontSize:'12px',color:darkMode?'#FCA5A5':'#991b1b',marginTop:'2px'}}>Deze taken hebben prioriteit!</div>
 </div>
 </div>
 {agendaItems.overdue.map(item=>(
-<div key={item.key} className="task-card" style={{marginBottom:'12px',background:'#fef2f2',borderLeft:'4px solid #dc2626'}}>
+<div key={item.key} className="task-card" style={{marginBottom:'12px',background:darkMode?'#2C2020':'#fef2f2',borderLeft:'4px solid #dc2626'}}>
 <div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
-<div style={{fontSize:'12px',color:'#dc2626',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<div style={{fontSize:'12px',color:darkMode?'#FCA5A5':'#dc2626',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
@@ -3025,11 +3012,11 @@ return count;
 
 {agendaItems.thisWeek.length>0&&(
 <div style={{marginBottom:'32px'}}>
-<div style={{background:'#fef9c3',border:'1px solid #fde047',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{background:darkMode?'#3D3520':'#fef9c3',border:`1px solid ${darkMode?'#854D0E':'#fde047'}`,borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span style={{fontSize:'20px'}}>🟡</span>
 <div style={{flex:1}}>
-<div style={{fontWeight:'600',color:'#854d0e'}}>DEZE WEEK ({agendaItems.thisWeek.length})</div>
-<div style={{fontSize:'12px',color:'#854d0e',marginTop:'2px'}}>Binnenkort af te ronden</div>
+<div style={{fontWeight:'600',color:darkMode?'#FDE047':'#854d0e'}}>DEZE WEEK ({agendaItems.thisWeek.length})</div>
+<div style={{fontSize:'12px',color:darkMode?'#FDE047':'#854d0e',marginTop:'2px'}}>Binnenkort af te ronden</div>
 </div>
 </div>
 {agendaItems.thisWeek.map(item=>(
@@ -3038,10 +3025,10 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
-<div style={{fontSize:'12px',color:'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<div style={{fontSize:'12px',color:darkMode?'#FDE047':'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
@@ -3056,11 +3043,11 @@ return count;
 
 {agendaItems.thisMonth.length>0&&(
 <div style={{marginBottom:'32px'}}>
-<div style={{background:'#dbeafe',border:'1px solid #3b82f6',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{background:darkMode?'#1E3A5F':'#dbeafe',border:`1px solid ${darkMode?'#3B82F6':'#3b82f6'}`,borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span style={{fontSize:'20px'}}>🔵</span>
 <div style={{flex:1}}>
-<div style={{fontWeight:'600',color:'#1e40af'}}>DEZE MAAND ({agendaItems.thisMonth.length})</div>
-<div style={{fontSize:'12px',color:'#1e40af',marginTop:'2px'}}>Deze maand afronden</div>
+<div style={{fontWeight:'600',color:darkMode?'#93C5FD':'#1e40af'}}>DEZE MAAND ({agendaItems.thisMonth.length})</div>
+<div style={{fontSize:'12px',color:darkMode?'#93C5FD':'#1e40af',marginTop:'2px'}}>Deze maand afronden</div>
 </div>
 </div>
 {agendaItems.thisMonth.map(item=>(
@@ -3069,10 +3056,10 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
-<div style={{fontSize:'12px',color:'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<div style={{fontSize:'12px',color:darkMode?'#93C5FD':'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
@@ -3087,11 +3074,11 @@ return count;
 
 {agendaItems.later.length>0&&(
 <div style={{marginBottom:'32px'}}>
-<div style={{background:'#f0fdf4',border:'1px solid #86efac',borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{background:darkMode?'#14352C':'#f0fdf4',border:`1px solid ${darkMode?'#166534':'#86efac'}`,borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span style={{fontSize:'20px'}}>🟢</span>
 <div style={{flex:1}}>
-<div style={{fontWeight:'600',color:'#166534'}}>VOLGENDE PERIODE ({agendaItems.later.length})</div>
-<div style={{fontSize:'12px',color:'#166534',marginTop:'2px'}}>Geen haast, maar wel plannen</div>
+<div style={{fontWeight:'600',color:darkMode?'#86EFAC':'#166534'}}>VOLGENDE PERIODE ({agendaItems.later.length})</div>
+<div style={{fontSize:'12px',color:darkMode?'#86EFAC':'#166534',marginTop:'2px'}}>Geen haast, maar wel plannen</div>
 </div>
 </div>
 {agendaItems.later.map(item=>(
@@ -3100,10 +3087,10 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
-<div style={{fontSize:'12px',color:'#166534',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<div style={{fontSize:'12px',color:darkMode?'#86EFAC':'#166534',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
@@ -3628,13 +3615,13 @@ Looker Studio
 </div>
 
 {currentClient.budget>0&&(
-<div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<div style={{background:darkMode?'#1C1C1E':'#f8fafc',border:`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
 <h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd & Pakket
 </h3>
-<div style={{fontSize:'14px',color:'#64748b'}}>
-Pakket: <span style={{fontWeight:'700',color:'#3b82f6'}}>{currentClient.budget} uren</span>
+<div style={{fontSize:'14px',color:darkMode?'#AEAEB2':'#64748b'}}>
+Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{currentClient.budget} uren</span>
 </div>
 </div>
 {(()=>{
@@ -3656,14 +3643,14 @@ return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
 const percentage=currentClient.budget>0?Math.round((hours/currentClient.budget)*100):0;
 const barColor=percentage>=90?'#dc2626':percentage>=70?'#f59e0b':'#10b981';
 return(
-<div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div key={monthKey} style={{background:darkMode?'#2C2C2E':'white',border:isCurrent?'2px solid #3b82f6':`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
 <span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{monthLabel}</span>
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<span style={{fontSize:'13px',color:'#64748b'}}>
+<span style={{fontSize:'13px',color:darkMode?'#AEAEB2':'#64748b'}}>
 <span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {currentClient.budget}u
 </span>
 {isAdmin&&(
@@ -3674,7 +3661,7 @@ return(
 </div>
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<div style={{flex:1,height:'6px',background:'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{flex:1,height:'6px',background:darkMode?'#38383A':'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
 <div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
 </div>
 <span style={{fontSize:'12px',fontWeight:'600',color:barColor,minWidth:'40px',textAlign:'right'}}>{percentage}%</span>
@@ -3781,13 +3768,8 @@ return(
 {isAdmin&&(
 <button onClick={async(e)=>{
 e.stopPropagation();
-console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-try{
 await deleteNote(noteKey);
-}catch(err){
-console.error('Delete button error:', err);
-}
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3809,61 +3791,16 @@ console.error('Delete button error:', err);
 </div>
 )}
 
-{currentStep?.type==='planning'&&(()=>{
-const clientNotes=getClientNotes(selectedClient);
-if(clientNotes.length===0)return null;
-return(
-<div className="notes-section" style={{background:'#f8f9fa',border:'1px solid #e1e4e8',borderRadius:'8px',padding:'16px',marginBottom:'24px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px',fontWeight:'600',fontSize:'14px',color:'#444'}}>
-<span>💬</span>
-<span>Notities ({clientNotes.length})</span>
-</div>
-{clientNotes.slice(0,3).map(note=>{
-const noteKey = note.key || `${selectedClient}-${note.id}`;
-return(
-<div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
-{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
-</div>
-{isAdmin&&(
-<button onClick={async(e)=>{
-e.stopPropagation();
-console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
-if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-try{
-await deleteNote(noteKey);
-}catch(err){
-console.error('Delete button error:', err);
-}
-}
-}} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
-🗑️ <span>Verwijder</span>
-</button>
-)}
-</div>
-<div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
-</div>
-);})}
-{clientNotes.length>3&&(
-<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginTop:'8px'}}>
-+ {clientNotes.length-3} meer notitie(s)
-</div>
-)}
-</div>
-);
-})()}
-
 {currentStep?.type==='planning'?(
 <>
 {clients.find(c=>c.id===selectedClient)?.budget>0&&(
-<div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<div style={{background:darkMode?'#1C1C1E':'#f8fafc',border:`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
 <h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd Tracking
 </h3>
-<div style={{fontSize:'14px',color:'#64748b'}}>
-Pakket: <span style={{fontWeight:'700',color:'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
+<div style={{fontSize:'14px',color:darkMode?'#AEAEB2':'#64748b'}}>
+Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
 </div>
 </div>
 {(()=>{
@@ -3887,14 +3824,14 @@ return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
 const percentage=client.budget>0?Math.round((hours/client.budget)*100):0;
 const barColor=percentage>=90?'#dc2626':percentage>=70?'#f59e0b':'#10b981';
 return(
-<div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div key={monthKey} style={{background:darkMode?'#2C2C2E':'white',border:isCurrent?'2px solid #3b82f6':`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
 <span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{monthLabel}</span>
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<span style={{fontSize:'13px',color:'#64748b'}}>
+<span style={{fontSize:'13px',color:darkMode?'#AEAEB2':'#64748b'}}>
 <span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {client.budget}u
 </span>
 {isAdmin&&(
@@ -3905,7 +3842,7 @@ return(
 </div>
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<div style={{flex:1,height:'6px',background:'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{flex:1,height:'6px',background:darkMode?'#38383A':'#e2e8f0',borderRadius:'3px',overflow:'hidden'}}>
 <div style={{width:`${Math.min(100,percentage)}%`,height:'100%',background:barColor,transition:'width 0.3s'}}/>
 </div>
 <span style={{fontSize:'12px',fontWeight:'600',color:barColor,minWidth:'40px',textAlign:'right'}}>{percentage}%</span>
@@ -3918,8 +3855,8 @@ return(
 )}
 
 {/* TO DO SECTIE bij Planning - voor iedereen zichtbaar */}
-<div style={{background:'#FEF9E7',border:'1px solid #F4D03F',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
-<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'#9A7B0A',display:'flex',alignItems:'center',gap:'8px'}}>
+<div style={{background:darkMode?'#2C2820':'#FEF9E7',border:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:darkMode?'#FDE047':'#9A7B0A',display:'flex',alignItems:'center',gap:'8px'}}>
 📋 To-Do Overzicht
 </h3>
 {(()=>{
@@ -3940,35 +3877,75 @@ const openTodos=allTodos.filter(t=>!t.completed);
 const completedTodos=clientTodos.filter(t=>t.completed);
 return(
 <div>
-{openTodos.length===0&&<div style={{fontSize:'13px',color:'#9A7B0A',fontStyle:'italic'}}>Geen openstaande to-do's! 🎉</div>}
+{openTodos.length===0&&<div style={{fontSize:'13px',color:darkMode?'#FDE047':'#9A7B0A',fontStyle:'italic'}}>Geen openstaande to-do's! 🎉</div>}
 {openTodos.map(todo=>(
-<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 0',borderBottom:'1px solid #F4D03F'}}>
-<div onClick={()=>{if(todo.isPlanning){togglePlanningItem(todo.monthKey,todo.itemId,selectedClient);}else if(isAdmin){toggleTodo(todo.key);}}} style={{width:'20px',height:'20px',borderRadius:'4px',border:'2px solid #9A7B0A',background:todo.completed?'#9A7B0A':'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-{todo.completed&&<span style={{color:'white',fontSize:'14px'}}>✓</span>}
+<div key={todo.key} style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 0',borderBottom:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}}>
+<div onClick={()=>{if(todo.isPlanning){togglePlanningItem(todo.monthKey,todo.itemId,selectedClient);}else if(isAdmin){toggleTodo(todo.key);}}} style={{width:'20px',height:'20px',borderRadius:'4px',border:`2px solid ${darkMode?'#FDE047':'#9A7B0A'}`,background:todo.completed?(darkMode?'#FDE047':'#9A7B0A'):'transparent',cursor:'pointer',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+{todo.completed&&<span style={{color:darkMode?'#1C1C1E':'white',fontSize:'14px'}}>✓</span>}
 </div>
-<span style={{flex:1,fontSize:'14px',color:'#5D4E0A'}}>{todo.text}</span>
-{todo.isPlanning&&<span style={{fontSize:'11px',background:'#F4D03F',color:'#9A7B0A',padding:'2px 8px',borderRadius:'4px'}}>Planning</span>}
-{!todo.isPlanning&&isAdmin&&<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:'#9A7B0A',cursor:'pointer',fontSize:'14px',opacity:0.6}}>✕</button>}
+<span style={{flex:1,fontSize:'14px',color:darkMode?'#FDE047':'#5D4E0A'}}>{todo.text}</span>
+{todo.isPlanning&&<span style={{fontSize:'11px',background:darkMode?'#5D4E0A':'#F4D03F',color:darkMode?'#FDE047':'#9A7B0A',padding:'2px 8px',borderRadius:'4px'}}>Planning</span>}
+{!todo.isPlanning&&isAdmin&&<button onClick={()=>deleteTodo(todo.key)} style={{background:'none',border:'none',color:darkMode?'#FDE047':'#9A7B0A',cursor:'pointer',fontSize:'14px',opacity:0.6}}>✕</button>}
 </div>
 ))}
 {completedTodos.length>0&&(
-<div style={{marginTop:'16px',paddingTop:'12px',borderTop:'2px solid #F4D03F'}}>
-<div style={{fontSize:'12px',color:'#9A7B0A',marginBottom:'8px',fontWeight:'600'}}>Afgerond ({completedTodos.length})</div>
+<div style={{marginTop:'16px',paddingTop:'12px',borderTop:`2px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}}>
+<div style={{fontSize:'12px',color:darkMode?'#FDE047':'#9A7B0A',marginBottom:'8px',fontWeight:'600'}}>Afgerond ({completedTodos.length})</div>
 {completedTodos.slice(0,3).map(todo=>(
 <div key={todo.key} style={{display:'flex',alignItems:'center',gap:'10px',padding:'6px 0',opacity:0.6}}>
-<div onClick={()=>isAdmin&&toggleTodo(todo.key)} style={{width:'20px',height:'20px',borderRadius:'4px',background:'#9A7B0A',cursor:isAdmin?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
-<span style={{color:'white',fontSize:'14px'}}>✓</span>
+<div onClick={()=>isAdmin&&toggleTodo(todo.key)} style={{width:'20px',height:'20px',borderRadius:'4px',background:darkMode?'#FDE047':'#9A7B0A',cursor:isAdmin?'pointer':'default',display:'flex',alignItems:'center',justifyContent:'center',flexShrink:0}}>
+<span style={{color:darkMode?'#1C1C1E':'white',fontSize:'14px'}}>✓</span>
 </div>
-<span style={{flex:1,fontSize:'14px',color:'#5D4E0A',textDecoration:'line-through'}}>{todo.text}</span>
+<span style={{flex:1,fontSize:'14px',color:darkMode?'#FDE047':'#5D4E0A',textDecoration:'line-through'}}>{todo.text}</span>
 </div>
 ))}
 </div>
 )}
 {isAdmin&&(
 <div style={{display:'flex',gap:'8px',marginTop:'16px'}}>
-<input type="text" placeholder="Nieuwe to-do toevoegen..." value={newTodoInputs[selectedClient]||''} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[selectedClient]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&(newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{flex:1,padding:'10px 14px',border:'1px solid #F4D03F',borderRadius:'8px',fontSize:'14px',background:'white'}}/>
-<button onClick={()=>{if((newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{padding:'10px 20px',background:'#9A7B0A',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Toevoegen</button>
+<input type="text" placeholder="Nieuwe to-do toevoegen..." value={newTodoInputs[selectedClient]||''} onChange={(e)=>setNewTodoInputs({...newTodoInputs,[selectedClient]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter'&&(newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{flex:1,padding:'10px 14px',border:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`,borderRadius:'8px',fontSize:'14px',background:darkMode?'#1C1C1E':'white',color:'var(--text)'}}/>
+<button onClick={()=>{if((newTodoInputs[selectedClient]||'').trim()){addTodo(selectedClient,newTodoInputs[selectedClient]);setNewTodoInputs({...newTodoInputs,[selectedClient]:''});}}} style={{padding:'10px 20px',background:darkMode?'#FDE047':'#9A7B0A',color:darkMode?'#1C1C1E':'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Toevoegen</button>
 </div>
+)}
+</div>
+);
+})()}
+
+{/* NOTITIES IN TO DO OVERZICHT */}
+{(()=>{
+const clientNotes=getClientNotes(selectedClient);
+if(clientNotes.length===0&&!isAdmin)return null;
+return(
+<div style={{marginTop:'20px',paddingTop:'16px',borderTop:`2px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}}>
+<div style={{fontSize:'14px',fontWeight:'600',color:darkMode?'#FDE047':'#9A7B0A',marginBottom:'12px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>💬</span> Notities ({clientNotes.length})
+</div>
+{clientNotes.slice(0,5).map(note=>{
+const noteKey = note.key || `${selectedClient}-${note.id}`;
+return(
+<div key={note.id} style={{background:darkMode?'#1C1C1E':'white',border:`1px solid ${darkMode?'#38383A':'#F4D03F'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'6px'}}>
+<div style={{fontSize:'11px',color:darkMode?'#AEAEB2':'#9A7B0A'}}>
+{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+</div>
+{isAdmin&&(
+<button onClick={async(e)=>{
+e.stopPropagation();
+if(confirm('Notitie verwijderen?')){
+await deleteNote(noteKey);
+}
+}} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600'}}>
+🗑️
+</button>
+)}
+</div>
+<div style={{fontSize:'13px',color:darkMode?'#FDE047':'#5D4E0A',lineHeight:'1.5'}}>{note.text}</div>
+</div>
+);})}
+{isAdmin&&(
+<button onClick={()=>setShowNoteModal(true)} style={{marginTop:'8px',padding:'8px 16px',background:darkMode?'#5D4E0A':'#F4D03F',color:darkMode?'#FDE047':'#9A7B0A',border:'none',borderRadius:'6px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>
++ Notitie Toevoegen
+</button>
 )}
 </div>
 );
