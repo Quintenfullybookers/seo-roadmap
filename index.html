@@ -7,7 +7,15 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDA2NkNDIiByeD0iNiIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMyIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlRGQjwvdGV4dD4KPC9zdmc+Cg==">
 <style>
 :root{--ios-blue:#1E3A5F;--ios-blue-dark:#152A45;--ios-blue-light:#E8EEF4;--ios-green:#34C759;--ios-green-bg:#E3F9E9;--ios-orange:#FF9500;--ios-orange-bg:#FFF3E0;--ios-yellow:#FFCC00;--ios-yellow-bg:#FFF9E5;--ios-red:#FF3B30;--ios-red-bg:#FFEEED;--ios-purple:#AF52DE;--ios-purple-bg:#F4EBFF;--ios-gray:#8E8E93;--ios-gray-2:#AEAEB2;--ios-gray-3:#C7C7CC;--ios-gray-4:#D1D1D6;--ios-gray-5:#E5E5EA;--ios-gray-6:#F2F2F7;--text:#000000;--text-light:#8E8E93;--text-lighter:#C7C7CC;--border:#E5E5EA;--bg:#F2F2F7;--white:#FFFFFF;--shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);--shadow:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);--shadow-lg:0 10px 20px rgba(0,0,0,0.1),0 3px 6px rgba(0,0,0,0.05);--shadow-card:0 2px 8px rgba(0,0,0,0.08)}
-body.dark-mode{--text:#FFFFFF;--text-light:#AEAEB2;--text-lighter:#636366;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#2D5A87;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
+body.dark-mode{--text:#FFFFFF;--text-light:#AEAEB2;--text-lighter:#636366;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#4A7BA7;--ios-blue-light:#2C3E50;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
+body.dark-mode .stat-number{color:#4A7BA7}
+body.dark-mode .progress-percentage{color:#4A7BA7}
+body.dark-mode .planning-box{background:#2C2C2E}
+body.dark-mode .planning-title{color:#AEAEB2}
+body.dark-mode .task-card{background:#2C2C2E;border-color:#38383A}
+body.dark-mode .client-card{background:#1C1C1E}
+body.dark-mode .status-card{background:#1C1C1E;border-color:#38383A}
+body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
@@ -313,8 +321,8 @@ const STATUS_OPTIONS=[
 
 // PROJECT MANAGERS
 const PROJECT_MANAGERS=[
-{key:'hugo',label:'Hugo',icon:'👨',color:'#64748B'},
-{key:'michelle',label:'Michelle',icon:'👩',color:'#94A3B8'},
+{key:'hugo',label:'Hugo',icon:'👨',color:'#5B7FA3'},
+{key:'michelle',label:'Michelle',icon:'👩',color:'#B37A95'},
 {key:'none',label:'Geen PM',icon:'⚪',color:'#CCCCCC'}
 ];
 
@@ -2296,9 +2304,9 @@ return(
 {upcoming.slice(0,5).map(item=>(
 <div key={item.key} style={{background:'white',border:'1px solid #fbbf24',borderRadius:'6px',padding:'10px',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
 <div>
-<div style={{fontWeight:'600',fontSize:'13px',color:'#333'}}>{item.clientName}</div>
-<div style={{fontSize:'12px',color:'#666',marginTop:'2px'}}>{item.itemText}</div>
-<div style={{fontSize:'12px',color:'#666',marginTop:'2px'}}>
+<div style={{fontWeight:'600',fontSize:'13px',color:'var(--text)'}}>{item.clientName}</div>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'2px'}}>{item.itemText}</div>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'2px'}}>
 📅 {new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})} - {item.urgency.label}
 </div>
 </div>
@@ -2429,7 +2437,7 @@ return(
 {client.website&&(<><br/><a href={client.website} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>🌐 Website</a></>)}
 {client.seRanking&&(<a href={client.seRanking} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📊 SE Ranking</a>)}
 {client.lookerStudio&&(<a href={client.lookerStudio} target="_blank" className="client-link" onClick={(e)=>e.stopPropagation()}>📈 Looker Studio</a>)}
-{(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'#666'}}>💬 {nc}</span>:null;})()}
+{(()=>{const nc=getClientNotes(client.id).length;return nc>0?<span style={{marginLeft:'8px',fontSize:'13px',color:'var(--text-light)'}}>💬 {nc}</span>:null;})()}
 </div>
 {client.budget>0&&(()=>{
 const budget=client.budget;
@@ -2904,7 +2912,7 @@ return count;
 <div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
-<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
 <span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
@@ -2935,7 +2943,7 @@ return count;
 <div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
-<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
 <span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
@@ -2966,7 +2974,7 @@ return count;
 <div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
-<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
 <span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
@@ -2997,7 +3005,7 @@ return count;
 <div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
-<span style={{fontWeight:'600',color:'#111827'}}>{item.clientName}</span>
+<span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
 <span style={{padding:'2px 8px',background:'#dbeafe',color:'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
@@ -3528,7 +3536,7 @@ Looker Studio
 {currentClient.budget>0&&(
 <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
-<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
+<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd & Pakket
 </h3>
 <div style={{fontSize:'14px',color:'#64748b'}}>
@@ -3557,7 +3565,7 @@ return(
 <div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'14px',fontWeight:'600',color:'#1e293b'}}>{monthLabel}</span>
+<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{monthLabel}</span>
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
@@ -3737,7 +3745,7 @@ return(
 {clientNotes.slice(0,3).map(note=>(
 <div key={note.id} style={{background:'white',border:'1px solid #e1e4e8',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
-<div style={{fontSize:'11px',color:'#666',marginBottom:'6px'}}>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
 </div>
 {isAdmin&&(
@@ -3776,11 +3784,11 @@ deleteNote(noteKey);
 </button>
 )}
 </div>
-<div style={{fontSize:'13px',color:'#333',lineHeight:'1.5'}}>{note.text}</div>
+<div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
 </div>
 ))}
 {clientNotes.length>3&&(
-<div style={{fontSize:'12px',color:'#666',fontStyle:'italic',marginTop:'8px'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginTop:'8px'}}>
 + {clientNotes.length-3} meer notitie(s)
 </div>
 )}
@@ -3793,7 +3801,7 @@ deleteNote(noteKey);
 {clients.find(c=>c.id===selectedClient)?.budget>0&&(
 <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
-<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
+<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd Tracking
 </h3>
 <div style={{fontSize:'14px',color:'#64748b'}}>
@@ -3824,7 +3832,7 @@ return(
 <div key={monthKey} style={{background:'white',border:isCurrent?'2px solid #3b82f6':'1px solid #e2e8f0',borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'14px',fontWeight:'600',color:'#1e293b'}}>{monthLabel}</span>
+<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{monthLabel}</span>
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
@@ -3932,7 +3940,7 @@ return items;
 {currentStep.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text}
 </div>
 {item.deadline&&(
-<div style={{fontSize:'12px',color:'#666',marginTop:'4px'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 📅 {item.deadline}
 </div>
 )}
@@ -4138,7 +4146,7 @@ setItemModalData({});
 <div className="modal-overlay" onClick={()=>setShowDeadlineModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
 <h2 className="modal-title">Deadline Instellen</h2>
-<p style={{fontSize:'14px',color:'#666',marginBottom:'16px'}}>{deadlineModalTask.title}</p>
+<p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>{deadlineModalTask.title}</p>
 <div className="input-group">
 <label className="input-label">Deadline</label>
 <input type="date" className="modal-input" value={itemModalData.deadlineDate||deadlineModalTask.currentDeadline||''} onChange={(e)=>setItemModalData({...itemModalData,deadlineDate:e.target.value})} autoFocus/>
