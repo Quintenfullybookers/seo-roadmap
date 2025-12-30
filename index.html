@@ -1657,58 +1657,58 @@ setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
 const deleteNote=async(noteKey)=>{
+console.log('=== DELETE NOTE START ===');
+console.log('1. noteKey:', noteKey);
+console.log('2. isAdmin:', isAdmin);
+
 if(!isAdmin){
-setToast({type:'error',message:'❌ Alleen admin kan notities verwijderen'});
+setToast({type:'error',message:'❌ Alleen admin'});
 return;
 }
 
-try {
-console.log('Delete note called with key:', noteKey);
-console.log('All note keys:', Object.keys(notes));
+console.log('3. All keys:', Object.keys(notes));
+console.log('4. Key exists?', noteKey in notes);
 
 let keyToDelete = noteKey;
-
-// Direct match check
-if(!notes[noteKey]){
+if(!(noteKey in notes)){
 const noteId = noteKey.split('-').pop();
-console.log('Looking for note with ID:', noteId);
-const matchingKey = Object.keys(notes).find(k => k.endsWith(noteId) || k.includes(noteId));
-if(matchingKey){
-console.log('Found matching key:', matchingKey);
-keyToDelete = matchingKey;
-} else {
-console.log('No match found');
-setToast({type:'error',message:'❌ Notitie niet gevonden'});
+console.log('5. Looking for ID:', noteId);
+keyToDelete = Object.keys(notes).find(k => k.includes(noteId));
+console.log('6. Found key:', keyToDelete);
+if(!keyToDelete){
+setToast({type:'error',message:'❌ Niet gevonden'});
 return;
 }
-} else {
-console.log('Direct match found');
 }
 
-console.log('Creating new notes object, deleting key:', keyToDelete);
-const newNotes={...notes};
-delete newNotes[keyToDelete];
-console.log('New notes count:', Object.keys(newNotes).length);
+console.log('7. Will delete:', keyToDelete);
+console.log('8. Creating new notes...');
 
-console.log('Setting state...');
+const newNotes = {};
+for(const k of Object.keys(notes)){
+if(k !== keyToDelete){
+newNotes[k] = notes[k];
+}
+}
+
+console.log('9. New count:', Object.keys(newNotes).length);
+console.log('10. db exists?', !!db);
+
 setNotes(newNotes);
 
-console.log('Checking db:', db ? 'exists' : 'null');
 if(!db){
-setToast({type:'error',message:'❌ Geen database verbinding'});
+setToast({type:'error',message:'❌ Geen db'});
 return;
 }
 
-console.log('Saving to Firebase...');
-await db.collection('roadmaps').doc('main').update({
-notes: newNotes,
-updatedAt: firebase.firestore.FieldValue.serverTimestamp()
-});
-console.log('Firebase save successful');
-setToast({type:'success',message:'✓ Notitie verwijderd'});
-} catch(err) {
-console.error('Error in deleteNote:', err);
-setToast({type:'error',message:'❌ Fout: ' + err.message});
+console.log('11. Saving...');
+try{
+await db.collection('roadmaps').doc('main').update({notes:newNotes});
+console.log('12. SUCCESS!');
+setToast({type:'success',message:'✓ Verwijderd'});
+}catch(e){
+console.error('13. ERROR:', e);
+setToast({type:'error',message:'❌ '+e.message});
 }
 };
 
@@ -3779,11 +3779,15 @@ return(
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{
+<button onClick={async(e)=>{
 e.stopPropagation();
 console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-deleteNote(noteKey);
+try{
+await deleteNote(noteKey);
+}catch(err){
+console.error('Delete button error:', err);
+}
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
@@ -3823,11 +3827,15 @@ return(
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
 </div>
 {isAdmin&&(
-<button onClick={(e)=>{
+<button onClick={async(e)=>{
 e.stopPropagation();
 console.log('Delete clicked, noteKey:', noteKey, 'note:', note);
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
-deleteNote(noteKey);
+try{
+await deleteNote(noteKey);
+}catch(err){
+console.error('Delete button error:', err);
+}
 }
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
