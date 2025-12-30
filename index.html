@@ -3854,7 +3854,8 @@ return(
 </div>
 )}
 
-{/* TO DO SECTIE bij Planning - voor iedereen zichtbaar */}
+{/* TO DO SECTIE bij Planning - alleen admin */}
+{isAdmin&&(
 <div style={{background:darkMode?'#2C2820':'#FEF9E7',border:`1px solid ${darkMode?'#5D4E0A':'#F4D03F'}`,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:darkMode?'#FDE047':'#9A7B0A',display:'flex',alignItems:'center',gap:'8px'}}>
 📋 To-Do Overzicht
@@ -3951,6 +3952,7 @@ await deleteNote(noteKey);
 );
 })()}
 </div>
+)}
 
 {currentStep?.months?.map(month=>(
 <PlanningMonth
