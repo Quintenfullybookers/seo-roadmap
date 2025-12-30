@@ -2660,7 +2660,7 @@ return(
 <input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
 </div>
 <div className="input-group">
-<label className="input-label">Budget (uren)</label>
+<label className="input-label">Pakket (uren)</label>
 <input type="number" className="modal-input" min="0" step="1" placeholder="0" value={newClient.budget||''} onChange={(e)=>setNewClient({...newClient,budget:parseInt(e.target.value)||0})}/>
 </div>
 <div className="input-group">
@@ -2740,7 +2740,7 @@ return(
 </div>
 </div>
 <div className="input-group">
-<label className="input-label">Budget (uren)</label>
+<label className="input-label">Pakket (uren)</label>
 <input type="number" className="modal-input" min="0" step="1" placeholder="0" value={editingClient.budget||''} onChange={(e)=>setEditingClient({...editingClient,budget:parseInt(e.target.value)||0})}/>
 </div>
 <div className="modal-buttons">
@@ -2788,7 +2788,7 @@ Koppel uren aan een specifieke stap voor betere inzichten
 <span style={{fontSize:'13px',fontWeight:'600'}}>{getClientHours(timeModalClient.id)}u</span>
 </div>
 <div style={{display:'flex',justifyContent:'space-between'}}>
-<span style={{fontSize:'13px',color:'var(--text-light)'}}>Budget:</span>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Pakket:</span>
 <span style={{fontSize:'13px',fontWeight:'600'}}>{timeModalClient.budget}u</span>
 </div>
 </div>
@@ -3518,10 +3518,10 @@ Looker Studio
 <div style={{background:'#f8fafc',border:'1px solid #e2e8f0',borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
 <div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
 <h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'#1e293b',display:'flex',alignItems:'center',gap:'8px'}}>
-⏱️ Tijd & Budget
+⏱️ Tijd & Pakket
 </h3>
 <div style={{fontSize:'14px',color:'#64748b'}}>
-Budget: <span style={{fontWeight:'700',color:'#3b82f6'}}>{currentClient.budget} uren</span>
+Pakket: <span style={{fontWeight:'700',color:'#3b82f6'}}>{currentClient.budget} uren</span>
 </div>
 </div>
 {(()=>{
@@ -3786,7 +3786,7 @@ deleteNote(noteKey);
 ⏱️ Tijd Tracking
 </h3>
 <div style={{fontSize:'14px',color:'#64748b'}}>
-Budget: <span style={{fontWeight:'700',color:'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
+Pakket: <span style={{fontWeight:'700',color:'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
 </div>
 </div>
 {(()=>{
@@ -3973,7 +3973,7 @@ return items;
 <input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
 </div>
 <div className="input-group">
-<label className="input-label">Budget (uren)</label>
+<label className="input-label">Pakket (uren)</label>
 <input type="number" className="modal-input" min="0" step="1" placeholder="0" value={newClient.budget||''} onChange={(e)=>setNewClient({...newClient,budget:parseInt(e.target.value)||0})}/>
 </div>
 <div className="input-group">
@@ -4180,7 +4180,7 @@ Koppel uren aan een specifieke stap voor betere inzichten
 <span style={{fontSize:'13px',fontWeight:'600'}}>{getClientHours(timeModalClient.id)}u</span>
 </div>
 <div style={{display:'flex',justifyContent:'space-between'}}>
-<span style={{fontSize:'13px',color:'var(--text-light)'}}>Budget:</span>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Pakket:</span>
 <span style={{fontSize:'13px',fontWeight:'600'}}>{timeModalClient.budget}u</span>
 </div>
 </div>
