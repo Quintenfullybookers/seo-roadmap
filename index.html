@@ -49,11 +49,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .dashboard-stats{background:linear-gradient(135deg,var(--blue) 0%,var(--blue-dark) 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
 .dashboard-stats h3{font-size:20px;margin-bottom:20px;font-weight:700;display:flex;align-items:center;gap:8px}
 .stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
-.stat-card{background:rgba(255,255,255,0.3);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;padding:20px;border:0.5px solid rgba(255,255,255,0.4);transition:all 0.3s ease}
+.stat-card{background:rgba(255,255,255,0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;padding:20px;border:0.5px solid rgba(255,255,255,0.5);transition:all 0.3s ease}
 .stat-card:hover{background:rgba(255,255,255,0.35);transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2)}
-.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 4px rgba(0,0,0,0.2);color:white}
-.dashboard-stats .stat-label{font-size:13px;opacity:1;font-weight:600;text-shadow:0 1px 2px rgba(0,0,0,0.2);color:white}
-.dashboard-stats .stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 2px rgba(0,0,0,0.2);color:white}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.3),0 1px 4px rgba(0,0,0,0.4);color:white}
+.dashboard-stats .stat-label{font-size:13px;opacity:1;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.4);color:white}
+.dashboard-stats .stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.4);color:white;font-weight:500}
 .stat-icon{font-size:24px;margin-bottom:8px}
 .stat-card.urgent{background:rgba(239,68,68,0.3);border-color:rgba(239,68,68,0.5)}
 .stat-card.urgent:hover{background:rgba(239,68,68,0.4)}
@@ -61,7 +61,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .notification-bell:hover{background:var(--gray-bg)}
 .notification-badge{position:absolute;top:4px;right:4px;background:var(--red);color:white;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
 @keyframes pulse{0%,100%{transform:scale(1)}50%{transform:scale(1.1)}}
-.notification-dropdown{position:absolute;top:100%;right:0;background:var(--white);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow-lg);width:380px;max-height:500px;overflow-y:auto;z-index:1000;margin-top:8px}
+.notification-dropdown{position:absolute;top:100%;left:12px;right:12px;width:auto;background:var(--white);border:none;border-radius:12px;box-shadow:var(--shadow-lg);max-height:400px;overflow-y:auto;z-index:1000;margin-top:8px}
 .notification-header{padding:16px;border-bottom:1px solid var(--border);font-weight:700;font-size:14px;display:flex;align-items:center;justify-content:space-between}
 .notification-item{padding:16px;border-bottom:1px solid var(--border);transition:background 0.2s;cursor:pointer}
 .notification-item:last-child{border-bottom:none}
@@ -108,8 +108,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .client-header{margin-bottom:16px;padding-bottom:0;border-bottom:none}
 .client-name{font-size:20px;font-weight:700;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;letter-spacing:-0.02em;line-height:1.2}
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px;margin-top:6px;font-weight:500}
-.client-link{color:var(--blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px}
-.client-link:hover{text-decoration:underline}
+.client-link{color:var(--ios-blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px;font-weight:500}
+.client-link:hover{text-decoration:underline;opacity:0.8}
 .delete-btn{background:var(--red-bg);color:var(--red);border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .delete-btn:hover{background:var(--red);color:var(--white)}
 .client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;padding:0}
@@ -2204,7 +2204,7 @@ return(
 {allNotifications.length>0&&<span className="notification-badge">{allNotifications.length}</span>}
 </div>
 {showNotifications&&(
-<div className="notification-dropdown" style={{left:0}}>
+<div className="notification-dropdown">
 <div className="notification-header">
 <span>🔔 Notificaties</span>
 {allNotifications.length>0&&<span style={{fontSize:'12px',color:'var(--text-light)'}}>{allNotifications.length}</span>}
@@ -2553,21 +2553,19 @@ return(
 {isExpanded&&(
 <>
 {planning.current.items.length>0&&(
-<div style={{marginBottom:'8px',marginTop:'8px'}}>
-<div style={{fontSize:'11px',fontWeight:'600',color:'var(--blue)',marginBottom:'4px'}}>{getMonthName(planning.current.month)}</div>
-{planning.current.items.slice(0,3).map(item=>(
+<div style={{marginBottom:'12px',marginTop:'8px',padding:'12px',background:'var(--ios-gray-6)',borderRadius:'8px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',color:'var(--ios-blue)',marginBottom:'8px',textTransform:'uppercase',letterSpacing:'0.5px'}}>{getMonthName(planning.current.month)}</div>
+{planning.current.items.map(item=>(
 <div key={item.id} className="planning-item" style={{textDecoration:item.completed?'line-through':'none',opacity:item.completed?0.6:1}}>• {item.text}</div>
 ))}
-{planning.current.items.length>3&&<div className="planning-item" style={{fontStyle:'italic',color:'var(--text-light)'}}>+{planning.current.items.length-3} meer...</div>}
 </div>
 )}
 {planning.next.items.length>0&&(
-<div>
-<div style={{fontSize:'11px',fontWeight:'600',color:'var(--blue)',marginBottom:'4px'}}>{getMonthName(planning.next.month)}</div>
-{planning.next.items.slice(0,3).map(item=>(
+<div style={{padding:'12px',background:'var(--ios-gray-6)',borderRadius:'8px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',color:'var(--ios-blue)',marginBottom:'8px',textTransform:'uppercase',letterSpacing:'0.5px'}}>{getMonthName(planning.next.month)}</div>
+{planning.next.items.map(item=>(
 <div key={item.id} className="planning-item" style={{textDecoration:item.completed?'line-through':'none',opacity:item.completed?0.6:1}}>• {item.text}</div>
 ))}
-{planning.next.items.length>3&&<div className="planning-item" style={{fontStyle:'italic',color:'var(--text-light)'}}>+{planning.next.items.length-3} meer...</div>}
 </div>
 )}
 </>
