@@ -2468,8 +2468,16 @@ const budget=client.budget;
 const hours=getClientHours(client.id);
 const percentage=budget>0?Math.round((hours/budget)*100):0;
 const remaining=Math.max(0,budget-hours);
-const barColor=percentage>=70?'#10b981':percentage>=40?'#3b82f6':'#94a3b8';
-const remainingColor=remaining<=budget*0.3?'#10b981':remaining<=budget*0.6?'#3b82f6':'#94a3b8';
+const getGreenShade=(pct)=>{
+if(pct>=90)return '#6ee7b7';
+if(pct>=70)return '#10b981';
+if(pct>=50)return '#059669';
+if(pct>=30)return '#047857';
+return '#065f46';
+};
+const barColor=getGreenShade(percentage);
+const remainingPct=budget>0?Math.round((remaining/budget)*100):100;
+const remainingColor=getGreenShade(100-remainingPct);
 const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
 const now=new Date();
 const currentMonth=monthNames[now.getMonth()+1]+' '+now.getFullYear();
@@ -3718,7 +3726,14 @@ monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
 }
 return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
 const percentage=currentClient.budget>0?Math.round((hours/currentClient.budget)*100):0;
-const barColor=percentage>=70?'#10b981':percentage>=40?'#3b82f6':'#94a3b8';
+const getGreenShade=(pct)=>{
+if(pct>=90)return '#6ee7b7';
+if(pct>=70)return '#10b981';
+if(pct>=50)return '#059669';
+if(pct>=30)return '#047857';
+return '#065f46';
+};
+const barColor=getGreenShade(percentage);
 return(
 <div key={monthKey} style={{background:darkMode?'#2C2C2E':'white',border:isCurrent?'2px solid #3b82f6':`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
@@ -3899,7 +3914,14 @@ monthsToShow.push({monthKey,monthLabel,hours,isCurrent});
 }
 return monthsToShow.map(({monthKey,monthLabel,hours,isCurrent})=>{
 const percentage=client.budget>0?Math.round((hours/client.budget)*100):0;
-const barColor=percentage>=70?'#10b981':percentage>=40?'#3b82f6':'#94a3b8';
+const getGreenShade=(pct)=>{
+if(pct>=90)return '#6ee7b7';
+if(pct>=70)return '#10b981';
+if(pct>=50)return '#059669';
+if(pct>=30)return '#047857';
+return '#065f46';
+};
+const barColor=getGreenShade(percentage);
 return(
 <div key={monthKey} style={{background:darkMode?'#2C2C2E':'white',border:isCurrent?'2px solid #3b82f6':`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
