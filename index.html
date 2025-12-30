@@ -543,6 +543,7 @@ const [expandedNotes,setExpandedNotes]=useState({});
 const [expandedTodos,setExpandedTodos]=useState({});
 const [todos,setTodos]=useState({});
 const [newTodoInputs,setNewTodoInputs]=useState({});
+const [contentFilter,setContentFilter]=useState('all');
 const [clientToDelete,setClientToDelete]=useState(null);
 const [itemModalData,setItemModalData]=useState({});
 const [editingCustomItem,setEditingCustomItem]=useState(null);
@@ -3188,7 +3189,66 @@ return count;
 <p style={{fontSize:'14px',color:'var(--text-light)'}}>
 Alle content items van alle projecten op volgorde van deadline
 </p>
+{contentItems.length>0&&(
+<div style={{display:'flex',gap:'16px',marginTop:'16px',flexWrap:'wrap'}}>
+<div style={{background:darkMode?'#1E3A5F':'#dbeafe',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>📝</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#93C5FD':'#1e40af'}}>{contentItems.length}</div>
+<div style={{fontSize:'11px',color:darkMode?'#93C5FD':'#1e40af',textTransform:'uppercase'}}>Totaal</div>
 </div>
+</div>
+<div style={{background:darkMode?'#14352C':'#f0fdf4',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>✅</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#86EFAC':'#166534'}}>{contentItems.filter(i=>i.completed).length}</div>
+<div style={{fontSize:'11px',color:darkMode?'#86EFAC':'#166534',textTransform:'uppercase'}}>Afgerond</div>
+</div>
+</div>
+<div style={{background:darkMode?'#3D3520':'#fef9c3',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>⏳</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FDE047':'#854d0e'}}>{contentItems.filter(i=>!i.completed).length}</div>
+<div style={{fontSize:'11px',color:darkMode?'#FDE047':'#854d0e',textTransform:'uppercase'}}>Open</div>
+</div>
+</div>
+<div style={{background:darkMode?'#3D1F1F':'#fef2f2',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>🔴</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FCA5A5':'#991b1b'}}>{contentItems.filter(i=>{
+if(i.completed||!i.deadline)return false;
+const parseDeadline=(dl)=>{
+if(dl.includes('-'))return new Date(dl);
+const months={Januari:0,Februari:1,Maart:2,April:3,Mei:4,Juni:5,Juli:6,Augustus:7,September:8,Oktober:9,November:10,December:11};
+const parts=dl.split(' ');
+if(parts.length===2&&months[parts[0]]!==undefined)return new Date(parseInt(parts[1]),months[parts[0]],1);
+return new Date(dl);
+};
+const dd=parseDeadline(i.deadline);
+const today=new Date();
+today.setHours(0,0,0,0);
+dd.setHours(0,0,0,0);
+return dd<=today;
+}).length}</div>
+<div style={{fontSize:'11px',color:darkMode?'#FCA5A5':'#991b1b',textTransform:'uppercase'}}>Verlopen</div>
+</div>
+</div>
+</div>
+)}
+</div>
+{contentItems.length>0&&(
+<div style={{display:'flex',gap:'8px',marginTop:'16px',flexWrap:'wrap'}}>
+<button onClick={()=>setContentFilter('all')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='all'?(darkMode?'#3B82F6':'#3b82f6'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='all'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+Alle ({contentItems.length})
+</button>
+<button onClick={()=>setContentFilter('open')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='open'?(darkMode?'#F59E0B':'#f59e0b'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='open'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+Open ({contentItems.filter(i=>!i.completed).length})
+</button>
+<button onClick={()=>setContentFilter('done')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='done'?(darkMode?'#10B981':'#10b981'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='done'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+Afgerond ({contentItems.filter(i=>i.completed).length})
+</button>
+</div>
+)}
 {contentItems.length===0?(
 <div style={{textAlign:'center',padding:'64px 32px',background:'var(--bg)',borderRadius:'8px',border:'1px solid var(--border)'}}>
 <div style={{fontSize:'48px',marginBottom:'16px'}}>📝</div>
@@ -3197,7 +3257,22 @@ Alle content items van alle projecten op volgorde van deadline
 </div>
 ):(
 <div style={{display:'grid',gap:'12px',width:'100%'}}>
-{contentItems.map(item=>{
+{(()=>{
+const filteredItems=contentItems.filter(item=>{
+if(contentFilter==='open')return !item.completed;
+if(contentFilter==='done')return item.completed;
+return true;
+});
+if(filteredItems.length===0){
+return(
+<div style={{textAlign:'center',padding:'32px',background:'var(--bg)',borderRadius:'8px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'14px',color:'var(--text-light)'}}>
+{contentFilter==='open'?'Geen openstaande content items':'Geen afgeronde content items'}
+</div>
+</div>
+);
+}
+return filteredItems.map(item=>{
 const client=clients.find(c=>c.id===item.clientId);
 const hasDeadline=!!item.deadline;
 const isCompleted=item.completed;
@@ -3298,7 +3373,8 @@ setActiveView('roadmap');
 </div>
 </div>
 );
-})}
+});
+})()}
 </div>
 )}
 </div>
