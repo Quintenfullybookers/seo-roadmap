@@ -19,8 +19,9 @@ body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
 body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .banner-btn{background:#5B8AB5;color:white}
-body.dark-mode .checkbox{background:#2C2C2E;border-color:#636366}
-body.dark-mode .checkbox.checked{background:#4A7BA7;border-color:#4A7BA7}
+body.dark-mode .checkbox{background:#2C2C2E;border-color:#9CA3AF}
+body.dark-mode .checkbox.checked{background:#3B82F6;border-color:#3B82F6}
+body.dark-mode .checkbox.clickable:hover{border-color:#60A5FA;background:#1E3A5F}
 body.dark-mode .notes-section{background:#2C2C2E !important;border-color:#38383A !important}
 body.dark-mode .notes-section div[style*="background:white"]{background:#1C1C1E !important}
 body.dark-mode .notes-section div[style*="background: white"]{background:#1C1C1E !important}
@@ -194,11 +195,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .task-card.clickable{cursor:pointer}
 .task-card.clickable:hover{box-shadow:var(--shadow);transform:translateY(-1px)}
 .task-card.completed{background:var(--bg);opacity:.7}
-.checkbox{width:20px;height:20px;border:2px solid #9CA3AF;border-radius:6px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:white}
+.checkbox{width:20px;height:20px;border:2px solid #6B7280;border-radius:6px;transition:all .2s;flex-shrink:0;display:flex;align-items:center;justify-content:center;background:#FFFFFF}
 .checkbox.clickable{cursor:pointer}
-.checkbox.clickable:hover{border-color:var(--blue);background:#f0f9ff}
-.checkbox.checked{background:var(--blue);border-color:var(--blue)}
-.checkbox.checked::after{content:'✓';color:white;font-size:14px;font-weight:bold}
+.checkbox.clickable:hover{border-color:#3B82F6;background:#EFF6FF}
+.checkbox.checked{background:#3B82F6;border-color:#3B82F6}
 .task-content{flex:1}
 .task-title{font-size:15px;font-weight:500;color:var(--text);margin-bottom:4px}
 .task-desc{font-size:13px;color:var(--text-light)}
@@ -454,7 +454,7 @@ return(
 ):(
 <>
 <div onClick={()=>{if(isAdmin)onToggle(month.key,item.id);}} style={{display:'flex',alignItems:'center',gap:'16px',flex:1}}>
-<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`}/>
+<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content" style={{flex:1}}>
 <div className="task-title">{item.text}</div>
 {itemDeadline&&(
@@ -2990,7 +2990,7 @@ return count;
 </div>
 {agendaItems.overdue.map(item=>(
 <div key={item.key} className="task-card" style={{marginBottom:'12px',background:darkMode?'#2C2020':'#fef2f2',borderLeft:'4px solid #dc2626'}}>
-<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
@@ -3021,7 +3021,7 @@ return count;
 </div>
 {agendaItems.thisWeek.map(item=>(
 <div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #eab308'}}>
-<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
@@ -3052,7 +3052,7 @@ return count;
 </div>
 {agendaItems.thisMonth.map(item=>(
 <div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #3b82f6'}}>
-<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
@@ -3083,7 +3083,7 @@ return count;
 </div>
 {agendaItems.later.map(item=>(
 <div key={item.key} className="task-card" style={{marginBottom:'12px',borderLeft:'4px solid #10b981'}}>
-<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}/>
+<div className={`checkbox ${item.completed?'checked':''} clickable`} onClick={()=>toggleAgendaItem(item)}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
@@ -3253,7 +3253,7 @@ const updatedItems=items.map(i=>i.id===item.itemId?{...i,completed:!i.completed}
 const newCustomItems={...customItems,[`${item.clientId}-4`]:updatedItems};
 setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients,timeTracking});
-}}/>
+}}>{isCompleted&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 )}
 <div style={{flex:1,minWidth:'200px',width:'100%',maxWidth:'100%'}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px',flexWrap:'wrap'}}>
@@ -3980,7 +3980,7 @@ const key=`${selectedClient}-${currentStep.id}-${task.id}`;
 const isChecked=!!tasks[key];
 return(
 <div key={task.id} className={`task-card ${isChecked?'completed':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleTask(currentStep.id,task.id);}}>
-<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`}/>
+<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`}>{isChecked&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content">
 <div className="task-title">{task.title}</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
@@ -4028,7 +4028,7 @@ return sortedItems;
 return items;
 })().map(item=>(
 <div key={item.id} className={`task-card ${item.completed?'completed':''} ${isAdmin?'clickable':''}`}>
-<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}/>
+<div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content">
 <div className="task-title">
 {currentStep.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text}
