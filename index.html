@@ -7,15 +7,15 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDA2NkNDIiByeD0iNiIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMyIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlRGQjwvdGV4dD4KPC9zdmc+Cg==">
 <style>
 :root{--ios-blue:#1E3A5F;--ios-blue-dark:#152A45;--ios-blue-light:#E8EEF4;--ios-green:#34C759;--ios-green-bg:#E3F9E9;--ios-orange:#FF9500;--ios-orange-bg:#FFF3E0;--ios-yellow:#FFCC00;--ios-yellow-bg:#FFF9E5;--ios-red:#FF3B30;--ios-red-bg:#FFEEED;--ios-purple:#AF52DE;--ios-purple-bg:#F4EBFF;--ios-gray:#8E8E93;--ios-gray-2:#AEAEB2;--ios-gray-3:#C7C7CC;--ios-gray-4:#D1D1D6;--ios-gray-5:#E5E5EA;--ios-gray-6:#F2F2F7;--text:#000000;--text-light:#8E8E93;--text-lighter:#C7C7CC;--border:#E5E5EA;--bg:#F2F2F7;--white:#FFFFFF;--shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);--shadow:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);--shadow-lg:0 10px 20px rgba(0,0,0,0.1),0 3px 6px rgba(0,0,0,0.05);--shadow-card:0 2px 8px rgba(0,0,0,0.08)}
-body.dark-mode{--text:#FFFFFF;--text-light:#E5E5EA;--text-lighter:#C7C7CC;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#4A7BA7;--ios-blue-light:#2C3E50;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
-body.dark-mode .stat-number{color:#4A7BA7}
-body.dark-mode .progress-percentage{color:#4A7BA7}
+body.dark-mode{--text:#FFFFFF;--text-light:#E5E5EA;--text-lighter:#C7C7CC;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#FFFFFF;--ios-blue-light:#2C3E50;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
+body.dark-mode .stat-number{color:#FFFFFF}
+body.dark-mode .progress-percentage{color:#FFFFFF}
 body.dark-mode .planning-box{background:#2C2C2E}
 body.dark-mode .planning-title{color:#AEAEB2}
 body.dark-mode .task-card{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .client-card{background:#1C1C1E}
 body.dark-mode .status-card{background:#1C1C1E;border-color:#38383A}
-body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
+body.dark-mode .nav-item.active{background:#2C3E50;color:#FFFFFF}
 body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .banner-btn{background:#5B8AB5;color:white}
@@ -2652,18 +2652,18 @@ const isExpanded=expandedNotes[client.id];
 return(
 <div style={{marginTop:'12px',padding:'12px',background:darkMode?'#1E2D3D':'#E8F4FD',borderRadius:'12px',border:`1px solid ${darkMode?'#2471A3':'#85C1E9'}`}}>
 <div onClick={(e)=>{e.stopPropagation();setExpandedNotes({...expandedNotes,[client.id]:!isExpanded});}} style={{cursor:'pointer',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:darkMode?'#93C5FD':'#2471A3'}}>💬 Notities ({clientNotes.length})</span>
-<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:darkMode?'#93C5FD':'#2471A3'}}>▼</span>
+<span style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.8px',color:darkMode?'#FFFFFF':'#2471A3'}}>💬 Notities ({clientNotes.length})</span>
+<span style={{fontSize:'14px',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)',color:darkMode?'#FFFFFF':'#2471A3'}}>▼</span>
 </div>
 {isExpanded&&(
 <div style={{marginTop:'8px'}}>
 {clientNotes.slice(0,3).map((note,i)=>(
-<div key={i} style={{padding:'8px',background:darkMode?'#1C1C1E':'white',borderRadius:'6px',marginBottom:'6px',fontSize:'12px',color:darkMode?'#93C5FD':'#1A5276',lineHeight:'1.4'}}>
+<div key={i} style={{padding:'8px',background:darkMode?'#1C1C1E':'white',borderRadius:'6px',marginBottom:'6px',fontSize:'12px',color:darkMode?'#FFFFFF':'#1A5276',lineHeight:'1.4'}}>
 <div style={{marginBottom:'4px'}}>{note.text}</div>
-<div style={{fontSize:'10px',color:darkMode?'#60A5FA':'#85C1E9'}}>{new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>
+<div style={{fontSize:'10px',color:darkMode?'#FFFFFF':'#85C1E9'}}>{new Date(note.timestamp).toLocaleDateString('nl-NL',{day:'numeric',month:'short'})}</div>
 </div>
 ))}
-{clientNotes.length>3&&<div style={{fontSize:'11px',color:darkMode?'#93C5FD':'#2471A3',fontStyle:'italic'}}>+{clientNotes.length-3} meer notities</div>}
+{clientNotes.length>3&&<div style={{fontSize:'11px',color:darkMode?'#FFFFFF':'#2471A3',fontStyle:'italic'}}>+{clientNotes.length-3} meer notities</div>}
 </div>
 )}
 </div>
@@ -3020,7 +3020,7 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#FFFFFF':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:darkMode?'#FCA5A5':'#dc2626',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
@@ -3051,7 +3051,7 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#FFFFFF':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:darkMode?'#FDE047':'#854d0e',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
@@ -3072,8 +3072,8 @@ return count;
 <div style={{background:darkMode?'#1E3A5F':'#dbeafe',border:`1px solid ${darkMode?'#3B82F6':'#3b82f6'}`,borderRadius:'8px',padding:'12px 16px',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span style={{fontSize:'20px'}}>🔵</span>
 <div style={{flex:1}}>
-<div style={{fontWeight:'600',color:darkMode?'#93C5FD':'#1e40af'}}>DEZE MAAND ({agendaItems.thisMonth.length})</div>
-<div style={{fontSize:'12px',color:darkMode?'#93C5FD':'#1e40af',marginTop:'2px'}}>Deze maand afronden</div>
+<div style={{fontWeight:'600',color:darkMode?'#FFFFFF':'#1e40af'}}>DEZE MAAND ({agendaItems.thisMonth.length})</div>
+<div style={{fontSize:'12px',color:darkMode?'#FFFFFF':'#1e40af',marginTop:'2px'}}>Deze maand afronden</div>
 </div>
 </div>
 {agendaItems.thisMonth.map(item=>(
@@ -3082,10 +3082,10 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#FFFFFF':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
-<div style={{fontSize:'12px',color:darkMode?'#93C5FD':'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
+<div style={{fontSize:'12px',color:darkMode?'#FFFFFF':'#1e40af',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
 <span>📅</span>
 <span>{typeof item.date==='string'&&item.date.includes('-')?new Date(item.date).toLocaleDateString('nl-NL',{weekday:'short',day:'numeric',month:'short'}):item.date}</span>
 </div>
@@ -3113,7 +3113,7 @@ return count;
 <div className="task-content" style={{flex:1}}>
 <div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
 <span style={{fontWeight:'600',color:'var(--text)'}}>{item.clientName}</span>
-<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#93C5FD':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
+<span style={{padding:'2px 8px',background:darkMode?'#1E3A5F':'#dbeafe',color:darkMode?'#FFFFFF':'#1e40af',borderRadius:'4px',fontSize:'11px',fontWeight:'600'}}>{item.type==='planning'?'Planning':'Content'}</span>
 </div>
 <div className="task-title">{item.text}</div>
 <div style={{fontSize:'12px',color:darkMode?'#86EFAC':'#166534',marginTop:'4px',display:'flex',alignItems:'center',gap:'4px'}}>
@@ -3219,8 +3219,8 @@ Alle content items van alle projecten op volgorde van deadline
 <div style={{background:darkMode?'#1E3A5F':'#dbeafe',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
 <span style={{fontSize:'20px'}}>📝</span>
 <div>
-<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#93C5FD':'#1e40af'}}>{contentItems.length}</div>
-<div style={{fontSize:'11px',color:darkMode?'#93C5FD':'#1e40af',textTransform:'uppercase'}}>Totaal</div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FFFFFF':'#1e40af'}}>{contentItems.length}</div>
+<div style={{fontSize:'11px',color:darkMode?'#FFFFFF':'#1e40af',textTransform:'uppercase'}}>Totaal</div>
 </div>
 </div>
 <div style={{background:darkMode?'#14352C':'#f0fdf4',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
@@ -3734,7 +3734,7 @@ Looker Studio
 ⏱️ Tijd & Pakket
 </h3>
 <div style={{fontSize:'14px',color:darkMode?'#E5E5EA':'#64748b'}}>
-Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{currentClient.budget} uren</span>
+Pakket: <span style={{fontWeight:'700',color:darkMode?'#FFFFFF':'#3b82f6'}}>{currentClient.budget} uren</span>
 </div>
 </div>
 {(()=>{
@@ -3930,7 +3930,7 @@ await deleteNote(noteKey);
 ⏱️ Tijd Tracking
 </h3>
 <div style={{fontSize:'14px',color:darkMode?'#E5E5EA':'#64748b'}}>
-Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
+Pakket: <span style={{fontWeight:'700',color:darkMode?'#FFFFFF':'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
 </div>
 </div>
 {(()=>{
