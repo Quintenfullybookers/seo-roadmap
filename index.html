@@ -19,9 +19,9 @@ body.dark-mode .nav-item.active{background:#2C3E50;color:#4A7BA7}
 body.dark-mode .todo-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .notes-box{background:#2C2C2E;border-color:#38383A}
 body.dark-mode .banner-btn{background:#5B8AB5;color:white}
-body.dark-mode .checkbox{background:#2C2C2E;border-color:#9CA3AF}
+body.dark-mode .checkbox{background:#1C1C1E;border-color:#AEAEB2;border-width:2px}
 body.dark-mode .checkbox.checked{background:#3B82F6;border-color:#3B82F6}
-body.dark-mode .checkbox.clickable:hover{border-color:#60A5FA;background:#1E3A5F}
+body.dark-mode .checkbox.clickable:hover{border-color:#60A5FA;background:#2C3E50}
 body.dark-mode .notes-section{background:#2C2C2E !important;border-color:#38383A !important}
 body.dark-mode .notes-section div[style*="background:white"]{background:#1C1C1E !important}
 body.dark-mode .notes-section div[style*="background: white"]{background:#1C1C1E !important}
@@ -518,6 +518,7 @@ const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
 const [showStatusModal,setShowStatusModal]=useState(false);
 const [showNoteModal,setShowNoteModal]=useState(false);
+const [editingNote,setEditingNote]=useState(null);
 const [showDeadlineModal,setShowDeadlineModal]=useState(false);
 const [deadlineModalTask,setDeadlineModalTask]=useState(null);
 const [showTimeModal,setShowTimeModal]=useState(false);
@@ -1621,7 +1622,21 @@ const newNotes={...notes,[`${clientId}-${noteId}`]:note};
 setNotes(newNotes);
 saveData({tasks,customItems,planningItems,notes:newNotes,clients});
 setShowNoteModal(false);
+setEditingNote(null);
 setToast({type:'success',message:'✓ Notitie toegevoegd'});
+};
+
+const updateNote=(noteKey,newText)=>{
+if(!isAdmin||!newText.trim())return;
+const note=notes[noteKey];
+if(!note)return;
+const updatedNote={...note,text:newText.trim(),editedAt:new Date().toISOString()};
+const newNotes={...notes,[noteKey]:updatedNote};
+setNotes(newNotes);
+saveData({tasks,customItems,planningItems,notes:newNotes,clients});
+setShowNoteModal(false);
+setEditingNote(null);
+setToast({type:'success',message:'✓ Notitie bijgewerkt'});
 };
 
 const getClientNotes=(clientId)=>{
@@ -1957,9 +1972,10 @@ setCustomItems(newCustomItems);
 saveData({tasks,customItems:newCustomItems,planningItems,clients});
 };
 
-const updateCustomItem=(stepId,itemId,updatedData)=>{
+const updateCustomItem=(stepId,itemId,updatedData,clientId=null)=>{
 if(!isAdmin)return;
-const key=`${selectedClient}-${stepId}`;
+const targetClient=clientId||selectedClient;
+const key=`${targetClient}-${stepId}`;
 const items=customItems[key]||[];
 const newItems=items.map(item=>item.id===itemId?{...item,...updatedData}:item);
 const newCustomItems={...customItems,[key]:newItems};
@@ -3372,6 +3388,17 @@ saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients
 )}
 </div>
 </div>
+<div style={{display:'flex',gap:'8px',flexShrink:0}}>
+{isAdmin&&(
+<button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap',background:'#3b82f6',color:'white'}} onClick={()=>{
+setEditingCustomItem({...item,id:item.itemId,stepId:4,clientId:item.clientId});
+setItemModalStep(4);
+setItemModalData({keyword:item.keyword||'',url:item.url||'',words:item.words||'',deadline:item.deadline||''});
+setShowItemModal(true);
+}}>
+✏️ Bewerken
+</button>
+)}
 <button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap',flexShrink:0}} onClick={()=>{
 setSelectedClient(item.clientId);
 setActiveStep(4);
@@ -3379,6 +3406,7 @@ setActiveView('roadmap');
 }}>
 → Open Project
 </button>
+</div>
 </div>
 </div>
 );
@@ -3855,9 +3883,18 @@ return(
 <div key={note.id} style={{background:'var(--bg)',border:'1px solid var(--border)',borderRadius:'6px',padding:'12px',marginBottom:'8px',position:'relative'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start'}}>
 <div style={{fontSize:'11px',color:'var(--text-light)',marginBottom:'6px'}}>
-{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}{note.editedAt?' (bewerkt)':''}
 </div>
 {isAdmin&&(
+<div style={{display:'flex',gap:'6px'}}>
+<button onClick={(e)=>{
+e.stopPropagation();
+setEditingNote({...note,key:noteKey});
+setItemModalData({noteText:note.text});
+setShowNoteModal(true);
+}} style={{background:'#3b82f6',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#2563eb'} onMouseLeave={(e)=>e.target.style.background='#3b82f6'} title="Notitie bewerken">
+✏️ <span>Bewerk</span>
+</button>
 <button onClick={async(e)=>{
 e.stopPropagation();
 if(confirm('Weet je zeker dat je deze notitie wilt verwijderen?')){
@@ -3866,6 +3903,7 @@ await deleteNote(noteKey);
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'6px',cursor:'pointer',padding:'6px 12px',fontSize:'13px',fontWeight:'600',transition:'all 0.2s',display:'flex',alignItems:'center',gap:'4px'}} onMouseEnter={(e)=>e.target.style.background='#dc2626'} onMouseLeave={(e)=>e.target.style.background='#ef4444'} title="Notitie verwijderen">
 🗑️ <span>Verwijder</span>
 </button>
+</div>
 )}
 </div>
 <div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{note.text}</div>
@@ -4026,9 +4064,18 @@ return(
 <div key={note.id} style={{background:darkMode?'#1C1C1E':'white',border:`1px solid ${darkMode?'#38383A':'#F4D03F'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'6px'}}>
 <div style={{fontSize:'11px',color:darkMode?'#AEAEB2':'#9A7B0A'}}>
-{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}
+{new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}{note.editedAt?' (bewerkt)':''}
 </div>
 {isAdmin&&(
+<div style={{display:'flex',gap:'4px'}}>
+<button onClick={(e)=>{
+e.stopPropagation();
+setEditingNote({...note,key:noteKey});
+setItemModalData({noteText:note.text});
+setShowNoteModal(true);
+}} style={{background:'#3b82f6',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600'}}>
+✏️
+</button>
 <button onClick={async(e)=>{
 e.stopPropagation();
 if(confirm('Notitie verwijderen?')){
@@ -4037,6 +4084,7 @@ await deleteNote(noteKey);
 }} style={{background:'#ef4444',color:'white',border:'none',borderRadius:'4px',cursor:'pointer',padding:'4px 8px',fontSize:'11px',fontWeight:'600'}}>
 🗑️
 </button>
+</div>
 )}
 </div>
 <div style={{fontSize:'13px',color:darkMode?'#FDE047':'#5D4E0A',lineHeight:'1.5'}}>{note.text}</div>
@@ -4279,7 +4327,7 @@ return step.customFields.map((field,idx)=>(
 ))}
 </select>
 ):(
-<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,itemData);}else{addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}}/>
+<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,itemData,editingCustomItem.clientId||null);}else{addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}}/>
 )}
 </div>
 ));
@@ -4287,7 +4335,7 @@ return step.customFields.map((field,idx)=>(
 return(
 <div className="input-group">
 <label className="input-label">Omschrijving</label>
-<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''});}else{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);setItemModalData({});}}}}/>
+<input type="text" className="modal-input" value={itemModalData.text||''} onChange={(e)=>setItemModalData({...itemModalData,text:e.target.value})} autoFocus onKeyPress={(e)=>{if(e.key==='Enter'){if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''},editingCustomItem.clientId||null);}else{addCustomItem(itemModalStep,itemModalData.text||'');setShowItemModal(false);setItemModalData({});}}}}/>
 </div>
 );
 }
@@ -4299,7 +4347,7 @@ if(step?.customFields){
 const itemData={};
 step.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});
 if(editingCustomItem){
-updateCustomItem(itemModalStep,editingCustomItem.id,itemData);
+updateCustomItem(itemModalStep,editingCustomItem.id,itemData,editingCustomItem.clientId||null);
 }else{
 addCustomItemWithFields(itemModalStep,itemData);
 setShowItemModal(false);
@@ -4307,7 +4355,7 @@ setItemModalData({});
 }
 }else{
 if(editingCustomItem){
-updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''});
+updateCustomItem(itemModalStep,editingCustomItem.id,{text:itemModalData.text||''},editingCustomItem.clientId||null);
 }else{
 addCustomItem(itemModalStep,itemModalData.text||'');
 setShowItemModal(false);
@@ -4322,16 +4370,23 @@ setItemModalData({});
 )}
 
 {isAdmin&&showNoteModal&&(
-<div className="modal-overlay" onClick={()=>setShowNoteModal(false)}>
+<div className="modal-overlay" onClick={()=>{setShowNoteModal(false);setEditingNote(null);setItemModalData({});}}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
-<h2 className="modal-title">Notitie Toevoegen</h2>
+<h2 className="modal-title">{editingNote?'Notitie Bewerken':'Notitie Toevoegen'}</h2>
 <div className="input-group">
 <label className="input-label">Notitie</label>
 <textarea className="modal-input" style={{minHeight:'120px',resize:'vertical'}} value={itemModalData.noteText||''} onChange={(e)=>setItemModalData({...itemModalData,noteText:e.target.value})} autoFocus placeholder="Voeg een notitie toe..."/>
 </div>
 <div className="modal-buttons">
-<button className="btn btn-primary" onClick={()=>{addNote(selectedClient,itemModalData.noteText||'');setItemModalData({});}}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowNoteModal(false);setItemModalData({});}}>Annuleren</button>
+<button className="btn btn-primary" onClick={()=>{
+if(editingNote){
+updateNote(editingNote.key,itemModalData.noteText||'');
+}else{
+addNote(selectedClient,itemModalData.noteText||'');
+}
+setItemModalData({});
+}}>Opslaan</button>
+<button className="btn btn-secondary" onClick={()=>{setShowNoteModal(false);setEditingNote(null);setItemModalData({});}}>Annuleren</button>
 </div>
 </div>
 </div>
