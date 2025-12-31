@@ -7,7 +7,7 @@
 <link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCAzMiAzMiI+CiAgPHJlY3Qgd2lkdGg9IjMyIiBoZWlnaHQ9IjMyIiBmaWxsPSIjMDA2NkNDIiByeD0iNiIvPgogIDx0ZXh0IHg9IjE2IiB5PSIyMyIgZm9udC1mYW1pbHk9IkFyaWFsLCBzYW5zLXNlcmlmIiBmb250LXNpemU9IjE0IiBmb250LXdlaWdodD0iYm9sZCIgZmlsbD0id2hpdGUiIHRleHQtYW5jaG9yPSJtaWRkbGUiPlRGQjwvdGV4dD4KPC9zdmc+Cg==">
 <style>
 :root{--ios-blue:#1E3A5F;--ios-blue-dark:#152A45;--ios-blue-light:#E8EEF4;--ios-green:#34C759;--ios-green-bg:#E3F9E9;--ios-orange:#FF9500;--ios-orange-bg:#FFF3E0;--ios-yellow:#FFCC00;--ios-yellow-bg:#FFF9E5;--ios-red:#FF3B30;--ios-red-bg:#FFEEED;--ios-purple:#AF52DE;--ios-purple-bg:#F4EBFF;--ios-gray:#8E8E93;--ios-gray-2:#AEAEB2;--ios-gray-3:#C7C7CC;--ios-gray-4:#D1D1D6;--ios-gray-5:#E5E5EA;--ios-gray-6:#F2F2F7;--text:#000000;--text-light:#8E8E93;--text-lighter:#C7C7CC;--border:#E5E5EA;--bg:#F2F2F7;--white:#FFFFFF;--shadow-sm:0 1px 3px rgba(0,0,0,0.04),0 1px 2px rgba(0,0,0,0.06);--shadow:0 4px 6px rgba(0,0,0,0.07),0 2px 4px rgba(0,0,0,0.05);--shadow-lg:0 10px 20px rgba(0,0,0,0.1),0 3px 6px rgba(0,0,0,0.05);--shadow-card:0 2px 8px rgba(0,0,0,0.08)}
-body.dark-mode{--text:#FFFFFF;--text-light:#AEAEB2;--text-lighter:#636366;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#4A7BA7;--ios-blue-light:#2C3E50;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
+body.dark-mode{--text:#FFFFFF;--text-light:#E5E5EA;--text-lighter:#C7C7CC;--border:#38383A;--bg:#000000;--white:#1C1C1E;--ios-gray-6:#1C1C1E;--ios-gray-5:#2C2C2E;--ios-gray-4:#38383A;--shadow-sm:0 1px 3px rgba(0,0,0,0.3);--shadow:0 4px 6px rgba(0,0,0,0.4);--shadow-lg:0 10px 20px rgba(0,0,0,0.5);--shadow-card:0 2px 8px rgba(0,0,0,0.4);--ios-blue:#4A7BA7;--ios-blue-light:#2C3E50;--ios-green:#32D74B;--ios-orange:#FF9F0A;--ios-yellow:#FFD60A;--ios-red:#FF453A}
 body.dark-mode .stat-number{color:#4A7BA7}
 body.dark-mode .progress-percentage{color:#4A7BA7}
 body.dark-mode .planning-box{background:#2C2C2E}
@@ -3263,13 +3263,13 @@ return dd<=today;
 </div>
 {contentItems.length>0&&(
 <div style={{display:'flex',gap:'8px',marginTop:'16px',flexWrap:'wrap'}}>
-<button onClick={()=>setContentFilter('all')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='all'?(darkMode?'#3B82F6':'#3b82f6'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='all'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+<button onClick={()=>setContentFilter('all')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='all'?(darkMode?'#3B82F6':'#3b82f6'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='all'?'white':(darkMode?'#E5E5EA':'#64748b')}}>
 Alle ({contentItems.length})
 </button>
-<button onClick={()=>setContentFilter('open')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='open'?(darkMode?'#F59E0B':'#f59e0b'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='open'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+<button onClick={()=>setContentFilter('open')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='open'?(darkMode?'#F59E0B':'#f59e0b'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='open'?'white':(darkMode?'#E5E5EA':'#64748b')}}>
 Open ({contentItems.filter(i=>!i.completed).length})
 </button>
-<button onClick={()=>setContentFilter('done')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='done'?(darkMode?'#10B981':'#10b981'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='done'?'white':(darkMode?'#AEAEB2':'#64748b')}}>
+<button onClick={()=>setContentFilter('done')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',cursor:'pointer',fontWeight:'600',fontSize:'13px',background:contentFilter==='done'?(darkMode?'#10B981':'#10b981'):(darkMode?'#2C2C2E':'#f1f5f9'),color:contentFilter==='done'?'white':(darkMode?'#E5E5EA':'#64748b')}}>
 Afgerond ({contentItems.filter(i=>i.completed).length})
 </button>
 </div>
@@ -3733,7 +3733,7 @@ Looker Studio
 <h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd & Pakket
 </h3>
-<div style={{fontSize:'14px',color:darkMode?'#AEAEB2':'#64748b'}}>
+<div style={{fontSize:'14px',color:darkMode?'#E5E5EA':'#64748b'}}>
 Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{currentClient.budget} uren</span>
 </div>
 </div>
@@ -3770,7 +3770,7 @@ return(
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<span style={{fontSize:'13px',color:darkMode?'#AEAEB2':'#64748b'}}>
+<span style={{fontSize:'13px',color:darkMode?'#E5E5EA':'#64748b'}}>
 <span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {currentClient.budget}u
 </span>
 {isAdmin&&(
@@ -3791,21 +3791,21 @@ const entries=getClientTimeEntriesForMonth(currentClient.id,monthKey);
 if(entries.length===0)return null;
 const isExpanded=expandedMonth===monthKey;
 return(
-<div style={{marginTop:'12px',borderTop:'1px solid #e2e8f0',paddingTop:'12px'}}>
-<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:'#f8fafc',borderRadius:'6px',cursor:'pointer',transition:'all 0.2s',border:'1px solid #e2e8f0'}} onClick={(e)=>{e.stopPropagation();setExpandedMonth(isExpanded?null:monthKey);}} onMouseEnter={(e)=>e.currentTarget.style.background='#f1f5f9'} onMouseLeave={(e)=>e.currentTarget.style.background='#f8fafc'}>
-<span style={{fontSize:'13px',fontWeight:'600',color:'#475569'}}>⏱️ Uren details ({entries.length})</span>
-<span style={{fontSize:'14px',color:'#64748b',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)'}}>▼</span>
+<div style={{marginTop:'12px',borderTop:`1px solid ${darkMode?'#38383A':'#e2e8f0'}`,paddingTop:'12px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'8px 12px',background:darkMode?'#2C2C2E':'#f8fafc',borderRadius:'6px',cursor:'pointer',transition:'all 0.2s',border:`1px solid ${darkMode?'#38383A':'#e2e8f0'}`}} onClick={(e)=>{e.stopPropagation();setExpandedMonth(isExpanded?null:monthKey);}}>
+<span style={{fontSize:'13px',fontWeight:'600',color:darkMode?'#E5E5EA':'#475569'}}>⏱️ Uren details ({entries.length})</span>
+<span style={{fontSize:'14px',color:darkMode?'#E5E5EA':'#64748b',transition:'transform 0.2s',transform:isExpanded?'rotate(180deg)':'rotate(0deg)'}}>▼</span>
 </div>
 {isExpanded&&(
 <div style={{marginTop:'8px',display:'flex',flexDirection:'column',gap:'6px'}}>
 {entries.map(entry=>(
-<div key={entry.id} style={{padding:'10px',background:entry.hours<0?'rgba(239,68,68,0.05)':'rgba(16,185,129,0.05)',border:entry.hours<0?'1px solid rgba(239,68,68,0.2)':'1px solid rgba(16,185,129,0.2)',borderRadius:'6px',fontSize:'12px',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:'8px'}}>
+<div key={entry.id} style={{padding:'10px',background:entry.hours<0?'rgba(239,68,68,0.1)':'rgba(16,185,129,0.1)',border:entry.hours<0?'1px solid rgba(239,68,68,0.3)':'1px solid rgba(16,185,129,0.3)',borderRadius:'6px',fontSize:'12px',display:'flex',alignItems:'flex-start',justifyContent:'space-between',gap:'8px'}}>
 <div style={{flex:1}}>
 <div style={{fontWeight:'700',color:entry.hours<0?'#dc2626':'#10b981',marginBottom:'4px'}}>
 {entry.hours>0?'+':''}{entry.hours}u
 </div>
-<div style={{color:'#475569',marginBottom:'2px',lineHeight:'1.4'}}>{entry.description}</div>
-<div style={{fontSize:'10px',color:'#64748b',marginTop:'4px'}}>
+<div style={{color:darkMode?'#E5E5EA':'#475569',marginBottom:'2px',lineHeight:'1.4'}}>{entry.description}</div>
+<div style={{fontSize:'10px',color:darkMode?'#C7C7CC':'#64748b',marginTop:'4px'}}>
 {new Date(entry.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric',hour:'2-digit',minute:'2-digit'})}
 {entry.stepId&&(()=>{
 const step=STEPS.find(s=>s.id===entry.stepId);
@@ -3929,7 +3929,7 @@ await deleteNote(noteKey);
 <h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
 ⏱️ Tijd Tracking
 </h3>
-<div style={{fontSize:'14px',color:darkMode?'#AEAEB2':'#64748b'}}>
+<div style={{fontSize:'14px',color:darkMode?'#E5E5EA':'#64748b'}}>
 Pakket: <span style={{fontWeight:'700',color:darkMode?'#60A5FA':'#3b82f6'}}>{clients.find(c=>c.id===selectedClient)?.budget} uren</span>
 </div>
 </div>
@@ -3968,7 +3968,7 @@ return(
 {isCurrent&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'12px'}}>Deze maand</span>}
 </div>
 <div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<span style={{fontSize:'13px',color:darkMode?'#AEAEB2':'#64748b'}}>
+<span style={{fontSize:'13px',color:darkMode?'#E5E5EA':'#64748b'}}>
 <span style={{fontWeight:'700',color:barColor}}>{hours}u</span> / {client.budget}u
 </span>
 {isAdmin&&(
@@ -4063,7 +4063,7 @@ const noteKey = note.key || `${selectedClient}-${note.id}`;
 return(
 <div key={note.id} style={{background:darkMode?'#1C1C1E':'white',border:`1px solid ${darkMode?'#38383A':'#F4D03F'}`,borderRadius:'6px',padding:'12px',marginBottom:'8px'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'start',marginBottom:'6px'}}>
-<div style={{fontSize:'11px',color:darkMode?'#AEAEB2':'#9A7B0A'}}>
+<div style={{fontSize:'11px',color:darkMode?'#E5E5EA':'#9A7B0A'}}>
 {new Date(note.timestamp).toLocaleString('nl-NL',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'})} - {note.author}{note.editedAt?' (bewerkt)':''}
 </div>
 {isAdmin&&(
