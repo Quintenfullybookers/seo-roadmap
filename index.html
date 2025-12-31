@@ -347,7 +347,7 @@ const STEPS=[
 {title:'Techniek',tasks:[{id:'4-4',title:'SSL-certificaat',desc:'HTTPS'},{id:'4-5',title:'301 redirects',desc:'Oude urls'},{id:'4-6',title:'404 oplossen',desc:'Check GSC'},{id:'4-7',title:'Broken links',desc:'Screaming Frog'},{id:'4-8',title:'Structured data',desc:'Schema.org'}]},
 {title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
 ]},
-{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']}]},
+{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}]},
 {id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
 {id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
 {id:7,name:'Planning',icon:'📅',type:'planning',months:[
@@ -1348,6 +1348,7 @@ keyword:item.keyword||'',
 url:item.url||'',
 words:item.words||'',
 deadline:item.deadline||'',
+liveUrl:item.liveUrl||'',
 completed:item.completed||false,
 stepId:4,
 itemId:item.id
@@ -3382,8 +3383,16 @@ saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients
 </div>
 )}
 {item.words&&(
-<div style={{fontSize:'13px',color:'var(--text-light)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px'}}>
 <span style={{fontWeight:'600'}}>Woorden:</span> {item.words}
+</div>
+)}
+{item.liveUrl&&(
+<div style={{fontSize:'13px',marginBottom:'4px'}}>
+<span style={{fontWeight:'600',color:'var(--text-light)'}}>Live:</span>{' '}
+<a href={item.liveUrl} target="_blank" rel="noopener noreferrer" style={{color:'#10b981',textDecoration:'none',wordBreak:'break-all'}} onClick={(e)=>e.stopPropagation()}>
+🔗 {item.liveUrl.replace(/^https?:\/\/(www\.)?/,'')}
+</a>
 </div>
 )}
 </div>
@@ -3393,7 +3402,7 @@ saveData({tasks,customItems:newCustomItems,planningItems,notes,deadlines,clients
 <button className="btn" style={{padding:'8px 16px',fontSize:'13px',whiteSpace:'nowrap',background:'#3b82f6',color:'white'}} onClick={()=>{
 setEditingCustomItem({...item,id:item.itemId,stepId:4,clientId:item.clientId});
 setItemModalStep(4);
-setItemModalData({keyword:item.keyword||'',url:item.url||'',words:item.words||'',deadline:item.deadline||''});
+setItemModalData({keyword:item.keyword||'',url:item.url||'',words:item.words||'',deadline:item.deadline||'',liveUrl:item.liveUrl||''});
 setShowItemModal(true);
 }}>
 ✏️ Bewerken
@@ -4185,6 +4194,13 @@ return items;
 {item.deadline&&(
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 📅 {item.deadline}
+</div>
+)}
+{item.liveUrl&&(
+<div style={{fontSize:'12px',marginTop:'4px'}}>
+<a href={item.liveUrl} target="_blank" rel="noopener noreferrer" style={{color:'#10b981',textDecoration:'none'}} onClick={(e)=>e.stopPropagation()}>
+🔗 Live: {item.liveUrl.replace(/^https?:\/\/(www\.)?/,'').substring(0,40)}{item.liveUrl.length>50?'...':''}
+</a>
 </div>
 )}
 </div>
