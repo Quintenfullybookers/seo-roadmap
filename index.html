@@ -3483,13 +3483,137 @@ setActiveView('roadmap');
 </div>
 )}
 </div>
+
+{/* RAPPORTAGES OVERZICHT */}
+<div style={{marginTop:'32px',marginBottom:'24px'}}>
+<h2 style={{fontSize:'24px',fontWeight:'700',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>📋</span>
+<span>Aankomende Rapportages</span>
+</h2>
+
+{/* Statistieken */}
+{(()=>{
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+let totalScheduled=0;
+let totalCompleted=0;
+let thisMonth=0;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)){
+const monthKey=key.replace(`${client.id}-`,'');
+if(data.completed)totalCompleted++;
+else{
+totalScheduled++;
+if(monthKey===currentMonthKey)thisMonth++;
+}
+}
+});
+});
+
+if(totalScheduled===0&&totalCompleted===0)return null;
+
+return(
+<div style={{display:'flex',gap:'16px',marginBottom:'20px',flexWrap:'wrap'}}>
+<div style={{background:darkMode?'#1E3A5F':'#dbeafe',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>📋</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FFFFFF':'#1e40af'}}>{totalScheduled}</div>
+<div style={{fontSize:'11px',color:darkMode?'#FFFFFF':'#1e40af',textTransform:'uppercase'}}>Gepland</div>
+</div>
+</div>
+{thisMonth>0&&(
+<div style={{background:darkMode?'#7C2D12':'#fef3c7',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>⚡</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FBBF24':'#92400e'}}>{thisMonth}</div>
+<div style={{fontSize:'11px',color:darkMode?'#FBBF24':'#92400e',textTransform:'uppercase'}}>Deze maand</div>
+</div>
+</div>
+)}
+<div style={{background:darkMode?'#14352C':'#f0fdf4',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>✅</span>
+<div>
+<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#86EFAC':'#166534'}}>{totalCompleted}</div>
+<div style={{fontSize:'11px',color:darkMode?'#86EFAC':'#166534',textTransform:'uppercase'}}>Verstuurd</div>
+</div>
+</div>
+</div>
+);
+})()}
+
+{(()=>{
+const allRapportages=[];
+const monthNames={'01':'Januari','02':'Februari','03':'Maart','04':'April','05':'Mei','06':'Juni','07':'Juli','08':'Augustus','09':'September','10':'Oktober','11':'November','12':'December'};
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)&&!data.completed){
+const monthKey=key.replace(`${client.id}-`,'');
+if(monthKey>=currentMonthKey){
+const [year,month]=monthKey.split('-');
+allRapportages.push({
+key,
+monthKey,
+monthLabel:`${monthNames[month]} ${year}`,
+clientId:client.id,
+clientName:client.name,
+clientCity:client.city,
+...data
+});
+}
+}
+});
+});
+
+allRapportages.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
+
+if(allRapportages.length===0){
+return <p style={{fontSize:'14px',color:'var(--text-light)'}}>Geen aankomende rapportages gepland.</p>;
+}
+
+const grouped={};
+allRapportages.forEach(r=>{
+if(!grouped[r.monthKey])grouped[r.monthKey]={label:r.monthLabel,items:[]};
+grouped[r.monthKey].items.push(r);
+});
+
+return(
+<div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
+{Object.entries(grouped).map(([monthKey,group])=>{
+const isCurrentMonth=monthKey===currentMonthKey;
+return(
+<div key={monthKey} style={{background:isCurrentMonth?(darkMode?'rgba(59,130,246,0.15)':'rgba(59,130,246,0.1)'):'var(--white)',border:`1px solid ${isCurrentMonth?'#3b82f6':'var(--border)'}`,borderRadius:'12px',padding:'16px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px'}}>
+<span style={{fontSize:'16px',fontWeight:'700',color:'var(--text)'}}>{group.label}</span>
+{isCurrentMonth&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'4px'}}>Deze maand</span>}
+<span style={{fontSize:'13px',color:'var(--text-light)',marginLeft:'auto'}}>{group.items.length} rapportage(s)</span>
+</div>
+<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+{group.items.map(r=>(
+<div key={r.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',background:'var(--bg)',borderRadius:'6px',cursor:'pointer'}} onClick={()=>{setSelectedClient(r.clientId);setActiveStep(9);setActiveView('roadmap');}}>
+<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{r.clientName}</span>
+{r.clientCity&&<span style={{fontSize:'12px',color:'var(--text-light)'}}>📍 {r.clientCity}</span>}
+<span style={{fontSize:'12px',color:'#3b82f6'}}>→</span>
+</div>
+))}
+</div>
+</div>
+);
+})}
+</div>
+);
+})()}
+</div>
+
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
 );
 }
-
-// RAPPORTAGE VIEW
 if(activeView==='rapportage'){
 const stats=getRapportageStats();
 const topPerformers=getTopPerformers();
