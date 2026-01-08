@@ -1690,18 +1690,21 @@ setToast({type:'success',message:'✓ To-do verwijderd'});
 const toggleRapportage=(clientId,monthKey)=>{
 if(!isAdmin)return;
 const key=`${clientId}-${monthKey}`;
+console.log('toggleRapportage - key:',key,'rapportages:',rapportages,'has key:',rapportages.hasOwnProperty(key));
 const current=rapportages[key];
 let newRapportages;
 if(current){
 // Remove if exists
 newRapportages={...rapportages};
 delete newRapportages[key];
+console.log('Removing rapportage, new:',newRapportages);
 setRapportages(newRapportages);
 saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
 setToast({type:'success',message:'✓ Rapportage verwijderd'});
 }else{
 // Add new
 newRapportages={...rapportages,[key]:{scheduled:true,completed:false,createdAt:new Date().toISOString()}};
+console.log('Adding rapportage, new:',newRapportages);
 setRapportages(newRapportages);
 saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
 setToast({type:'success',message:'✓ Rapportage ingepland'});
