@@ -2373,6 +2373,24 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+<span className="nav-count">{(()=>{
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+let count=0;
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)&&!data.completed){
+const monthKey=key.replace(`${client.id}-`,'');
+if(monthKey>=currentMonthKey)count++;
+}
+});
+});
+return count;
+})()}</span>
+</div>
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
@@ -3037,6 +3055,10 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
@@ -3195,6 +3217,234 @@ return count;
 );
 }
 
+// RAPPORTAGES OVERZICHT VIEW
+if(activeView==='rapportages-overzicht'){
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<span className={`mode-badge ${isAdmin?'admin':'viewer'}`}>{isAdmin?'👑 Admin':'👁️ Viewer'}</span>
+<button className="dark-mode-toggle" onClick={()=>setDarkMode(!darkMode)}>{darkMode?'☀️':'🌙'}</button>
+</div>
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+</div>
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+</div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
+</nav>
+</aside>
+<main style={{overflow:'visible',marginLeft:'280px',boxSizing:'border-box'}}>
+<div style={{padding:'20px',boxSizing:'border-box'}}>
+<div style={{marginBottom:'24px'}}>
+<h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>📋</span>
+<span>Rapportages Overzicht</span>
+</h1>
+<p style={{fontSize:'14px',color:'var(--text-light)'}}>
+Alle aankomende rapportages van alle projecten
+</p>
+</div>
+
+{/* Statistieken */}
+{(()=>{
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+let totalScheduled=0;
+let totalCompleted=0;
+let thisMonth=0;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)){
+const monthKey=key.replace(`${client.id}-`,'');
+if(data.completed)totalCompleted++;
+else{
+totalScheduled++;
+if(monthKey===currentMonthKey)thisMonth++;
+}
+}
+});
+});
+
+return(
+<div style={{display:'flex',gap:'16px',marginBottom:'24px',flexWrap:'wrap'}}>
+<div style={{background:darkMode?'#1E3A5F':'#dbeafe',padding:'16px 24px',borderRadius:'12px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'28px'}}>📋</span>
+<div>
+<div style={{fontSize:'28px',fontWeight:'700',color:darkMode?'#FFFFFF':'#1e40af'}}>{totalScheduled}</div>
+<div style={{fontSize:'12px',color:darkMode?'#FFFFFF':'#1e40af',textTransform:'uppercase',fontWeight:'600'}}>Gepland</div>
+</div>
+</div>
+{thisMonth>0&&(
+<div style={{background:darkMode?'#7C2D12':'#fef3c7',padding:'16px 24px',borderRadius:'12px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'28px'}}>⚡</span>
+<div>
+<div style={{fontSize:'28px',fontWeight:'700',color:darkMode?'#FBBF24':'#92400e'}}>{thisMonth}</div>
+<div style={{fontSize:'12px',color:darkMode?'#FBBF24':'#92400e',textTransform:'uppercase',fontWeight:'600'}}>Deze maand</div>
+</div>
+</div>
+)}
+<div style={{background:darkMode?'#14352C':'#f0fdf4',padding:'16px 24px',borderRadius:'12px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'28px'}}>✅</span>
+<div>
+<div style={{fontSize:'28px',fontWeight:'700',color:darkMode?'#86EFAC':'#166534'}}>{totalCompleted}</div>
+<div style={{fontSize:'12px',color:darkMode?'#86EFAC':'#166534',textTransform:'uppercase',fontWeight:'600'}}>Verstuurd</div>
+</div>
+</div>
+</div>
+);
+})()}
+
+{/* Rapportages per maand */}
+{(()=>{
+const allRapportages=[];
+const monthNames={'01':'Januari','02':'Februari','03':'Maart','04':'April','05':'Mei','06':'Juni','07':'Juli','08':'Augustus','09':'September','10':'Oktober','11':'November','12':'December'};
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)&&!data.completed){
+const monthKey=key.replace(`${client.id}-`,'');
+if(monthKey>=currentMonthKey){
+const [year,month]=monthKey.split('-');
+allRapportages.push({
+key,
+monthKey,
+monthLabel:`${monthNames[month]} ${year}`,
+clientId:client.id,
+clientName:client.name,
+clientCity:client.city,
+pm:client.pm,
+...data
+});
+}
+}
+});
+});
+
+allRapportages.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
+
+if(allRapportages.length===0){
+return(
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'40px',textAlign:'center'}}>
+<span style={{fontSize:'48px',display:'block',marginBottom:'16px'}}>📋</span>
+<p style={{fontSize:'16px',color:'var(--text-light)',margin:0}}>Geen aankomende rapportages gepland.</p>
+<p style={{fontSize:'14px',color:'var(--text-lighter)',marginTop:'8px'}}>Plan rapportages in bij de projecten via de Rapportages stap.</p>
+</div>
+);
+}
+
+const grouped={};
+allRapportages.forEach(r=>{
+if(!grouped[r.monthKey])grouped[r.monthKey]={label:r.monthLabel,items:[]};
+grouped[r.monthKey].items.push(r);
+});
+
+return(
+<div style={{display:'flex',flexDirection:'column',gap:'20px'}}>
+{Object.entries(grouped).map(([monthKey,group])=>{
+const isCurrentMonth=monthKey===currentMonthKey;
+return(
+<div key={monthKey} style={{background:isCurrentMonth?(darkMode?'rgba(59,130,246,0.15)':'rgba(59,130,246,0.08)'):'var(--white)',border:`2px solid ${isCurrentMonth?'#3b82f6':'var(--border)'}`,borderRadius:'12px',padding:'20px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'16px'}}>
+<span style={{fontSize:'20px',fontWeight:'700',color:'var(--text)'}}>{group.label}</span>
+{isCurrentMonth&&<span style={{fontSize:'12px',background:'#3b82f6',color:'white',padding:'4px 12px',borderRadius:'6px',fontWeight:'600'}}>Deze maand</span>}
+<span style={{fontSize:'14px',color:'var(--text-light)',marginLeft:'auto'}}>{group.items.length} rapportage(s)</span>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(280px,1fr))',gap:'12px'}}>
+{group.items.map(r=>(
+<div key={r.key} style={{display:'flex',alignItems:'center',justifyContent:'space-between',padding:'12px 16px',background:'var(--bg)',borderRadius:'8px',cursor:'pointer',transition:'all 0.2s'}} onClick={()=>{setSelectedClient(r.clientId);setActiveStep(9);setActiveView('roadmap');}}>
+<div>
+<div style={{fontSize:'15px',fontWeight:'600',color:'var(--text)',marginBottom:'4px'}}>{r.clientName}</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+{r.clientCity&&<span style={{fontSize:'12px',color:'var(--text-light)'}}>📍 {r.clientCity}</span>}
+{r.pm&&<span style={{fontSize:'11px',padding:'2px 6px',background:r.pm==='Hugo'?'#fef3c7':'#fce7f3',color:r.pm==='Hugo'?'#92400e':'#9d174d',borderRadius:'4px'}}>{r.pm}</span>}
+</div>
+</div>
+<span style={{fontSize:'14px',color:'#3b82f6',fontWeight:'600'}}>→</span>
+</div>
+))}
+</div>
+</div>
+);
+})}
+</div>
+);
+})()}
+
+{/* Recent verstuurd */}
+{(()=>{
+const monthNames={'01':'Jan','02':'Feb','03':'Mrt','04':'Apr','05':'Mei','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Okt','11':'Nov','12':'Dec'};
+const completed=[];
+
+clients.filter(c=>!c.archived).forEach(client=>{
+Object.entries(rapportages).forEach(([key,data])=>{
+if(key.startsWith(`${client.id}-`)&&data.completed){
+const monthKey=key.replace(`${client.id}-`,'');
+const [year,month]=monthKey.split('-');
+completed.push({
+key,
+monthKey,
+monthLabel:`${monthNames[month]} ${year}`,
+clientId:client.id,
+clientName:client.name,
+completedAt:data.completedAt
+});
+}
+});
+});
+
+if(completed.length===0)return null;
+
+completed.sort((a,b)=>b.completedAt?.localeCompare(a.completedAt)||0);
+
+return(
+<div style={{marginTop:'32px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'600',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>✅</span> Recent Verstuurd
+</h2>
+<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+{completed.slice(0,12).map(r=>(
+<div key={r.key} style={{padding:'8px 12px',background:'rgba(16,185,129,0.1)',border:'1px solid rgba(16,185,129,0.3)',borderRadius:'6px',fontSize:'13px'}}>
+<span style={{fontWeight:'600',color:'var(--text)'}}>{r.clientName}</span>
+<span style={{color:'var(--text-light)',marginLeft:'8px'}}>{r.monthLabel}</span>
+</div>
+))}
+</div>
+</div>
+);
+})()}
+
+</div>
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
+</div>
+);
+}
+
 // CONTENT CREATIE VIEW
 if(activeView==='content'){
 const contentItems=getAllContentItems();
@@ -3252,6 +3502,10 @@ count+=items.length;
 });
 return count;
 })()}</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
 </div>
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
@@ -3484,131 +3738,6 @@ setActiveView('roadmap');
 )}
 </div>
 
-{/* RAPPORTAGES OVERZICHT */}
-<div style={{marginTop:'32px',marginBottom:'24px'}}>
-<h2 style={{fontSize:'24px',fontWeight:'700',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'12px'}}>
-<span>📋</span>
-<span>Aankomende Rapportages</span>
-</h2>
-
-{/* Statistieken */}
-{(()=>{
-const now=new Date();
-const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
-let totalScheduled=0;
-let totalCompleted=0;
-let thisMonth=0;
-
-clients.filter(c=>!c.archived).forEach(client=>{
-Object.entries(rapportages).forEach(([key,data])=>{
-if(key.startsWith(`${client.id}-`)){
-const monthKey=key.replace(`${client.id}-`,'');
-if(data.completed)totalCompleted++;
-else{
-totalScheduled++;
-if(monthKey===currentMonthKey)thisMonth++;
-}
-}
-});
-});
-
-if(totalScheduled===0&&totalCompleted===0)return null;
-
-return(
-<div style={{display:'flex',gap:'16px',marginBottom:'20px',flexWrap:'wrap'}}>
-<div style={{background:darkMode?'#1E3A5F':'#dbeafe',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'20px'}}>📋</span>
-<div>
-<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FFFFFF':'#1e40af'}}>{totalScheduled}</div>
-<div style={{fontSize:'11px',color:darkMode?'#FFFFFF':'#1e40af',textTransform:'uppercase'}}>Gepland</div>
-</div>
-</div>
-{thisMonth>0&&(
-<div style={{background:darkMode?'#7C2D12':'#fef3c7',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'20px'}}>⚡</span>
-<div>
-<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#FBBF24':'#92400e'}}>{thisMonth}</div>
-<div style={{fontSize:'11px',color:darkMode?'#FBBF24':'#92400e',textTransform:'uppercase'}}>Deze maand</div>
-</div>
-</div>
-)}
-<div style={{background:darkMode?'#14352C':'#f0fdf4',padding:'12px 20px',borderRadius:'8px',display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'20px'}}>✅</span>
-<div>
-<div style={{fontSize:'20px',fontWeight:'700',color:darkMode?'#86EFAC':'#166534'}}>{totalCompleted}</div>
-<div style={{fontSize:'11px',color:darkMode?'#86EFAC':'#166534',textTransform:'uppercase'}}>Verstuurd</div>
-</div>
-</div>
-</div>
-);
-})()}
-
-{(()=>{
-const allRapportages=[];
-const monthNames={'01':'Januari','02':'Februari','03':'Maart','04':'April','05':'Mei','06':'Juni','07':'Juli','08':'Augustus','09':'September','10':'Oktober','11':'November','12':'December'};
-const now=new Date();
-const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
-
-clients.filter(c=>!c.archived).forEach(client=>{
-Object.entries(rapportages).forEach(([key,data])=>{
-if(key.startsWith(`${client.id}-`)&&!data.completed){
-const monthKey=key.replace(`${client.id}-`,'');
-if(monthKey>=currentMonthKey){
-const [year,month]=monthKey.split('-');
-allRapportages.push({
-key,
-monthKey,
-monthLabel:`${monthNames[month]} ${year}`,
-clientId:client.id,
-clientName:client.name,
-clientCity:client.city,
-...data
-});
-}
-}
-});
-});
-
-allRapportages.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
-
-if(allRapportages.length===0){
-return <p style={{fontSize:'14px',color:'var(--text-light)'}}>Geen aankomende rapportages gepland.</p>;
-}
-
-const grouped={};
-allRapportages.forEach(r=>{
-if(!grouped[r.monthKey])grouped[r.monthKey]={label:r.monthLabel,items:[]};
-grouped[r.monthKey].items.push(r);
-});
-
-return(
-<div style={{display:'flex',flexDirection:'column',gap:'16px'}}>
-{Object.entries(grouped).map(([monthKey,group])=>{
-const isCurrentMonth=monthKey===currentMonthKey;
-return(
-<div key={monthKey} style={{background:isCurrentMonth?(darkMode?'rgba(59,130,246,0.15)':'rgba(59,130,246,0.1)'):'var(--white)',border:`1px solid ${isCurrentMonth?'#3b82f6':'var(--border)'}`,borderRadius:'12px',padding:'16px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'12px'}}>
-<span style={{fontSize:'16px',fontWeight:'700',color:'var(--text)'}}>{group.label}</span>
-{isCurrentMonth&&<span style={{fontSize:'11px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'4px'}}>Deze maand</span>}
-<span style={{fontSize:'13px',color:'var(--text-light)',marginLeft:'auto'}}>{group.items.length} rapportage(s)</span>
-</div>
-<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
-{group.items.map(r=>(
-<div key={r.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px 12px',background:'var(--bg)',borderRadius:'6px',cursor:'pointer'}} onClick={()=>{setSelectedClient(r.clientId);setActiveStep(9);setActiveView('roadmap');}}>
-<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{r.clientName}</span>
-{r.clientCity&&<span style={{fontSize:'12px',color:'var(--text-light)'}}>📍 {r.clientCity}</span>}
-<span style={{fontSize:'12px',color:'#3b82f6'}}>→</span>
-</div>
-))}
-</div>
-</div>
-);
-})}
-</div>
-);
-})()}
-</div>
-
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -3669,6 +3798,10 @@ count+=items.length;
 });
 return count;
 })()}</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
 </div>
 {isAdmin&&(
 <div className={`nav-item ${activeView==='rapportage'?'active':''}`} onClick={()=>setActiveView('rapportage')} style={{cursor:'pointer'}}>
