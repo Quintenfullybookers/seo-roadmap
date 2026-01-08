@@ -336,6 +336,12 @@ const PROJECT_MANAGERS=[
 
 // ORIGINELE STAPPEN MET SUBKOPJES
 const STEPS=[
+{id:7,name:'Planning',icon:'📅',type:'planning',months:[
+{key:'2025-12',label:'December 2025'},{key:'2026-01',label:'Januari 2026'},{key:'2026-02',label:'Februari 2026'},
+{key:'2026-03',label:'Maart 2026'},{key:'2026-04',label:'April 2026'},{key:'2026-05',label:'Mei 2026'},
+{key:'2026-06',label:'Juni 2026'},{key:'2026-07',label:'Juli 2026'},{key:'2026-08',label:'Augustus 2026'},
+{key:'2026-09',label:'September 2026'},{key:'2026-10',label:'Oktober 2026'},{key:'2026-11',label:'November 2026'},{key:'2026-12',label:'December 2026'}
+]},
 {id:1,name:'SEO Plan',icon:'🎯',sections:[
 {title:'Zoekwoorden onderzoek',tasks:[{id:'1-1',title:'Website',desc:''},{id:'1-2',title:'Concurrentie',desc:''},{id:'1-3',title:'Search Console',desc:''},{id:'1-4',title:'SE Ranking',desc:''}]},
 {title:'Zoekwoorden voorstel',tasks:[{id:'1-5',title:'Gestuurd',desc:''},{id:'1-6',title:'Feedback ontvangen',desc:''},{id:'1-7',title:'Verwerkt',desc:''},{id:'1-8',title:'Voltooid',desc:''}]}
@@ -353,13 +359,7 @@ const STEPS=[
 {id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}]},
 {id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
 {id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
-{id:9,name:'Rapportages',icon:'📋',type:'rapportages'},
-{id:7,name:'Planning',icon:'📅',type:'planning',months:[
-{key:'2025-12',label:'December 2025'},{key:'2026-01',label:'Januari 2026'},{key:'2026-02',label:'Februari 2026'},
-{key:'2026-03',label:'Maart 2026'},{key:'2026-04',label:'April 2026'},{key:'2026-05',label:'Mei 2026'},
-{key:'2026-06',label:'Juni 2026'},{key:'2026-07',label:'Juli 2026'},{key:'2026-08',label:'Augustus 2026'},
-{key:'2026-09',label:'September 2026'},{key:'2026-10',label:'Oktober 2026'},{key:'2026-11',label:'November 2026'},{key:'2026-12',label:'December 2026'}
-]}
+{id:9,name:'Rapportages',icon:'📋',type:'rapportages'}
 ];
 
 // LOCAL STORAGE
@@ -3885,6 +3885,64 @@ Looker Studio
 </div>
 </div>
 </div>
+</div>
+
+{/* PLANNING PREVIEW IN OVERZICHT */}
+<div style={{background:darkMode?'#1C1C1E':'#f0f9ff',border:`1px solid ${darkMode?'#38383A':'#bae6fd'}`,borderRadius:'8px',padding:'20px',marginBottom:'24px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'16px'}}>
+<h3 style={{margin:0,fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+📅 Planning
+</h3>
+<button onClick={()=>setActiveStep(7)} style={{padding:'6px 12px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>
+Bekijk volledige planning →
+</button>
+</div>
+{(()=>{
+const monthNames=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+const now=new Date();
+const upcomingMonths=[];
+for(let i=0;i<4;i++){
+const date=new Date(now.getFullYear(),now.getMonth()+i,1);
+const monthKey=`${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
+const monthLabel=`${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+const items=planningItems[`${selectedClient}-${monthKey}`]||[];
+const isCurrent=i===0;
+upcomingMonths.push({monthKey,monthLabel,items,isCurrent});
+}
+const hasAnyItems=upcomingMonths.some(m=>m.items.length>0);
+if(!hasAnyItems){
+return(
+<div style={{textAlign:'center',padding:'16px',color:'var(--text-light)'}}>
+<span style={{fontSize:'14px'}}>Nog geen items gepland voor de komende maanden</span>
+{isAdmin&&<div style={{marginTop:'8px'}}><button onClick={()=>setActiveStep(7)} style={{padding:'8px 16px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'13px',cursor:'pointer'}}>+ Planning toevoegen</button></div>}
+</div>
+);
+}
+return(
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit,minmax(180px,1fr))',gap:'12px'}}>
+{upcomingMonths.map(({monthKey,monthLabel,items,isCurrent})=>(
+<div key={monthKey} style={{background:isCurrent?(darkMode?'rgba(59,130,246,0.15)':'rgba(59,130,246,0.1)'):'var(--white)',border:`1px solid ${isCurrent?'#3b82f6':'var(--border)'}`,borderRadius:'8px',padding:'12px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',marginBottom:'8px'}}>
+<span style={{fontSize:'13px',fontWeight:'600',color:'var(--text)'}}>{monthLabel.split(' ')[0]}</span>
+{isCurrent&&<span style={{fontSize:'10px',background:'#3b82f6',color:'white',padding:'2px 6px',borderRadius:'4px'}}>Nu</span>}
+</div>
+{items.length>0?(
+<div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
+{items.slice(0,3).map((item,idx)=>(
+<div key={idx} style={{fontSize:'12px',color:item.completed?'#10b981':'var(--text)',display:'flex',alignItems:'center',gap:'4px',textDecoration:item.completed?'line-through':'none'}}>
+{item.completed?'✓':''}{item.text?.substring(0,25)}{item.text?.length>25?'...':''}
+</div>
+))}
+{items.length>3&&<span style={{fontSize:'11px',color:'var(--text-light)'}}>+{items.length-3} meer</span>}
+</div>
+):(
+<span style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>Geen items</span>
+)}
+</div>
+))}
+</div>
+);
+})()}
 </div>
 
 {currentClient.budget>0&&(
