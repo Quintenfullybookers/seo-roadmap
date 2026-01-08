@@ -1687,8 +1687,9 @@ setToast({type:'success',message:'✓ To-do verwijderd'});
 };
 
 // RAPPORTAGE FUNCTIONS
-const addRapportage=(clientId,monthKey)=>{
+const addRapportage=async(clientId,monthKey)=>{
 if(!isAdmin)return;
+if(!db){setToast({type:'error',message:'Geen verbinding'});return;}
 const cid=String(clientId);
 const key=`${cid}-${monthKey}`;
 if(rapportages[key]){
@@ -1698,12 +1699,27 @@ return;
 const newRapportages={...rapportages,[key]:{scheduled:true,completed:false,createdAt:new Date().toISOString()}};
 console.log('Adding rapportage with key:',key);
 setRapportages(newRapportages);
-saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
+setSaveStatus('saving');
+try{
+await db.collection('roadmaps').doc('main').update({
+rapportages:newRapportages,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+setSaveStatus('success');
+setTimeout(()=>setSaveStatus('idle'),2000);
 setToast({type:'success',message:'✓ Rapportage ingepland'});
+}catch(error){
+console.error('addRapportage error:',error);
+setToast({type:'error',message:'Opslaan mislukt'});
+setSaveStatus('error');
+setTimeout(()=>setSaveStatus('idle'),3000);
+setRapportages(rapportages);
+}
 };
 
-const toggleRapportageCompletedByKey=(key)=>{
+const toggleRapportageCompletedByKey=async(key)=>{
 if(!isAdmin)return;
+if(!db){setToast({type:'error',message:'Geen verbinding'});return;}
 const current=rapportages[key];
 if(!current){
 console.log('toggleRapportageCompletedByKey - key not found:',key);
@@ -1712,8 +1728,22 @@ return;
 const newCompleted=!current.completed;
 const newRapportages={...rapportages,[key]:{...current,completed:newCompleted,completedAt:newCompleted?new Date().toISOString():null}};
 setRapportages(newRapportages);
-saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
+setSaveStatus('saving');
+try{
+await db.collection('roadmaps').doc('main').update({
+rapportages:newRapportages,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+setSaveStatus('success');
+setTimeout(()=>setSaveStatus('idle'),2000);
 setToast({type:'success',message:newCompleted?'✓ Rapportage verstuurd':'✓ Rapportage als open gemarkeerd'});
+}catch(error){
+console.error('toggleRapportageCompletedByKey error:',error);
+setToast({type:'error',message:'Opslaan mislukt'});
+setSaveStatus('error');
+setTimeout(()=>setSaveStatus('idle'),3000);
+setRapportages(rapportages);
+}
 };
 
 const getClientRapportages=(clientId)=>{
@@ -1724,8 +1754,10 @@ return Object.entries(rapportages)
 .sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
 };
 
-const deleteRapportage=(key)=>{
+const deleteRapportage=async(key)=>{
 if(!isAdmin)return;
+if(!db){setToast({type:'error',message:'Geen verbinding'});return;}
+console.log('deleteRapportage called with key:',key);
 if(!rapportages[key]){
 console.log('deleteRapportage - key not found:',key,'available:',Object.keys(rapportages));
 setToast({type:'error',message:'Rapportage niet gevonden'});
@@ -1733,9 +1765,26 @@ return;
 }
 const newRapportages={...rapportages};
 delete newRapportages[key];
+console.log('deleteRapportage - new rapportages:',Object.keys(newRapportages));
 setRapportages(newRapportages);
-saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
+setSaveStatus('saving');
+try{
+// Overschrijf het hele rapportages object (niet merge) zodat verwijderde keys ook verdwijnen
+await db.collection('roadmaps').doc('main').update({
+rapportages:newRapportages,
+updatedAt:firebase.firestore.FieldValue.serverTimestamp()
+});
+setSaveStatus('success');
+setTimeout(()=>setSaveStatus('idle'),2000);
 setToast({type:'success',message:'✓ Rapportage verwijderd'});
+}catch(error){
+console.error('deleteRapportage error:',error);
+setToast({type:'error',message:'Verwijderen mislukt'});
+setSaveStatus('error');
+setTimeout(()=>setSaveStatus('idle'),3000);
+// Revert state on error
+setRapportages(rapportages);
+}
 };
 
 const getAllUpcomingRapportages=()=>{
