@@ -353,6 +353,7 @@ const STEPS=[
 {id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}]},
 {id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
 {id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
+{id:9,name:'Rapportages',icon:'📋',type:'rapportages'},
 {id:7,name:'Planning',icon:'📅',type:'planning',months:[
 {key:'2025-12',label:'December 2025'},{key:'2026-01',label:'Januari 2026'},{key:'2026-02',label:'Februari 2026'},
 {key:'2026-03',label:'Maart 2026'},{key:'2026-04',label:'April 2026'},{key:'2026-05',label:'Mei 2026'},
@@ -546,6 +547,7 @@ const [expandedPlanning,setExpandedPlanning]=useState({});
 const [expandedNotes,setExpandedNotes]=useState({});
 const [expandedTodos,setExpandedTodos]=useState({});
 const [todos,setTodos]=useState({});
+const [rapportages,setRapportages]=useState({});
 const [newTodoInputs,setNewTodoInputs]=useState({});
 const [contentFilter,setContentFilter]=useState('all');
 const [clientToDelete,setClientToDelete]=useState(null);
@@ -736,6 +738,7 @@ setDeadlines(data.deadlines||{});
 setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
+setRapportages(data.rapportages||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 
@@ -752,6 +755,7 @@ setDeadlines(data.deadlines||{});
 setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
+setRapportages(data.rapportages||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 });
@@ -799,6 +803,7 @@ setDeadlines(data.deadlines||{});
 setClients(data.clients||[]);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
+setRapportages(data.rapportages||{});
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[],data.timeTracking||{});
 setToast({type:'success',message:'✓ Herladen voltooid'});
 }
@@ -1679,6 +1684,57 @@ delete newTodos[todoKey];
 setTodos(newTodos);
 saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos:newTodos});
 setToast({type:'success',message:'✓ To-do verwijderd'});
+};
+
+// RAPPORTAGE FUNCTIONS
+const toggleRapportage=(clientId,monthKey)=>{
+if(!isAdmin)return;
+const key=`${clientId}-${monthKey}`;
+const current=rapportages[key];
+let newRapportages;
+if(current){
+// Remove if exists
+newRapportages={...rapportages};
+delete newRapportages[key];
+}else{
+// Add new
+newRapportages={...rapportages,[key]:{scheduled:true,completed:false,createdAt:new Date().toISOString()}};
+}
+setRapportages(newRapportages);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
+};
+
+const toggleRapportageCompleted=(clientId,monthKey)=>{
+if(!isAdmin)return;
+const key=`${clientId}-${monthKey}`;
+const current=rapportages[key];
+if(!current)return;
+const newRapportages={...rapportages,[key]:{...current,completed:!current.completed,completedAt:!current.completed?new Date().toISOString():null}};
+setRapportages(newRapportages);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking,todos,rapportages:newRapportages});
+};
+
+const getClientRapportages=(clientId)=>{
+return Object.entries(rapportages)
+.filter(([key])=>key.startsWith(`${clientId}-`))
+.map(([key,data])=>({key,monthKey:key.replace(`${clientId}-`,''),...data}))
+.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
+};
+
+const getAllUpcomingRapportages=()=>{
+const now=new Date();
+const currentMonthKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+return Object.entries(rapportages)
+.filter(([key,data])=>!data.completed)
+.map(([key,data])=>{
+const parts=key.split('-');
+const monthKey=parts.slice(-2).join('-');
+const clientId=parts.slice(0,-2).join('-')||parts[0];
+const client=clients.find(c=>String(c.id)===String(clientId));
+return{key,monthKey,clientId,clientName:client?.name||'Onbekend',...data};
+})
+.filter(r=>r.monthKey>=currentMonthKey||r.monthKey===currentMonthKey)
+.sort((a,b)=>a.monthKey.localeCompare(b.monthKey));
 };
 
 const deleteNote=async(noteKey)=>{
@@ -4152,7 +4208,7 @@ return(
 </div>
 ))}
 
-{currentStep&&currentStep.type!=='planning'&&(
+{currentStep&&currentStep.type!=='planning'&&currentStep.type!=='rapportages'&&(
 <div className="section">
 <div className="section-header">
 {currentStep.type==='hybrid'?currentStep.customSection?.title:(currentStep.type==='custom'?'Custom Items':'Extra Taken')}
@@ -4221,6 +4277,86 @@ return items;
 ))}
 </div>
 )}
+
+{/* RAPPORTAGES UI */}
+{currentStep&&currentStep.type==='rapportages'&&(
+<div className="section">
+<div className="section-header">
+📋 Rapportage Planning
+</div>
+<p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'20px'}}>
+Selecteer de maanden waarin een rapportage gepland staat. Vink af wanneer de rapportage is verstuurd.
+</p>
+
+{(()=>{
+const monthNames=['Januari','Februari','Maart','April','Mei','Juni','Juli','Augustus','September','Oktober','November','December'];
+const now=new Date();
+const months=[];
+for(let i=-6;i<=11;i++){
+const date=new Date(now.getFullYear(),now.getMonth()+i,1);
+const monthKey=`${date.getFullYear()}-${(date.getMonth()+1).toString().padStart(2,'0')}`;
+const label=`${monthNames[date.getMonth()]} ${date.getFullYear()}`;
+const isCurrent=i===0;
+const isPast=i<0;
+months.push({monthKey,label,isCurrent,isPast});
+}
+const clientRapportages=getClientRapportages(selectedClient);
+return(
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill,minmax(200px,1fr))',gap:'12px'}}>
+{months.map(({monthKey,label,isCurrent,isPast})=>{
+const rapportage=clientRapportages.find(r=>r.monthKey===monthKey);
+const isScheduled=!!rapportage;
+const isCompleted=rapportage?.completed;
+return(
+<div key={monthKey} style={{padding:'16px',background:isCompleted?'rgba(16,185,129,0.1)':isScheduled?'rgba(59,130,246,0.1)':'var(--white)',border:isCurrent?'2px solid #3b82f6':`1px solid ${isScheduled?'#3b82f6':'var(--border)'}`,borderRadius:'8px',opacity:isPast&&!isScheduled?0.5:1}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+<span style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{label}</span>
+{isCurrent&&<span style={{fontSize:'10px',background:'#3b82f6',color:'white',padding:'2px 6px',borderRadius:'4px'}}>Nu</span>}
+</div>
+{isScheduled?(
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<div className={`checkbox ${isCompleted?'checked':''} clickable`} onClick={()=>toggleRapportageCompleted(selectedClient,monthKey)} style={{width:'20px',height:'20px',flexShrink:0}}>
+{isCompleted&&<span style={{color:'white',fontSize:'12px',fontWeight:'bold'}}>✓</span>}
+</div>
+<span style={{fontSize:'13px',color:isCompleted?'#10b981':'#3b82f6',fontWeight:'500'}}>{isCompleted?'Verstuurd':'Gepland'}</span>
+{isAdmin&&(<button onClick={()=>toggleRapportage(selectedClient,monthKey)} style={{marginLeft:'auto',padding:'4px 8px',background:'#ef4444',color:'white',border:'none',borderRadius:'4px',fontSize:'11px',cursor:'pointer'}}>✕</button>)}
+</div>
+):(
+isAdmin?(
+<button onClick={()=>toggleRapportage(selectedClient,monthKey)} style={{width:'100%',padding:'8px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Inplannen</button>
+):(
+<span style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>Geen rapportage</span>
+)
+)}
+</div>
+);})}
+</div>
+);
+})()}
+
+<div style={{marginTop:'24px',padding:'16px',background:'var(--bg)',borderRadius:'8px'}}>
+<h4 style={{margin:'0 0 12px 0',fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>📊 Overzicht</h4>
+{(()=>{
+const clientRapportages=getClientRapportages(selectedClient);
+const scheduled=clientRapportages.filter(r=>!r.completed);
+const completed=clientRapportages.filter(r=>r.completed);
+if(clientRapportages.length===0)return <p style={{fontSize:'13px',color:'var(--text-light)',margin:0}}>Nog geen rapportages ingepland.</p>;
+const monthNames={'01':'Jan','02':'Feb','03':'Mrt','04':'Apr','05':'Mei','06':'Jun','07':'Jul','08':'Aug','09':'Sep','10':'Okt','11':'Nov','12':'Dec'};
+return(
+<div style={{display:'flex',gap:'24px',flexWrap:'wrap'}}>
+<div><div style={{fontSize:'12px',fontWeight:'600',color:'#3b82f6',marginBottom:'8px'}}>⏳ Gepland ({scheduled.length})</div>
+{scheduled.length>0?scheduled.map(r=>{const [year,month]=r.monthKey.split('-');return <div key={r.key} style={{fontSize:'13px',color:'var(--text)',marginBottom:'4px'}}>{monthNames[month]} {year}</div>;}):<span style={{fontSize:'12px',color:'var(--text-light)'}}>-</span>}
+</div>
+<div><div style={{fontSize:'12px',fontWeight:'600',color:'#10b981',marginBottom:'8px'}}>✓ Verstuurd ({completed.length})</div>
+{completed.length>0?completed.map(r=>{const [year,month]=r.monthKey.split('-');return <div key={r.key} style={{fontSize:'13px',color:'var(--text)',marginBottom:'4px'}}>{monthNames[month]} {year}</div>;}):<span style={{fontSize:'12px',color:'var(--text-light)'}}>-</span>}
+</div>
+</div>
+);
+})()}
+</div>
+</div>
+)}
+
 </>
 )}
 </main>
