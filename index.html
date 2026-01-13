@@ -1920,7 +1920,7 @@ if(y>268){doc.addPage();y=20;}
 doc.setFontSize(8);
 doc.setFont(undefined,'normal');
 const checkbox=item.completed?'[X]':'[ ]';
-const itemText=step.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text;
+const itemText=(step.customFields||step.customSection?.fields)?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text;
 doc.text(`${checkbox} ${itemText}`,30,y);
 if(item.deadline){
 doc.setTextColor(200,0,0);
@@ -4475,13 +4475,16 @@ return(
 })()}
 {(()=>{
 const items=customItems[`${selectedClient}-${currentStep.id}`]||[];
-// Sort by deadline if content creation (step 4) or linkbuilding (step 5)
+// Sort by deadline/date if content creation (step 4) or linkbuilding (step 5)
 if(currentStep.id===4||currentStep.id===5){
 const sortedItems=[...items].sort((a,b)=>{
-// Items without deadline go to end
-if(!a.deadline&&!b.deadline)return 0;
-if(!a.deadline)return 1;
-if(!b.deadline)return-1;
+// Use deadline for content, date for linkbuilding
+const aDate=a.deadline||a.date;
+const bDate=b.deadline||b.date;
+// Items without date go to end
+if(!aDate&&!bDate)return 0;
+if(!aDate)return 1;
+if(!bDate)return-1;
 // Parse deadline to date for comparison
 const parseDeadline=(dl)=>{
 // If deadline is like "December 2025", convert to date
@@ -4495,9 +4498,9 @@ return new Date(year,month,1);
 // If it's ISO format, parse directly
 return new Date(dl);
 };
-const dateA=parseDeadline(a.deadline);
-const dateB=parseDeadline(b.deadline);
-return dateA-dateB;
+const dateA=parseDeadline(aDate);
+const dateB=parseDeadline(bDate);
+return dateB-dateA; // Newest first for linkbuilding
 });
 return sortedItems;
 }
@@ -4507,16 +4510,40 @@ return items;
 <div className={`checkbox ${item.completed?'checked':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleCustomItem(currentStep.id,item.id);}}>{item.completed&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
 <div className="task-content">
 <div className="task-title">
-{currentStep.customFields?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text}
+{currentStep.id===5&&item.url?(
+// Linkbuilding: toon URL als klikbare link
+<a href={item.url.startsWith('http')?item.url:`https://${item.url}`} target="_blank" rel="noopener noreferrer" style={{color:'var(--text)',textDecoration:'none'}} onClick={(e)=>e.stopPropagation()}>
+{item.url.replace(/^https?:\/\/(www\.)?/,'').substring(0,60)}{item.url.length>60?'...':''}
+</a>
+):(
+(currentStep.customFields||currentStep.customSection?.fields)?.map(f=>item[f.key]).filter(Boolean).join(' - ')||item.text
+)}
 </div>
+{currentStep.id===5&&item.anchor&&(
+<div style={{fontSize:'12px',color:'#6366f1',marginTop:'2px',fontWeight:'500'}}>
+🔗 Anchor: "{item.anchor}"
+</div>
+)}
 {item.deadline&&(
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 📅 {item.deadline}
 </div>
 )}
+{item.date&&!item.deadline&&(
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
+📅 {new Date(item.date).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}
+</div>
+)}
 {item.cost&&(
 <div style={{fontSize:'12px',color:'#10b981',fontWeight:'600',marginTop:'4px'}}>
 💰 €{parseFloat(item.cost).toFixed(2)}
+</div>
+)}
+{item.url&&!item.liveUrl&&currentStep.id!==5&&(
+<div style={{fontSize:'12px',marginTop:'4px'}}>
+<a href={item.url.startsWith('http')?item.url:`https://${item.url}`} target="_blank" rel="noopener noreferrer" style={{color:'#3b82f6',textDecoration:'none'}} onClick={(e)=>e.stopPropagation()}>
+🔗 {item.url.replace(/^https?:\/\/(www\.)?/,'').substring(0,50)}{item.url.length>50?'...':''}
+</a>
 </div>
 )}
 {item.liveUrl&&(
@@ -4734,8 +4761,9 @@ return`Extra Taak ${action} - ${step.name}`;
 </h2>
 {(()=>{
 const step=STEPS.find(s=>s.id===itemModalStep);
-if(step?.customFields){
-return step.customFields.map((field,idx)=>(
+const fields=step?.customFields||step?.customSection?.fields;
+if(fields){
+return fields.map((field,idx)=>(
 <div key={field.key} className="input-group">
 <label className="input-label">{field.label}</label>
 {field.type==='select'?(
@@ -4746,7 +4774,7 @@ return step.customFields.map((field,idx)=>(
 ))}
 </select>
 ):(
-<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const itemData={};stepObj?.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,itemData,editingCustomItem.clientId||null);}else{addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}}/>
+<input type={field.type} className="modal-input" value={itemModalData[field.key]||''} onChange={(e)=>setItemModalData({...itemModalData,[field.key]:e.target.value})} autoFocus={idx===0} onKeyPress={(e)=>{if(e.key==='Enter'){const stepObj=STEPS.find(s=>s.id===itemModalStep);const flds=stepObj?.customFields||stepObj?.customSection?.fields;const itemData={};flds?.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});if(editingCustomItem){updateCustomItem(itemModalStep,editingCustomItem.id,itemData,editingCustomItem.clientId||null);}else{addCustomItemWithFields(itemModalStep,itemData);setShowItemModal(false);setItemModalData({});}}}}/>
 )}
 </div>
 ));
@@ -4762,9 +4790,10 @@ return(
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={()=>{
 const step=STEPS.find(s=>s.id===itemModalStep);
-if(step?.customFields){
+const fields=step?.customFields||step?.customSection?.fields;
+if(fields){
 const itemData={};
-step.customFields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});
+fields.forEach(f=>{itemData[f.key]=itemModalData[f.key]||'';});
 if(editingCustomItem){
 updateCustomItem(itemModalStep,editingCustomItem.id,itemData,editingCustomItem.clientId||null);
 }else{
