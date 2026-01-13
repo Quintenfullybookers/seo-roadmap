@@ -357,7 +357,7 @@ const STEPS=[
 {title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
 ]},
 {id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}]},
-{id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'date',label:'Datum',type:'date'}]}},
+{id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'cost',label:'Kosten (€)',type:'number'},{key:'date',label:'Datum',type:'date'}]}},
 {id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
 {id:9,name:'Rapportages',icon:'📋',type:'rapportages'}
 ];
@@ -4405,6 +4405,30 @@ return(
 {currentStep.type==='hybrid'?currentStep.customSection?.title:(currentStep.type==='custom'?'Custom Items':'Extra Taken')}
 {isAdmin&&<button className="add-item-btn" onClick={()=>{setEditingCustomItem(null);setItemModalStep(currentStep.id);setItemModalData({});setShowItemModal(true);}}>+ Taak Toevoegen</button>}
 </div>
+{/* Kosten overzicht voor Linkbuilding */}
+{currentStep.id===5&&(()=>{
+const items=customItems[`${selectedClient}-5`]||[];
+const totalCost=items.reduce((sum,item)=>sum+(parseFloat(item.cost)||0),0);
+const itemsWithCost=items.filter(i=>i.cost&&parseFloat(i.cost)>0);
+if(itemsWithCost.length===0)return null;
+return(
+<div style={{background:darkMode?'#1E3A2F':'#ecfdf5',border:`1px solid ${darkMode?'#065F46':'#a7f3d0'}`,borderRadius:'8px',padding:'16px',marginBottom:'16px'}}>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',flexWrap:'wrap',gap:'12px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<span style={{fontSize:'24px'}}>💰</span>
+<div>
+<div style={{fontSize:'12px',color:darkMode?'#6ee7b7':'#065f46',textTransform:'uppercase',fontWeight:'600'}}>Totaal Linkbuilding Kosten</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:darkMode?'#34d399':'#059669'}}>€{totalCost.toFixed(2)}</div>
+</div>
+</div>
+<div style={{textAlign:'right'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>{itemsWithCost.length} link{itemsWithCost.length!==1?'s':''} met kosten</div>
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>Gem. €{(totalCost/itemsWithCost.length).toFixed(2)} per link</div>
+</div>
+</div>
+</div>
+);
+})()}
 {(()=>{
 const items=customItems[`${selectedClient}-${currentStep.id}`]||[];
 // Sort by deadline if content creation (step 4) or linkbuilding (step 5)
@@ -4444,6 +4468,11 @@ return items;
 {item.deadline&&(
 <div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>
 📅 {item.deadline}
+</div>
+)}
+{item.cost&&(
+<div style={{fontSize:'12px',color:'#10b981',fontWeight:'600',marginTop:'4px'}}>
+💰 €{parseFloat(item.cost).toFixed(2)}
 </div>
 )}
 {item.liveUrl&&(
