@@ -4861,6 +4861,53 @@ setItemModalData({});
 )}
 
 
+{showTimeModal&&timeModalClient&&(
+<div className="modal-overlay" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');setTimeModalMonth('');setEditingTimeEntry(null);}}>
+<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<h2 className="modal-title">⏱️ {editingTimeEntry?'Uren Bewerken':'Uren Registreren'}</h2>
+<p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'8px'}}>{timeModalClient.name}</p>
+{timeModalMonth&&(()=>{
+const monthNames={'01':'Januari','02':'Februari','03':'Maart','04':'April','05':'Mei','06':'Juni','07':'Juli','08':'Augustus','09':'September','10':'Oktober','11':'November','12':'December'};
+const [year,month]=timeModalMonth.split('-');
+return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:'16px'}}>📅 {monthNames[month]} {year}</p>;
+})()}
+<div className="input-group">
+<label className="input-label">Aantal uren</label>
+<input type="number" className="modal-input" step="0.5" placeholder="2.5 of -1.0" value={timeModalHours} onChange={(e)=>setTimeModalHours(e.target.value)} autoFocus onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){if(editingTimeEntry){updateTimeEntry(timeModalClient.id,timeModalMonth,editingTimeEntry.id,hours,timeModalDescription,timeModalStep);}else{addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep,timeModalMonth);}}}}}/>
+</div>
+<div className="input-group">
+<label className="input-label">Omschrijving</label>
+<input type="text" className="modal-input" placeholder="Wat heb je gedaan?" value={timeModalDescription} onChange={(e)=>setTimeModalDescription(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'&&timeModalHours&&timeModalDescription){const hours=parseFloat(timeModalHours);if(!isNaN(hours)){if(editingTimeEntry){updateTimeEntry(timeModalClient.id,timeModalMonth,editingTimeEntry.id,hours,timeModalDescription,timeModalStep);}else{addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep,timeModalMonth);}}}}}/>
+</div>
+<div className="input-group">
+<label className="input-label">Stap (optioneel)</label>
+<select className="modal-input" value={timeModalStep} onChange={(e)=>setTimeModalStep(e.target.value)}>
+<option value="">-- Geen stap --</option>
+{STEPS.filter(s=>s.type!=='planning').map(step=>(
+<option key={step.id} value={step.id}>{step.icon} {step.name}</option>
+))}
+</select>
+</div>
+<div style={{padding:'12px',background:'var(--bg)',borderRadius:'6px',marginBottom:'16px',border:'1px solid var(--border)'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'4px'}}>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Stand deze maand:</span>
+<span style={{fontSize:'13px',fontWeight:'600'}}>{timeModalMonth?getClientHoursForMonth(timeModalClient.id,timeModalMonth):getClientHours(timeModalClient.id)}u</span>
+</div>
+<div style={{display:'flex',justifyContent:'space-between'}}>
+<span style={{fontSize:'13px',color:'var(--text-light)'}}>Pakket:</span>
+<span style={{fontSize:'13px',fontWeight:'600'}}>{timeModalClient.budget}u</span>
+</div>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={()=>{const hours=parseFloat(timeModalHours);if(!isNaN(hours)&&timeModalDescription.trim()){if(editingTimeEntry){updateTimeEntry(timeModalClient.id,timeModalMonth,editingTimeEntry.id,hours,timeModalDescription,timeModalStep);}else{addClientHours(timeModalClient.id,hours,timeModalDescription,timeModalStep,timeModalMonth);}}else{setToast({type:'error',message:'Vul uren én omschrijving in'});}}}>
+{editingTimeEntry?'Bijwerken':(timeModalHours&&parseFloat(timeModalHours)<0?'Aftrekken':'Toevoegen')}
+</button>
+<button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');setTimeModalMonth('');setEditingTimeEntry(null);}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
 );
