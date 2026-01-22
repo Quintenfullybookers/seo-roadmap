@@ -343,24 +343,199 @@ const STEPS=[
 {key:'2026-09',label:'September 2026'},{key:'2026-10',label:'Oktober 2026'},{key:'2026-11',label:'November 2026'},{key:'2026-12',label:'December 2026'}
 ]},
 {id:1,name:'SEO Plan',icon:'🎯',sections:[
-{title:'Zoekwoorden onderzoek',tasks:[{id:'1-1',title:'Website',desc:''},{id:'1-2',title:'Concurrentie',desc:''},{id:'1-3',title:'Search Console',desc:''},{id:'1-4',title:'SE Ranking',desc:''}]},
-{title:'Zoekwoorden voorstel',tasks:[{id:'1-5',title:'Gestuurd',desc:''},{id:'1-6',title:'Feedback ontvangen',desc:''},{id:'1-7',title:'Verwerkt',desc:''},{id:'1-8',title:'Voltooid',desc:''}]}
+{title:'Analyse',tasks:[
+{id:'1-1',title:'Doelstellingen bepalen',desc:''},
+{id:'1-2',title:'KPIs vaststellen',desc:''},
+{id:'1-3',title:'Doelgroep analyse',desc:''},
+{id:'1-4',title:'Concurrentie analyse',desc:''},
+{id:'1-5',title:'Seizoensplanning',desc:''}
+]},
+{title:'Zoekwoorden onderzoek',tasks:[
+{id:'1-6',title:'Zoekwoorden website',desc:''},
+{id:'1-7',title:'Zoekwoorden concurrentie',desc:''},
+{id:'1-8',title:'Search Console data',desc:''},
+{id:'1-9',title:'SE Ranking data',desc:''}
+]},
+{title:'Zoekwoorden voorstel',tasks:[
+{id:'1-10',title:'Voorstel gestuurd',desc:''},
+{id:'1-11',title:'Feedback ontvangen',desc:''},
+{id:'1-12',title:'Verwerkt',desc:''},
+{id:'1-13',title:'Voltooid',desc:''}
+]}
 ]},
 {id:8,name:'0-meting',icon:'📏',sections:[
-{title:'0-meting',tasks:[{id:'8-1',title:'0-meting GSC',desc:''},{id:'8-2',title:'0-meting SERanking',desc:''},{id:'8-3',title:'0-meting SEMRush',desc:''},{id:'8-4',title:'0-meting Pagespeed',desc:''}]}
+{title:'Rankings & Data',tasks:[
+{id:'8-1',title:'Huidige rankings meten',desc:''},
+{id:'8-2',title:'Google Search Console audit',desc:''},
+{id:'8-3',title:'SE Ranking baseline',desc:''},
+{id:'8-4',title:'SEMRush analyse',desc:''}
 ]},
-{id:2,name:'GMB',icon:'📍',sections:[{title:'Google My Business',tasks:[{id:'2-1',title:'GMB koppelen',desc:''},{id:'2-2',title:'GMB Locaties',desc:'Alle locaties toegevoegd'},{id:'2-3',title:'GMB Automations Reviews',desc:'Ingesteld'},{id:'2-4',title:'GMB Questionaire',desc:'Ingevuld door klant'}]}]},
+{title:'Audits',tasks:[
+{id:'8-5',title:'Technische SEO audit',desc:''},
+{id:'8-6',title:'Backlink profiel analyse',desc:''},
+{id:'8-7',title:'Content audit',desc:''},
+{id:'8-8',title:'Lokale SEO audit',desc:''},
+{id:'8-9',title:'PageSpeed meting',desc:''}
+]}
+]},
+{id:2,name:'GMB',icon:'📍',sections:[
+{title:'Basis Setup',tasks:[
+{id:'2-1',title:'Profiel claimen/verifiëren',desc:''},
+{id:'2-2',title:'NAW gegevens optimaliseren',desc:''},
+{id:'2-3',title:'Categorieën instellen',desc:''},
+{id:'2-4',title:'Openingstijden bijwerken',desc:''},
+{id:'2-5',title:'Fotos optimaliseren',desc:''}
+]},
+{title:'Hotel specifiek',tasks:[
+{id:'2-6',title:'Hotelvoorzieningen invullen',desc:'',show:'hotel'},
+{id:'2-7',title:'Boekingslink instellen',desc:'',show:'hotel'}
+]},
+{title:'Restaurant specifiek',tasks:[
+{id:'2-8',title:'Menu toevoegen',desc:'',show:'restaurant'},
+{id:'2-9',title:'Reserveringslink instellen',desc:'',show:'restaurant'}
+]},
+{title:'Optimalisatie',tasks:[
+{id:'2-10',title:'Posts/updates plannen',desc:''},
+{id:'2-11',title:'Reviews strategie opzetten',desc:''},
+{id:'2-12',title:'Q&A sectie optimaliseren',desc:''}
+]}
+]},
 {id:3,name:'Technische Optimalisatie',icon:'🔧',sections:[
-{title:'Snelheid',tasks:[{id:'4-1',title:'PageSpeed test',desc:'Streef 80+'},{id:'4-2',title:'Afbeeldingen',desc:'Comprimeer'}]},
-{title:'Mobile',tasks:[{id:'4-3',title:'Mobile test',desc:'Check mobile'}]},
-{title:'Techniek',tasks:[{id:'4-4',title:'SSL-certificaat',desc:'HTTPS'},{id:'4-5',title:'301 redirects',desc:'Oude urls'},{id:'4-6',title:'404 oplossen',desc:'Check GSC'},{id:'4-7',title:'Broken links',desc:'Screaming Frog'},{id:'4-8',title:'Structured data',desc:'Schema.org'}]},
-{title:'On-Page',tasks:[{id:'4-9',title:'Title tags',desc:'50-60 tekens'},{id:'4-10',title:'Meta descriptions',desc:'150-160 tekens'},{id:'4-11',title:'Headers',desc:'1 H1, H2s'},{id:'4-12',title:'URL-structuur',desc:'Kort + keyword'},{id:'4-13',title:'Alt-tekst',desc:'5-15 woorden'},{id:'4-14',title:'Interne links',desc:'Relevante paginas'}]}
+{title:'Snelheid & Core Web Vitals',tasks:[
+{id:'3-1',title:'PageSpeed optimaliseren',desc:'Streef 80+'},
+{id:'3-2',title:'Afbeeldingen comprimeren',desc:''},
+{id:'3-3',title:'Core Web Vitals optimaliseren',desc:''},
+{id:'3-4',title:'Mobile friendly check',desc:''}
 ]},
-{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['December 2025','Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}]},
-{id:5,name:'Linkbuilding',icon:'🔗',sections:[{title:'Audit',tasks:[{id:'6-1',title:'Backlink profiel',desc:'Ahrefs'},{id:'6-2',title:'Concurrent links',desc:'Analyseer'},{id:'6-3',title:'Broken links',desc:'Controleer'}]}],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'cost',label:'Kosten (€)',type:'number'},{key:'date',label:'Datum',type:'date'}]}},
-{id:6,name:'Meten & Bijsturen',icon:'📊',sections:[{title:'Maandelijks',tasks:[{id:'7-1',title:'Foutmeldingen',desc:''},{id:'7-2',title:'SE Ranking',desc:''},{id:'7-3',title:'Maandrapport',desc:''},{id:'7-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}]}]},
+{title:'Technische Basis',tasks:[
+{id:'3-5',title:'SSL/HTTPS check',desc:''},
+{id:'3-6',title:'XML sitemap optimaliseren',desc:''},
+{id:'3-7',title:'Robots.txt controleren',desc:''},
+{id:'3-8',title:'Canonical tags',desc:''},
+{id:'3-9',title:'301 redirects opruimen',desc:''},
+{id:'3-10',title:'404 paginas fixen',desc:''},
+{id:'3-11',title:'Broken links fixen',desc:''}
+]},
+{title:'Schema Markup',tasks:[
+{id:'3-12',title:'Schema - LocalBusiness',desc:''},
+{id:'3-13',title:'Schema - Hotel',desc:'',show:'hotel'},
+{id:'3-14',title:'Schema - Restaurant',desc:'',show:'restaurant'},
+{id:'3-15',title:'Schema - Menu',desc:'',show:'restaurant'},
+{id:'3-16',title:'Schema - Breadcrumbs',desc:''},
+{id:'3-17',title:'Schema - FAQ',desc:''}
+]},
+{title:'On-Page SEO',tasks:[
+{id:'3-18',title:'Title tags optimaliseren',desc:'50-60 tekens'},
+{id:'3-19',title:'Meta descriptions',desc:'150-160 tekens'},
+{id:'3-20',title:'H1/H2 structuur',desc:''},
+{id:'3-21',title:'URL-structuur',desc:'Kort + keyword'},
+{id:'3-22',title:'Alt-teksten',desc:''},
+{id:'3-23',title:'Interne linkstructuur',desc:''}
+]},
+{title:'Meertalig',tasks:[
+{id:'3-24',title:'Hreflang tags implementeren',desc:'',show:'multilingual'}
+]},
+{title:'Multi-locatie',tasks:[
+{id:'3-25',title:'Locatie selector optimaliseren',desc:'',show:'multi'}
+]}
+]},
+{id:4,name:'Content Creatie',icon:'✍️',type:'custom',customFields:[{key:'keyword',label:'Zoekwoord',type:'text'},{key:'url',label:'URL',type:'text'},{key:'words',label:'Hoeveelheid woorden',type:'number'},{key:'deadline',label:'Deadline',type:'select',options:['Januari 2026','Februari 2026','Maart 2026','April 2026','Mei 2026','Juni 2026','Juli 2026','Augustus 2026','September 2026','Oktober 2026','November 2026','December 2026','Januari 2027','Februari 2027','Maart 2027']},{key:'liveUrl',label:'Live URL (gepubliceerd)',type:'text'}],
+contentSuggestions:{
+hotel:[
+{keyword:'Kamerpagina [type]',url:'/kamers/[type]',words:500},
+{keyword:'Suite pagina',url:'/suites',words:600},
+{keyword:'Faciliteiten',url:'/faciliteiten',words:400},
+{keyword:'Vergaderruimtes',url:'/vergaderen',words:500},
+{keyword:'Trouwlocatie [stad]',url:'/trouwen',words:600},
+{keyword:'Arrangementen',url:'/arrangementen',words:400},
+{keyword:'Omgeving bezienswaardigheden',url:'/omgeving',words:500}
+],
+restaurant:[
+{keyword:'Menukaart',url:'/menukaart',words:300},
+{keyword:'Lunch [stad]',url:'/lunch',words:400},
+{keyword:'Diner [stad]',url:'/diner',words:400},
+{keyword:'Groepsarrangementen',url:'/groepen',words:500},
+{keyword:'Trouwlocatie [stad]',url:'/trouwen',words:600}
+],
+all:[
+{keyword:'Homepage',url:'/',words:600},
+{keyword:'Over ons',url:'/over-ons',words:400},
+{keyword:'Contact',url:'/contact',words:200},
+{keyword:'FAQ',url:'/faq',words:500},
+{keyword:'Reviews',url:'/reviews',words:300}
+],
+multi:[
+{keyword:'Locatie overzicht',url:'/locaties',words:400},
+{keyword:'[Stad] locatie pagina',url:'/locaties/[stad]',words:500}
+]
+}},
+{id:5,name:'Linkbuilding',icon:'🔗',sections:[
+{title:'Analyse',tasks:[
+{id:'5-1',title:'Backlink profiel analyse',desc:'Ahrefs'},
+{id:'5-2',title:'Concurrent backlinks analyseren',desc:''},
+{id:'5-3',title:'Broken links opsporen',desc:''}
+]},
+{title:'Directories',tasks:[
+{id:'5-4',title:'Lokale directories',desc:''},
+{id:'5-5',title:'Branche directories',desc:''},
+{id:'5-6',title:'TripAdvisor profiel',desc:''}
+]},
+{title:'Hotel platforms',tasks:[
+{id:'5-7',title:'Booking.com profiel',desc:'',show:'hotel'},
+{id:'5-8',title:'Trivago profiel',desc:'',show:'hotel'},
+{id:'5-9',title:'Hotelspecials/Voordeeluitjes',desc:'',show:'hotel'}
+]},
+{title:'Restaurant platforms',tasks:[
+{id:'5-10',title:'Iens/TheFork profiel',desc:'',show:'restaurant'},
+{id:'5-11',title:'Couverts profiel',desc:'',show:'restaurant'}
+]},
+{title:'Outreach',tasks:[
+{id:'5-12',title:'Lokale samenwerkingen',desc:''},
+{id:'5-13',title:'Gastbloggen',desc:''},
+{id:'5-14',title:'Digital PR / Persberichten',desc:''}
+]}
+],type:'hybrid',customSection:{title:'Geplaatste Links',fields:[{key:'url',label:'URL',type:'text'},{key:'anchor',label:'Anchor tekst',type:'text'},{key:'cost',label:'Kosten (€)',type:'number'},{key:'date',label:'Datum',type:'date'}]}},
+{id:6,name:'Meten & Bijsturen',icon:'📊',sections:[
+{title:'Setup',tasks:[
+{id:'6-1',title:'Google Analytics 4 instellen',desc:''},
+{id:'6-2',title:'Search Console koppelen',desc:''},
+{id:'6-3',title:'Ranking tracking opzetten',desc:''},
+{id:'6-4',title:'Doelen instellen GA4',desc:''}
+]},
+{title:'Conversie tracking',tasks:[
+{id:'6-5',title:'Conversie tracking boekingen',desc:'',show:'hotel'},
+{id:'6-6',title:'Conversie tracking reserveringen',desc:'',show:'restaurant'}
+]},
+{title:'Maandelijks',tasks:[
+{id:'6-7',title:'Foutmeldingen checken',desc:''},
+{id:'6-8',title:'Rankings monitoren',desc:''},
+{id:'6-9',title:'Data review',desc:''},
+{id:'6-reset',title:'🔄 Reset Maandelijks',desc:'Reset alle maandelijkse taken'}
+]}
+]},
 {id:9,name:'Rapportages',icon:'📋',type:'rapportages'}
 ];
+
+// FILTER TAKEN OP BASIS VAN KLANT TYPE
+const filterTasksForClient=(tasks,client)=>{
+if(!tasks||!client)return tasks||[];
+return tasks.filter(task=>{
+if(!task.show)return true; // Geen conditie = altijd tonen
+if(task.show==='hotel')return client.clientType==='hotel';
+if(task.show==='restaurant')return client.clientType==='restaurant';
+if(task.show==='multi')return client.multiLocation;
+if(task.show==='multilingual')return client.isMultilingual;
+return true;
+});
+};
+
+const filterSectionsForClient=(sections,client)=>{
+if(!sections||!client)return sections||[];
+return sections.map(section=>({
+...section,
+tasks:filterTasksForClient(section.tasks,client)
+})).filter(section=>section.tasks.length>0);
+};
 
 // LOCAL STORAGE
 const saveLocalData=(tasks,customItems,planningItems,notes,deadlines,clients,timeTracking)=>{
@@ -538,7 +713,7 @@ const [expandedMonth,setExpandedMonth]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
-const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
+const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
@@ -1852,6 +2027,12 @@ doc.text(client.city,45,y);
 doc.setFont(undefined,'normal');
 y+=5;
 }
+doc.text('Type:',20,y);
+doc.setFont(undefined,'bold');
+doc.text((client.clientType||'hotel')==='hotel'?'Hotel':'Restaurant',45,y);
+if(client.multiLocation)doc.text(' (Multi-locatie)',doc.getTextWidth((client.clientType||'hotel')==='hotel'?'Hotel':'Restaurant')+47,y);
+doc.setFont(undefined,'normal');
+y+=5;
 const statusInfo=getStatusInfo(client.status||'schema');
 doc.text('Status:',20,y);
 doc.setFont(undefined,'bold');
@@ -1885,7 +2066,8 @@ doc.text(`STAP ${index+1}: ${step.name.toUpperCase()}`,22,y+1);
 y+=10;
 
 if(step.type==='tasks'||step.type==='hybrid'){
-step.sections?.forEach(section=>{
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections?.forEach(section=>{
 if(y>260){doc.addPage();y=20;}
 doc.setFontSize(9);
 doc.setFont(undefined,'bold');
@@ -2135,12 +2317,14 @@ setToast({type:'success',message:'✓ Planning item bijgewerkt'});
 
 // HELPERS
 const getClientProgress=(clientId)=>{
+const client=clients.find(c=>c.id===clientId);
 let total=0;
 let completed=0;
 STEPS.forEach(step=>{
 if(step.type==='planning'||step.type==='custom'||step.type==='hybrid')return;
 if(step.sections){
-step.sections.forEach(section=>{
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 total++;
 const key=`${clientId}-${step.id}-${task.id}`;
@@ -2153,13 +2337,15 @@ return total>0?Math.round((completed/total)*100):0;
 };
 
 const getClientStats=(clientId)=>{
+const client=clients.find(c=>c.id===clientId);
 let totalTasks=0;
 let completedTasks=0;
 let customCount=0;
 STEPS.forEach(step=>{
 if(step.type==='planning')return;
 if(step.sections){
-step.sections.forEach(section=>{
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 totalTasks++;
 const key=`${clientId}-${step.id}-${task.id}`;
@@ -2178,11 +2364,13 @@ return{total:totalTasks,completed:completedTasks,custom:customCount};
 
 const getStepStats=(clientId,stepId)=>{
 const step=STEPS.find(s=>s.id===stepId);
+const client=clients.find(c=>c.id===clientId);
 if(!step||step.type==='planning')return{total:0,completed:0};
 let totalTasks=0;
 let completedTasks=0;
 if(step.sections){
-step.sections.forEach(section=>{
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 totalTasks++;
 const key=`${clientId}-${step.id}-${task.id}`;
@@ -2579,7 +2767,14 @@ return(
 <div className="client-header">
 <div>
 <h3 className="client-name">{client.name}</h3>
-{pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color}}>{pmInfo.icon} {pmInfo.label}</div>)}
+<div style={{display:'flex',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
+<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:(client.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(client.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
+{(client.clientType||'hotel')==='hotel'?'🏨 Hotel':'🍽️ Restaurant'}
+</span>
+{client.multiLocation&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
+{client.isMultilingual&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#ecfdf5',color:'#047857',fontWeight:'600'}}>🌍 Meertalig</span>}
+</div>
+{pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color,marginTop:'6px'}}>{pmInfo.icon} {pmInfo.label}</div>)}
 </div>
 </div>
 <div className="client-meta">
@@ -2864,16 +3059,68 @@ return(
 
 {isAdmin&&showModal&&(
 <div className="modal-overlay" onClick={()=>setShowModal(false)}>
-<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'500px'}}>
 <h2 className="modal-title">Nieuwe Klant Toevoegen</h2>
 <div className="input-group">
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+<div className="input-group">
+<label className="input-label">Type klant *</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
+🏨 Hotel
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+🍽️ Restaurant
+</button>
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Locaties</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍 Enkele
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍📍 Meerdere
+</button>
+</div>
+</div>
+</div>
+<div className="input-group" style={{marginTop:'8px'}}>
+<label className="input-label">Extra kenmerken</label>
+<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasBooking?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasBooking||false} onChange={(e)=>setNewClient({...newClient,hasBooking:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Boekingsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasReservation?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasReservation||false} onChange={(e)=>setNewClient({...newClient,hasReservation:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Reserveringsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasMenu?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasMenu||false} onChange={(e)=>setNewClient({...newClient,hasMenu:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Menukaart online</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.isMultilingual?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.isMultilingual||false} onChange={(e)=>setNewClient({...newClient,isMultilingual:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Meertalig</span>
+</label>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Website</label>
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.website} onChange={(e)=>setNewClient({...newClient,website:e.target.value})}/>
 </div>
+<div className="input-group">
+<label className="input-label">Plaats</label>
+<input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">SE Ranking Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.seRanking} onChange={(e)=>setNewClient({...newClient,seRanking:e.target.value})}/>
@@ -2882,9 +3129,6 @@ return(
 <label className="input-label">Looker Studio Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.lookerStudio} onChange={(e)=>setNewClient({...newClient,lookerStudio:e.target.value})}/>
 </div>
-<div className="input-group">
-<label className="input-label">Plaats</label>
-<input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
 </div>
 <div className="input-group">
 <label className="input-label">Pakket (uren)</label>
@@ -2914,7 +3158,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -2922,16 +3166,68 @@ return(
 
 {isAdmin&&showEditModal&&editingClient&&(
 <div className="modal-overlay" onClick={()=>setShowEditModal(false)}>
-<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'500px'}}>
 <h2 className="modal-title">Klant Bewerken</h2>
 <div className="input-group">
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={editingClient.name} onChange={(e)=>setEditingClient({...editingClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+<div className="input-group">
+<label className="input-label">Type klant *</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${(editingClient.clientType||'hotel')==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:(editingClient.clientType||'hotel')==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:(editingClient.clientType||'hotel')==='hotel'?'600':'400'}}>
+🏨 Hotel
+</button>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
+🍽️ Restaurant
+</button>
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Locaties</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍 Enkele
+</button>
+<button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍📍 Meerdere
+</button>
+</div>
+</div>
+</div>
+<div className="input-group" style={{marginTop:'8px'}}>
+<label className="input-label">Extra kenmerken</label>
+<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:editingClient.hasBooking?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={editingClient.hasBooking||false} onChange={(e)=>setEditingClient({...editingClient,hasBooking:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Boekingsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:editingClient.hasReservation?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={editingClient.hasReservation||false} onChange={(e)=>setEditingClient({...editingClient,hasReservation:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Reserveringsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:editingClient.hasMenu?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={editingClient.hasMenu||false} onChange={(e)=>setEditingClient({...editingClient,hasMenu:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Menukaart online</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:editingClient.isMultilingual?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={editingClient.isMultilingual||false} onChange={(e)=>setEditingClient({...editingClient,isMultilingual:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Meertalig</span>
+</label>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Website</label>
 <input type="text" className="modal-input" placeholder="https://..." value={editingClient.website||''} onChange={(e)=>setEditingClient({...editingClient,website:e.target.value})}/>
 </div>
+<div className="input-group">
+<label className="input-label">Plaats</label>
+<input type="text" className="modal-input" value={editingClient.city||''} onChange={(e)=>setEditingClient({...editingClient,city:e.target.value})}/>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">SE Ranking Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={editingClient.seRanking||''} onChange={(e)=>setEditingClient({...editingClient,seRanking:e.target.value})}/>
@@ -2940,9 +3236,10 @@ return(
 <label className="input-label">Looker Studio Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={editingClient.lookerStudio||''} onChange={(e)=>setEditingClient({...editingClient,lookerStudio:e.target.value})}/>
 </div>
+</div>
 <div className="input-group">
-<label className="input-label">Plaats</label>
-<input type="text" className="modal-input" value={editingClient.city||''} onChange={(e)=>setEditingClient({...editingClient,city:e.target.value})}/>
+<label className="input-label">Pakket (uren)</label>
+<input type="number" className="modal-input" min="0" step="1" placeholder="0" value={editingClient.budget||''} onChange={(e)=>setEditingClient({...editingClient,budget:parseInt(e.target.value)||0})}/>
 </div>
 <div className="input-group">
 <label className="input-label">Status</label>
@@ -2965,10 +3262,6 @@ return(
 </div>
 ))}
 </div>
-</div>
-<div className="input-group">
-<label className="input-label">Pakket (uren)</label>
-<input type="number" className="modal-input" min="0" step="1" placeholder="0" value={editingClient.budget||''} onChange={(e)=>setEditingClient({...editingClient,budget:parseInt(e.target.value)||0})}/>
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={editClient}>Opslaan</button>
@@ -3874,6 +4167,16 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <span>ℹ️</span> Client Informatie
 </h3>
 <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+<div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
+<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:(currentClient.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(currentClient.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
+{(currentClient.clientType||'hotel')==='hotel'?'🏨 Hotel':'🍽️ Restaurant'}
+</span>
+{currentClient.multiLocation&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
+{currentClient.isMultilingual&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#ecfdf5',color:'#047857',fontWeight:'600'}}>🌍 Meertalig</span>}
+{currentClient.hasBooking&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Boekingsmodule</span>}
+{currentClient.hasReservation&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Reserveringsmodule</span>}
+{currentClient.hasMenu&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Menukaart online</span>}
+</div>
 {currentClient.city&&(
 <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
 <span style={{color:'var(--text-light)'}}>📍</span>
@@ -4424,7 +4727,7 @@ onShowDeadlineModal={(key,title,currentDeadline)=>{setDeadlineModalTask({key,tit
 </>
 ):(
 <>
-{currentStep?.sections&&currentStep.sections.map(section=>(
+{currentStep?.sections&&filterSectionsForClient(currentStep.sections,currentClient).map(section=>(
 <div key={section.title} className="section">
 <div className="section-header">{section.title}</div>
 {section.tasks.map(task=>{
@@ -4662,23 +4965,76 @@ return(
 
 {isAdmin&&showModal&&(
 <div className="modal-overlay" onClick={()=>setShowModal(false)}>
-<div className="modal" onClick={(e)=>e.stopPropagation()}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'500px'}}>
 <h2 className="modal-title">Nieuwe Klant Toevoegen</h2>
 <div className="input-group">
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+<div className="input-group">
+<label className="input-label">Type klant *</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
+🏨 Hotel
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+🍽️ Restaurant
+</button>
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Locaties</label>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍 Enkele
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
+📍📍 Meerdere
+</button>
+</div>
+</div>
+</div>
+<div className="input-group" style={{marginTop:'8px'}}>
+<label className="input-label">Extra kenmerken</label>
+<div style={{display:'flex',flexWrap:'wrap',gap:'8px'}}>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasBooking?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasBooking||false} onChange={(e)=>setNewClient({...newClient,hasBooking:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Boekingsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasReservation?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasReservation||false} onChange={(e)=>setNewClient({...newClient,hasReservation:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Reserveringsmodule</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.hasMenu?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.hasMenu||false} onChange={(e)=>setNewClient({...newClient,hasMenu:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Menukaart online</span>
+</label>
+<label style={{display:'flex',alignItems:'center',gap:'6px',padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'6px',cursor:'pointer',background:newClient.isMultilingual?'#ecfdf5':'var(--white)'}}>
+<input type="checkbox" checked={newClient.isMultilingual||false} onChange={(e)=>setNewClient({...newClient,isMultilingual:e.target.checked})}/>
+<span style={{fontSize:'13px'}}>Meertalig</span>
+</label>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Website</label>
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.website} onChange={(e)=>setNewClient({...newClient,website:e.target.value})}/>
 </div>
 <div className="input-group">
+<label className="input-label">Plaats</label>
+<input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+<div className="input-group">
 <label className="input-label">SE Ranking Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={newClient.seRanking} onChange={(e)=>setNewClient({...newClient,seRanking:e.target.value})}/>
 </div>
 <div className="input-group">
-<label className="input-label">Plaats</label>
-<input type="text" className="modal-input" value={newClient.city} onChange={(e)=>setNewClient({...newClient,city:e.target.value})}/>
+<label className="input-label">Looker Studio Link</label>
+<input type="text" className="modal-input" placeholder="https://..." value={newClient.lookerStudio} onChange={(e)=>setNewClient({...newClient,lookerStudio:e.target.value})}/>
+</div>
 </div>
 <div className="input-group">
 <label className="input-label">Pakket (uren)</label>
@@ -4708,7 +5064,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
