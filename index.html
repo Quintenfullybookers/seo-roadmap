@@ -345,8 +345,6 @@ const STEPS=[
 {id:1,name:'SEO Plan',icon:'🎯',sections:[
 {title:'Analyse',tasks:[
 {id:'1-1',title:'Doelstellingen bepalen',desc:''},
-{id:'1-2',title:'KPIs vaststellen',desc:''},
-{id:'1-3',title:'Doelgroep analyse',desc:''},
 {id:'1-4',title:'Concurrentie analyse',desc:''},
 {id:'1-5',title:'Seizoensplanning',desc:''}
 ]},
@@ -682,6 +680,7 @@ const [db,setDb]=useState(null);
 const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
 const [showArchive,setShowArchive]=useState(false);
+const [showJourney,setShowJourney]=useState(false);
 const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
@@ -2383,6 +2382,34 @@ const customList=customItems[customKey]||[];
 totalTasks+=customList.length;
 customList.forEach(item=>{if(item.completed)completedTasks++;});
 return{total:totalTasks,completed:completedTasks};
+};
+
+// JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
+const getAllTasksForJourney=(clientId)=>{
+const client=clients.find(c=>c.id===clientId);
+if(!client)return[];
+const allTasks=[];
+STEPS.forEach(step=>{
+if(step.type==='planning'||step.type==='rapportages')return;
+if(step.sections){
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
+section.tasks.forEach(task=>{
+const key=`${clientId}-${step.id}-${task.id}`;
+allTasks.push({
+...task,
+stepId:step.id,
+stepName:step.name,
+stepIcon:step.icon,
+sectionTitle:section.title,
+taskKey:key,
+completed:!!tasks[key]
+});
+});
+});
+}
+});
+return allTasks;
 };
 
 const getStatusCounts=()=>{
@@ -4130,6 +4157,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 {isAdmin&&(
 <div className="banner-buttons">
+<button className="banner-btn" onClick={()=>setShowJourney(true)} style={{background:'linear-gradient(135deg, #1e3a5f, #2d5a87)',color:'white'}}>🗺️ Journey</button>
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
 <button className="banner-btn" onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
@@ -5260,6 +5288,150 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 </button>
 <button className="btn btn-secondary" onClick={()=>{setShowTimeModal(false);setTimeModalClient(null);setTimeModalHours('');setTimeModalDescription('');setTimeModalStep('');setTimeModalMonth('');setEditingTimeEntry(null);}}>Annuleren</button>
 </div>
+</div>
+</div>
+)}
+
+{/* JOURNEY VIEW - Visuele roadmap */}
+{showJourney&&selectedClient&&(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%)',zIndex:9999,overflow:'auto'}}>
+<div style={{padding:'20px',maxWidth:'1200px',margin:'0 auto'}}>
+{/* Header */}
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'30px'}}>
+<div>
+<h1 style={{color:'white',fontSize:'28px',margin:0,display:'flex',alignItems:'center',gap:'12px'}}>
+🗺️ SEO Journey
+</h1>
+<p style={{color:'rgba(255,255,255,0.7)',margin:'8px 0 0',fontSize:'14px'}}>
+{clients.find(c=>c.id===selectedClient)?.name} - Volg je pad naar SEO succes
+</p>
+</div>
+<button onClick={()=>setShowJourney(false)} style={{padding:'12px 24px',background:'rgba(255,255,255,0.2)',color:'white',border:'none',borderRadius:'12px',cursor:'pointer',fontSize:'14px',fontWeight:'600',display:'flex',alignItems:'center',gap:'8px'}}>
+✕ Sluiten
+</button>
+</div>
+
+{/* Progress overview */}
+{(()=>{
+const journeyTasks=getAllTasksForJourney(selectedClient);
+const completedCount=journeyTasks.filter(t=>t.completed).length;
+const totalCount=journeyTasks.length;
+const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
+const currentIndex=journeyTasks.findIndex(t=>!t.completed);
+const currentTask=currentIndex>=0?journeyTasks[currentIndex]:null;
+
+return(
+<>
+{/* Progress bar */}
+<div style={{background:'rgba(255,255,255,0.1)',borderRadius:'16px',padding:'20px',marginBottom:'30px'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
+<span style={{color:'white',fontWeight:'600'}}>Voortgang</span>
+<span style={{color:'#4ade80',fontWeight:'700',fontSize:'20px'}}>{progressPct}%</span>
+</div>
+<div style={{height:'12px',background:'rgba(255,255,255,0.2)',borderRadius:'6px',overflow:'hidden'}}>
+<div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${progressPct}%`,transition:'width 0.5s ease',borderRadius:'6px'}}/>
+</div>
+<div style={{display:'flex',justifyContent:'space-between',marginTop:'8px',fontSize:'13px',color:'rgba(255,255,255,0.6)'}}>
+<span>{completedCount} voltooid</span>
+<span>{totalCount-completedCount} te gaan</span>
+</div>
+</div>
+
+{/* Current task highlight */}
+{currentTask&&(
+<div style={{background:'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',borderRadius:'16px',padding:'24px',marginBottom:'30px',boxShadow:'0 8px 32px rgba(245,158,11,0.5)'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px'}}>
+<span style={{fontSize:'12px',background:'rgba(255,255,255,0.2)',padding:'4px 10px',borderRadius:'20px',color:'white',fontWeight:'600'}}>VOLGENDE STAP</span>
+</div>
+<h2 style={{color:'white',margin:'0 0 8px',fontSize:'22px',fontWeight:'700'}}>{currentTask.title}</h2>
+<p style={{color:'rgba(255,255,255,0.8)',margin:0,fontSize:'14px'}}>
+{currentTask.stepIcon} {currentTask.stepName} → {currentTask.sectionTitle}
+</p>
+{isAdmin&&(
+<button onClick={()=>{toggleTask(currentTask.stepId,currentTask.id);}} style={{marginTop:'16px',padding:'12px 28px',background:'white',color:'#d97706',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'15px',fontWeight:'700',display:'flex',alignItems:'center',gap:'8px'}}>
+✓ Markeer als voltooid
+</button>
+)}
+</div>
+)}
+
+{/* Journey path */}
+<div style={{position:'relative',padding:'20px 0'}}>
+{/* Vertical line */}
+<div style={{position:'absolute',left:'24px',top:'40px',bottom:'40px',width:'4px',background:'rgba(255,255,255,0.2)',borderRadius:'2px'}}/>
+
+{/* Group tasks by step */}
+{(()=>{
+const stepGroups={};
+journeyTasks.forEach((task,idx)=>{
+if(!stepGroups[task.stepId]){
+stepGroups[task.stepId]={step:task,tasks:[],startIndex:idx};
+}
+stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
+});
+
+return Object.values(stepGroups).map((group,groupIdx)=>{
+const allCompleted=group.tasks.every(t=>t.completed);
+const isCurrent=group.tasks.some(t=>!t.completed)&&(groupIdx===0||Object.values(stepGroups)[groupIdx-1].tasks.every(t=>t.completed));
+
+return(
+<div key={group.step.stepId} style={{marginBottom:'16px'}}>
+{/* Step header */}
+<div style={{display:'flex',alignItems:'center',gap:'16px',marginBottom:'12px',position:'relative'}}>
+<div style={{width:'52px',height:'52px',borderRadius:'50%',background:allCompleted?'linear-gradient(135deg, #4ade80, #22c55e)':isCurrent?'linear-gradient(135deg, #f59e0b, #d97706)':'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px',boxShadow:isCurrent?'0 0 20px rgba(245,158,11,0.5)':'none',transition:'all 0.3s',zIndex:1}}>
+{allCompleted?'✓':group.step.stepIcon}
+</div>
+<div>
+<h3 style={{color:'white',margin:0,fontSize:'18px',fontWeight:'600'}}>{group.step.stepName}</h3>
+<p style={{color:'rgba(255,255,255,0.5)',margin:'4px 0 0',fontSize:'13px'}}>
+{group.tasks.filter(t=>t.completed).length} / {group.tasks.length} taken
+</p>
+</div>
+</div>
+
+{/* Tasks in step */}
+<div style={{marginLeft:'68px',display:'flex',flexDirection:'column',gap:'8px'}}>
+{group.tasks.map((task)=>{
+const isCurrentTask=currentIndex===task.globalIndex;
+return(
+<div key={task.id} style={{background:task.completed?'rgba(74,222,128,0.15)':isCurrentTask?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)',border:isCurrentTask?'2px solid #f59e0b':'1px solid rgba(255,255,255,0.1)',borderRadius:'12px',padding:'14px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',transition:'all 0.3s',cursor:isAdmin?'pointer':'default'}} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}}>
+<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{width:'28px',height:'28px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrentTask?'#f59e0b':'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:task.completed||isCurrentTask?'white':'rgba(255,255,255,0.5)',fontWeight:'600',transition:'all 0.3s'}}>
+{task.completed?'✓':(task.globalIndex+1)}
+</div>
+<div>
+<span style={{color:task.completed?'#4ade80':'white',fontWeight:isCurrentTask?'600':'400',fontSize:'14px'}}>{task.title}</span>
+<span style={{color:'rgba(255,255,255,0.4)',fontSize:'12px',marginLeft:'8px'}}>{task.sectionTitle}</span>
+</div>
+</div>
+{isCurrentTask&&!task.completed&&(
+<span style={{background:'#f59e0b',color:'white',padding:'4px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'}}>NU</span>
+)}
+</div>
+);
+})}
+</div>
+</div>
+);
+});
+})()}
+
+{/* Finish line */}
+<div style={{display:'flex',alignItems:'center',gap:'16px',marginTop:'20px'}}>
+<div style={{width:'52px',height:'52px',borderRadius:'50%',background:progressPct===100?'linear-gradient(135deg, #4ade80, #22c55e)':'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px'}}>
+🏁
+</div>
+<div>
+<h3 style={{color:progressPct===100?'#4ade80':'rgba(255,255,255,0.5)',margin:0,fontSize:'18px',fontWeight:'600'}}>
+{progressPct===100?'🎉 Journey Voltooid!':'Finish'}
+</h3>
+{progressPct===100&&<p style={{color:'rgba(255,255,255,0.7)',margin:'4px 0 0',fontSize:'13px'}}>Gefeliciteerd! Alle taken zijn afgerond.</p>}
+</div>
+</div>
+</div>
+</>
+);
+})()}
 </div>
 </div>
 )}
