@@ -5292,149 +5292,209 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 </div>
 )}
 
-{/* JOURNEY VIEW - Visuele roadmap */}
-{showJourney&&selectedClient&&(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'linear-gradient(135deg, #1e3a5f 0%, #2d5a87 50%, #1e3a5f 100%)',zIndex:9999,overflow:'auto'}}>
-<div style={{padding:'20px',maxWidth:'1200px',margin:'0 auto'}}>
-{/* Header */}
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'30px'}}>
-<div>
-<h1 style={{color:'white',fontSize:'28px',margin:0,display:'flex',alignItems:'center',gap:'12px'}}>
-🗺️ SEO Journey
-</h1>
-<p style={{color:'rgba(255,255,255,0.7)',margin:'8px 0 0',fontSize:'14px'}}>
-{clients.find(c=>c.id===selectedClient)?.name} - Volg je pad naar SEO succes
-</p>
-</div>
-<button onClick={()=>setShowJourney(false)} style={{padding:'12px 24px',background:'rgba(255,255,255,0.2)',color:'white',border:'none',borderRadius:'12px',cursor:'pointer',fontSize:'14px',fontWeight:'600',display:'flex',alignItems:'center',gap:'8px'}}>
-✕ Sluiten
-</button>
-</div>
-
-{/* Progress overview */}
-{(()=>{
+{/* JOURNEY VIEW - Visuele roadmap met bergbeklimmer */}
+{showJourney&&selectedClient&&(()=>{
 const journeyTasks=getAllTasksForJourney(selectedClient);
 const completedCount=journeyTasks.filter(t=>t.completed).length;
 const totalCount=journeyTasks.length;
 const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
 const currentIndex=journeyTasks.findIndex(t=>!t.completed);
 const currentTask=currentIndex>=0?journeyTasks[currentIndex]:null;
+const prevTask=currentIndex>0?journeyTasks[currentIndex-1]:null;
+const nextTask=currentIndex>=0&&currentIndex<journeyTasks.length-1?journeyTasks[currentIndex+1]:null;
+const climberPosition=100-progressPct;
 
 return(
-<>
-{/* Progress bar */}
-<div style={{background:'rgba(255,255,255,0.1)',borderRadius:'16px',padding:'20px',marginBottom:'30px'}}>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'12px'}}>
-<span style={{color:'white',fontWeight:'600'}}>Voortgang</span>
-<span style={{color:'#4ade80',fontWeight:'700',fontSize:'20px'}}>{progressPct}%</span>
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%)',zIndex:9999,overflow:'hidden',display:'flex'}}>
+
+{/* Left side - Task focus */}
+<div style={{flex:1,padding:'40px',display:'flex',flexDirection:'column',overflow:'auto'}}>
+{/* Header */}
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'40px'}}>
+<div>
+<h1 style={{color:'white',fontSize:'32px',margin:0,fontWeight:'700'}}>
+🏔️ SEO Journey
+</h1>
+<p style={{color:'rgba(255,255,255,0.6)',margin:'8px 0 0',fontSize:'15px'}}>
+{clients.find(c=>c.id===selectedClient)?.name}
+</p>
 </div>
-<div style={{height:'12px',background:'rgba(255,255,255,0.2)',borderRadius:'6px',overflow:'hidden'}}>
-<div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${progressPct}%`,transition:'width 0.5s ease',borderRadius:'6px'}}/>
+<button onClick={()=>setShowJourney(false)} style={{padding:'12px 20px',background:'rgba(255,255,255,0.1)',color:'white',border:'1px solid rgba(255,255,255,0.2)',borderRadius:'10px',cursor:'pointer',fontSize:'14px'}}>
+✕ Sluiten
+</button>
 </div>
-<div style={{display:'flex',justifyContent:'space-between',marginTop:'8px',fontSize:'13px',color:'rgba(255,255,255,0.6)'}}>
-<span>{completedCount} voltooid</span>
-<span>{totalCount-completedCount} te gaan</span>
+
+{/* Progress stats */}
+<div style={{display:'flex',gap:'20px',marginBottom:'40px'}}>
+<div style={{background:'rgba(255,255,255,0.05)',borderRadius:'16px',padding:'20px',flex:1,border:'1px solid rgba(255,255,255,0.1)'}}>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.5)',marginBottom:'4px'}}>Voortgang</div>
+<div style={{fontSize:'36px',fontWeight:'700',color:'#4ade80'}}>{progressPct}%</div>
+</div>
+<div style={{background:'rgba(255,255,255,0.05)',borderRadius:'16px',padding:'20px',flex:1,border:'1px solid rgba(255,255,255,0.1)'}}>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.5)',marginBottom:'4px'}}>Voltooid</div>
+<div style={{fontSize:'36px',fontWeight:'700',color:'white'}}>{completedCount}<span style={{fontSize:'18px',color:'rgba(255,255,255,0.4)'}}> / {totalCount}</span></div>
 </div>
 </div>
 
-{/* Current task highlight */}
-{currentTask&&(
-<div style={{background:'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',borderRadius:'16px',padding:'24px',marginBottom:'30px',boxShadow:'0 8px 32px rgba(245,158,11,0.5)'}}>
-<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'8px'}}>
-<span style={{fontSize:'12px',background:'rgba(255,255,255,0.2)',padding:'4px 10px',borderRadius:'20px',color:'white',fontWeight:'600'}}>VOLGENDE STAP</span>
+{/* Previous task (completed) */}
+{prevTask&&(
+<div style={{background:'rgba(74,222,128,0.1)',borderRadius:'12px',padding:'16px',marginBottom:'16px',border:'1px solid rgba(74,222,128,0.3)',opacity:0.7}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontSize:'11px',color:'#4ade80',fontWeight:'600'}}>✓ VORIGE STAP</span>
 </div>
-<h2 style={{color:'white',margin:'0 0 8px',fontSize:'22px',fontWeight:'700'}}>{currentTask.title}</h2>
-<p style={{color:'rgba(255,255,255,0.8)',margin:0,fontSize:'14px'}}>
-{currentTask.stepIcon} {currentTask.stepName} → {currentTask.sectionTitle}
-</p>
+<div style={{color:'#4ade80',fontSize:'15px'}}>{prevTask.title}</div>
+<div style={{color:'rgba(255,255,255,0.4)',fontSize:'12px',marginTop:'4px'}}>{prevTask.stepIcon} {prevTask.stepName}</div>
+</div>
+)}
+
+{/* Current task - BIG FOCUS */}
+{currentTask?(
+<div style={{background:'linear-gradient(135deg, #f59e0b 0%, #ea580c 100%)',borderRadius:'20px',padding:'32px',marginBottom:'16px',boxShadow:'0 20px 60px rgba(245,158,11,0.4)',position:'relative',overflow:'hidden'}}>
+<div style={{position:'absolute',top:'-50px',right:'-50px',width:'200px',height:'200px',background:'rgba(255,255,255,0.1)',borderRadius:'50%'}}/>
+<div style={{position:'absolute',bottom:'-30px',left:'-30px',width:'100px',height:'100px',background:'rgba(255,255,255,0.05)',borderRadius:'50%'}}/>
+<div style={{position:'relative'}}>
+<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'12px'}}>
+<span style={{background:'rgba(255,255,255,0.2)',padding:'6px 14px',borderRadius:'20px',fontSize:'12px',color:'white',fontWeight:'700'}}>HUIDIGE TAAK</span>
+<span style={{background:'rgba(255,255,255,0.2)',padding:'6px 14px',borderRadius:'20px',fontSize:'12px',color:'white'}}>Stap {currentIndex+1} van {totalCount}</span>
+</div>
+<h2 style={{color:'white',margin:'0 0 12px',fontSize:'28px',fontWeight:'700',lineHeight:1.3}}>{currentTask.title}</h2>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'24px'}}>
+<span style={{fontSize:'20px'}}>{currentTask.stepIcon}</span>
+<span style={{color:'rgba(255,255,255,0.9)',fontSize:'16px'}}>{currentTask.stepName}</span>
+<span style={{color:'rgba(255,255,255,0.5)'}}>→</span>
+<span style={{color:'rgba(255,255,255,0.7)',fontSize:'14px'}}>{currentTask.sectionTitle}</span>
+</div>
 {isAdmin&&(
-<button onClick={()=>{toggleTask(currentTask.stepId,currentTask.id);}} style={{marginTop:'16px',padding:'12px 28px',background:'white',color:'#d97706',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'15px',fontWeight:'700',display:'flex',alignItems:'center',gap:'8px'}}>
-✓ Markeer als voltooid
+<button onClick={()=>{toggleTask(currentTask.stepId,currentTask.id);}} style={{padding:'16px 32px',background:'white',color:'#ea580c',border:'none',borderRadius:'12px',cursor:'pointer',fontSize:'16px',fontWeight:'700',display:'flex',alignItems:'center',gap:'10px',boxShadow:'0 4px 20px rgba(0,0,0,0.2)'}}>
+<span style={{fontSize:'20px'}}>✓</span> Markeer als voltooid
 </button>
 )}
 </div>
+</div>
+):(
+<div style={{background:'linear-gradient(135deg, #4ade80 0%, #22c55e 100%)',borderRadius:'20px',padding:'40px',textAlign:'center',boxShadow:'0 20px 60px rgba(74,222,128,0.3)'}}>
+<div style={{fontSize:'60px',marginBottom:'16px'}}>🎉</div>
+<h2 style={{color:'white',margin:'0 0 8px',fontSize:'28px',fontWeight:'700'}}>Journey Voltooid!</h2>
+<p style={{color:'rgba(255,255,255,0.8)',margin:0,fontSize:'16px'}}>Gefeliciteerd! Alle {totalCount} taken zijn afgerond.</p>
+</div>
 )}
 
-{/* Journey path */}
-<div style={{position:'relative',padding:'20px 0'}}>
-{/* Vertical line */}
-<div style={{position:'absolute',left:'24px',top:'40px',bottom:'40px',width:'4px',background:'rgba(255,255,255,0.2)',borderRadius:'2px'}}/>
+{/* Next task preview */}
+{nextTask&&(
+<div style={{background:'rgba(255,255,255,0.05)',borderRadius:'12px',padding:'16px',border:'1px solid rgba(255,255,255,0.1)',opacity:0.6}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<span style={{fontSize:'11px',color:'rgba(255,255,255,0.5)',fontWeight:'600'}}>VOLGENDE</span>
+</div>
+<div style={{color:'rgba(255,255,255,0.7)',fontSize:'15px'}}>{nextTask.title}</div>
+<div style={{color:'rgba(255,255,255,0.4)',fontSize:'12px',marginTop:'4px'}}>{nextTask.stepIcon} {nextTask.stepName}</div>
+</div>
+)}
 
-{/* Group tasks by step */}
+{/* Step overview mini */}
+<div style={{marginTop:'auto',paddingTop:'30px'}}>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.5)',marginBottom:'12px'}}>Stappen overzicht</div>
+<div style={{display:'flex',gap:'4px',flexWrap:'wrap'}}>
 {(()=>{
 const stepGroups={};
 journeyTasks.forEach((task,idx)=>{
-if(!stepGroups[task.stepId]){
-stepGroups[task.stepId]={step:task,tasks:[],startIndex:idx};
-}
-stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
+if(!stepGroups[task.stepId])stepGroups[task.stepId]={icon:task.stepIcon,name:task.stepName,tasks:[]};
+stepGroups[task.stepId].tasks.push({...task,idx});
 });
-
-return Object.values(stepGroups).map((group,groupIdx)=>{
-const allCompleted=group.tasks.every(t=>t.completed);
-const isCurrent=group.tasks.some(t=>!t.completed)&&(groupIdx===0||Object.values(stepGroups)[groupIdx-1].tasks.every(t=>t.completed));
-
+return Object.values(stepGroups).map((group,i)=>{
+const done=group.tasks.filter(t=>t.completed).length;
+const total=group.tasks.length;
+const allDone=done===total;
+const isCurrent=group.tasks.some(t=>!t.completed)&&(i===0||Object.values(stepGroups)[i-1].tasks.every(t=>t.completed));
 return(
-<div key={group.step.stepId} style={{marginBottom:'16px'}}>
-{/* Step header */}
-<div style={{display:'flex',alignItems:'center',gap:'16px',marginBottom:'12px',position:'relative'}}>
-<div style={{width:'52px',height:'52px',borderRadius:'50%',background:allCompleted?'linear-gradient(135deg, #4ade80, #22c55e)':isCurrent?'linear-gradient(135deg, #f59e0b, #d97706)':'rgba(255,255,255,0.15)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px',boxShadow:isCurrent?'0 0 20px rgba(245,158,11,0.5)':'none',transition:'all 0.3s',zIndex:1}}>
-{allCompleted?'✓':group.step.stepIcon}
-</div>
-<div>
-<h3 style={{color:'white',margin:0,fontSize:'18px',fontWeight:'600'}}>{group.step.stepName}</h3>
-<p style={{color:'rgba(255,255,255,0.5)',margin:'4px 0 0',fontSize:'13px'}}>
-{group.tasks.filter(t=>t.completed).length} / {group.tasks.length} taken
-</p>
-</div>
-</div>
-
-{/* Tasks in step */}
-<div style={{marginLeft:'68px',display:'flex',flexDirection:'column',gap:'8px'}}>
-{group.tasks.map((task)=>{
-const isCurrentTask=currentIndex===task.globalIndex;
-return(
-<div key={task.id} style={{background:task.completed?'rgba(74,222,128,0.15)':isCurrentTask?'rgba(245,158,11,0.2)':'rgba(255,255,255,0.05)',border:isCurrentTask?'2px solid #f59e0b':'1px solid rgba(255,255,255,0.1)',borderRadius:'12px',padding:'14px 18px',display:'flex',alignItems:'center',justifyContent:'space-between',transition:'all 0.3s',cursor:isAdmin?'pointer':'default'}} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}}>
-<div style={{display:'flex',alignItems:'center',gap:'12px'}}>
-<div style={{width:'28px',height:'28px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrentTask?'#f59e0b':'rgba(255,255,255,0.2)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'14px',color:task.completed||isCurrentTask?'white':'rgba(255,255,255,0.5)',fontWeight:'600',transition:'all 0.3s'}}>
-{task.completed?'✓':(task.globalIndex+1)}
-</div>
-<div>
-<span style={{color:task.completed?'#4ade80':'white',fontWeight:isCurrentTask?'600':'400',fontSize:'14px'}}>{task.title}</span>
-<span style={{color:'rgba(255,255,255,0.4)',fontSize:'12px',marginLeft:'8px'}}>{task.sectionTitle}</span>
-</div>
-</div>
-{isCurrentTask&&!task.completed&&(
-<span style={{background:'#f59e0b',color:'white',padding:'4px 10px',borderRadius:'20px',fontSize:'11px',fontWeight:'600'}}>NU</span>
-)}
-</div>
-);
-})}
-</div>
+<div key={i} title={`${group.name}: ${done}/${total}`} style={{width:'40px',height:'40px',borderRadius:'10px',background:allDone?'#4ade80':isCurrent?'#f59e0b':'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'18px',border:isCurrent?'2px solid white':'none',boxShadow:isCurrent?'0 0 20px rgba(245,158,11,0.5)':'none'}}>
+{allDone?'✓':group.icon}
 </div>
 );
 });
 })()}
+</div>
+</div>
+</div>
 
-{/* Finish line */}
-<div style={{display:'flex',alignItems:'center',gap:'16px',marginTop:'20px'}}>
-<div style={{width:'52px',height:'52px',borderRadius:'50%',background:progressPct===100?'linear-gradient(135deg, #4ade80, #22c55e)':'rgba(255,255,255,0.1)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'24px'}}>
-🏁
+{/* Right side - Mountain visualization */}
+<div style={{width:'400px',background:'linear-gradient(180deg, #0c1929 0%, #1a365d 100%)',position:'relative',overflow:'hidden'}}>
+{/* Stars */}
+{[...Array(30)].map((_,i)=>(
+<div key={i} style={{position:'absolute',width:Math.random()*3+1+'px',height:Math.random()*3+1+'px',background:'white',borderRadius:'50%',top:Math.random()*40+'%',left:Math.random()*100+'%',opacity:Math.random()*0.8+0.2}}/>
+))}
+
+{/* Moon */}
+<div style={{position:'absolute',top:'60px',right:'60px',width:'60px',height:'60px',background:'linear-gradient(135deg, #fef3c7 0%, #fcd34d 100%)',borderRadius:'50%',boxShadow:'0 0 40px rgba(252,211,77,0.5)'}}/>
+
+{/* Mountain SVG */}
+<svg viewBox="0 0 400 600" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
+{/* Back mountain */}
+<path d="M-50 600 L100 250 L250 600 Z" fill="#1e3a5f" opacity="0.5"/>
+{/* Main mountain */}
+<path d="M50 600 L200 150 L350 600 Z" fill="#2d4a6f"/>
+{/* Snow cap */}
+<path d="M170 200 L200 150 L230 200 L215 195 L200 210 L185 195 Z" fill="white" opacity="0.9"/>
+{/* Mountain path - zigzag up */}
+<path d={`
+M100 550
+Q120 530 140 540
+Q180 520 160 490
+Q200 470 180 440
+Q220 420 200 390
+Q240 370 220 340
+Q260 320 240 290
+Q280 270 260 240
+Q300 220 280 190
+Q310 170 290 150
+L200 150
+`} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="3" strokeDasharray="8,8"/>
+
+{/* Checkpoints on path */}
+{[
+{x:120,y:540,pct:10},{x:170,y:490,pct:25},{x:190,y:440,pct:40},
+{x:230,y:340,pct:55},{x:250,y:290,pct:70},{x:270,y:240,pct:85},{x:200,y:150,pct:100}
+].map((cp,i)=>(
+<circle key={i} cx={cp.x} cy={cp.y} r={progressPct>=cp.pct?"8":"5"} fill={progressPct>=cp.pct?"#4ade80":"rgba(255,255,255,0.3)"} stroke={progressPct>=cp.pct?"white":"none"} strokeWidth="2"/>
+))}
+
+{/* Climber */}
+<g transform={`translate(${140+progressPct*0.9}, ${550-progressPct*4})`}>
+<circle cx="0" cy="-12" r="8" fill="#fcd34d"/>
+<rect x="-6" y="-4" width="12" height="16" rx="3" fill="#f97316"/>
+<line x1="-8" y1="0" x2="-12" y2="8" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round"/>
+<line x1="8" y1="0" x2="12" y2="8" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round"/>
+<line x1="-4" y1="12" x2="-6" y2="24" stroke="#1e3a5f" strokeWidth="3" strokeLinecap="round"/>
+<line x1="4" y1="12" x2="6" y2="24" stroke="#1e3a5f" strokeWidth="3" strokeLinecap="round"/>
+</g>
+
+{/* Flag at top */}
+<g transform="translate(200, 130)">
+<line x1="0" y1="0" x2="0" y2="30" stroke="#8b4513" strokeWidth="3"/>
+<path d="M0 0 L25 8 L0 16 Z" fill={progressPct===100?"#4ade80":"#ef4444"}/>
+</g>
+</svg>
+
+{/* Progress indicator */}
+<div style={{position:'absolute',bottom:'30px',left:'30px',right:'30px'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+<span style={{color:'rgba(255,255,255,0.6)',fontSize:'13px'}}>Hoogte bereikt</span>
+<span style={{color:'#4ade80',fontSize:'15px',fontWeight:'700'}}>{progressPct}%</span>
 </div>
-<div>
-<h3 style={{color:progressPct===100?'#4ade80':'rgba(255,255,255,0.5)',margin:0,fontSize:'18px',fontWeight:'600'}}>
-{progressPct===100?'🎉 Journey Voltooid!':'Finish'}
-</h3>
-{progressPct===100&&<p style={{color:'rgba(255,255,255,0.7)',margin:'4px 0 0',fontSize:'13px'}}>Gefeliciteerd! Alle taken zijn afgerond.</p>}
+<div style={{height:'8px',background:'rgba(255,255,255,0.1)',borderRadius:'4px',overflow:'hidden'}}>
+<div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${progressPct}%`,transition:'width 0.5s ease',borderRadius:'4px'}}/>
+</div>
+<div style={{textAlign:'center',marginTop:'16px',color:'white',fontSize:'14px'}}>
+{progressPct<25&&'🏕️ Net begonnen - keep going!'}
+{progressPct>=25&&progressPct<50&&'⛺ Goed op weg!'}
+{progressPct>=50&&progressPct<75&&'🥾 Halverwege de top!'}
+{progressPct>=75&&progressPct<100&&'🏔️ Bijna bij de top!'}
+{progressPct===100&&'🏁 Je hebt de top bereikt!'}
 </div>
 </div>
 </div>
-</>
+</div>
 );
 })()}
-</div>
-</div>
-)}
 
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
