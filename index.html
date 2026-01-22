@@ -5350,6 +5350,7 @@ const completedCount=journeyTasks.filter(t=>t.completed).length;
 const totalCount=journeyTasks.length;
 const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
 const currentIndex=journeyTasks.findIndex(t=>!t.completed);
+const [expandedTask,setExpandedTask]=React.useState(null);
 
 // Group by step
 const stepGroups={};
@@ -5358,56 +5359,87 @@ if(!stepGroups[task.stepId])stepGroups[task.stepId]={icon:task.stepIcon,name:tas
 stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
 });
 
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)',zIndex:9999,overflow:'hidden',display:'flex'}}>
+// Path checkpoints (zigzag omhoog)
+const pathPoints=[
+{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},
+{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}
+];
 
-{/* Left side - Task list */}
-<div style={{flex:1,padding:'30px',display:'flex',flexDirection:'column',overflow:'auto',maxWidth:'600px'}}>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'24px'}}>
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'#0f172a',zIndex:9999,overflow:'hidden',display:'flex'}}>
+
+{/* Left side - Task list (75%) */}
+<div style={{flex:'1 1 75%',padding:'24px 32px',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
 <div>
 <h1 style={{color:'white',fontSize:'24px',margin:0,fontWeight:'700'}}>🏔️ SEO Journey</h1>
 <p style={{color:'#94a3b8',margin:'4px 0 0',fontSize:'14px'}}>{clients.find(c=>c.id===selectedClient)?.name}</p>
 </div>
-<div style={{display:'flex',gap:'8px'}}>
-{isAdmin&&<button onClick={()=>copyJourneyLink(selectedClient)} style={{padding:'10px 16px',background:'#4ade80',color:'#0f172a',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>🔗 Deel link</button>}
-<button onClick={()=>setShowJourney(false)} style={{padding:'10px 16px',background:'#334155',color:'white',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'13px'}}>✕ Sluiten</button>
+<div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<div style={{background:'#1e293b',padding:'8px 16px',borderRadius:'20px',border:'1px solid #334155'}}>
+<span style={{color:'#4ade80',fontSize:'16px',fontWeight:'700'}}>{completedCount}/{totalCount}</span>
+<span style={{color:'#64748b',fontSize:'14px',marginLeft:'6px'}}>({progressPct}%)</span>
+</div>
+{isAdmin&&<button onClick={()=>copyJourneyLink(selectedClient)} style={{padding:'10px 16px',background:'#4ade80',color:'#0f172a',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>🔗 Deel link</button>}
+<button onClick={()=>setShowJourney(false)} style={{padding:'10px 16px',background:'#334155',color:'white',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px'}}>✕ Sluiten</button>
 </div>
 </div>
 
-{/* Progress */}
-<div style={{background:'#1e293b',borderRadius:'12px',padding:'16px',marginBottom:'20px',border:'1px solid #334155'}}>
-<div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
-<span style={{color:'#94a3b8',fontSize:'13px'}}>Voortgang</span>
-<span style={{color:'#4ade80',fontSize:'14px',fontWeight:'700'}}>{completedCount}/{totalCount} ({progressPct}%)</span>
-</div>
-<div style={{height:'6px',background:'#334155',borderRadius:'3px',overflow:'hidden'}}>
+{/* Progress bar */}
+<div style={{marginBottom:'16px'}}>
+<div style={{height:'8px',background:'#334155',borderRadius:'4px',overflow:'hidden'}}>
 <div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${progressPct}%`,transition:'width 0.5s'}}/>
 </div>
 </div>
 
-{/* All tasks grouped by step */}
-<div style={{flex:1,overflow:'auto'}}>
+{/* All tasks - grotere items */}
+<div style={{flex:1,overflow:'auto',paddingRight:'8px'}}>
 {Object.values(stepGroups).map((group,groupIdx)=>{
 const groupCompleted=group.tasks.filter(t=>t.completed).length;
 const groupTotal=group.tasks.length;
 const allDone=groupCompleted===groupTotal;
 return(
 <div key={groupIdx} style={{marginBottom:'16px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px',padding:'8px 12px',background:allDone?'rgba(74,222,128,0.1)':'#1e293b',borderRadius:'8px',border:`1px solid ${allDone?'#4ade80':'#334155'}`}}>
-<span style={{fontSize:'20px'}}>{allDone?'✓':group.icon}</span>
-<span style={{color:allDone?'#4ade80':'white',fontWeight:'600',fontSize:'14px',flex:1}}>{group.name}</span>
-<span style={{color:'#64748b',fontSize:'12px'}}>{groupCompleted}/{groupTotal}</span>
+{/* Section header */}
+<div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'8px',padding:'14px 18px',background:allDone?'rgba(74,222,128,0.15)':'#1e293b',borderRadius:'12px',border:`2px solid ${allDone?'#4ade80':'#334155'}`}}>
+<span style={{fontSize:'24px'}}>{allDone?'✓':group.icon}</span>
+<span style={{color:allDone?'#4ade80':'white',fontWeight:'700',fontSize:'17px',flex:1}}>{group.name}</span>
+<span style={{color:allDone?'#4ade80':'#64748b',fontSize:'14px',background:allDone?'rgba(74,222,128,0.2)':'#334155',padding:'5px 14px',borderRadius:'14px',fontWeight:'600'}}>{groupCompleted}/{groupTotal}</span>
 </div>
-<div style={{display:'flex',flexDirection:'column',gap:'4px',marginLeft:'12px'}}>
+
+{/* Tasks */}
+<div style={{display:'flex',flexDirection:'column',gap:'6px',marginLeft:'12px'}}>
 {group.tasks.map((task)=>{
 const isCurrent=currentIndex===task.globalIndex;
+const isExpanded=expandedTask===task.id;
 return(
-<div key={task.id} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}} style={{display:'flex',alignItems:'center',gap:'10px',padding:'10px 12px',background:task.completed?'rgba(74,222,128,0.08)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.02)',border:`1px solid ${task.completed?'rgba(74,222,128,0.3)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'8px',cursor:isAdmin?'pointer':'default',transition:'all 0.2s'}}>
-<div style={{width:'22px',height:'22px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',color:'white',fontWeight:'600',flexShrink:0}}>
+<div key={task.id}>
+<div onClick={()=>setExpandedTask(isExpanded?null:task.id)} style={{display:'flex',alignItems:'center',gap:'14px',padding:'16px 18px',background:task.completed?'rgba(74,222,128,0.1)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.03)',border:`2px solid ${task.completed?'rgba(74,222,128,0.4)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'12px',cursor:'pointer',transition:'all 0.2s'}}>
+<div style={{width:'36px',height:'36px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',color:'white',fontWeight:'700',flexShrink:0}}>
 {task.completed?'✓':task.globalIndex+1}
 </div>
-<span style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'13px',flex:1}}>{task.title}</span>
-{isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'2px 8px',borderRadius:'10px',fontSize:'10px',fontWeight:'700'}}>NU</span>}
+<div style={{flex:1}}>
+<div style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'16px',fontWeight:isCurrent?'600':'500'}}>{task.title}</div>
+<div style={{color:'#64748b',fontSize:'13px',marginTop:'3px'}}>{task.sectionTitle}</div>
+</div>
+{isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'5px 14px',borderRadius:'14px',fontSize:'11px',fontWeight:'700'}}>VOLGENDE</span>}
+<span style={{color:'#64748b',fontSize:'18px',transform:isExpanded?'rotate(180deg)':'rotate(0)',transition:'transform 0.2s'}}>▼</span>
+</div>
+{/* Expanded details */}
+{isExpanded&&(
+<div style={{margin:'6px 0 12px 50px',padding:'18px 22px',background:'#1e293b',borderRadius:'12px',border:'1px solid #334155'}}>
+<div style={{display:'flex',flexWrap:'wrap',gap:'20px',marginBottom:'16px'}}>
+<div><span style={{color:'#64748b',fontSize:'13px'}}>Sectie: </span><span style={{color:'#e2e8f0',fontSize:'14px',fontWeight:'500'}}>{task.stepIcon} {task.stepName}</span></div>
+<div><span style={{color:'#64748b',fontSize:'13px'}}>Onderdeel: </span><span style={{color:'#e2e8f0',fontSize:'14px',fontWeight:'500'}}>{task.sectionTitle}</span></div>
+<div><span style={{color:'#64748b',fontSize:'13px'}}>Status: </span><span style={{color:task.completed?'#4ade80':'#fbbf24',fontSize:'14px',fontWeight:'600'}}>{task.completed?'✓ Voltooid':'⏳ Open'}</span></div>
+</div>
+{isAdmin&&(
+<button onClick={(e)=>{e.stopPropagation();toggleTask(task.stepId,task.id);}} style={{padding:'14px 28px',background:task.completed?'#ef4444':'#4ade80',color:task.completed?'white':'#0f172a',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'15px',fontWeight:'600',width:'100%'}}>
+{task.completed?'✗ Markeer als open':'✓ Markeer als voltooid'}
+</button>
+)}
+</div>
+)}
 </div>
 );
 })}
@@ -5416,94 +5448,95 @@ return(
 );
 })}
 </div>
+
 {!isAdmin&&(
-<div style={{marginTop:'16px',padding:'12px',background:'rgba(59,130,246,0.1)',borderRadius:'8px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}>
-<span style={{color:'#60a5fa',fontSize:'12px'}}>👀 Je bekijkt de voortgang van dit project</span>
+<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}>
+<span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span>
 </div>
 )}
 </div>
 
-{/* Right side - Mountain */}
-<div style={{flex:1,position:'relative',overflow:'hidden',minWidth:'400px'}}>
-{/* Stars */}
-{[...Array(40)].map((_,i)=><div key={i} style={{position:'absolute',width:Math.random()*2+1+'px',height:Math.random()*2+1+'px',background:'white',borderRadius:'50%',top:Math.random()*50+'%',left:Math.random()*100+'%',opacity:Math.random()*0.7+0.3}}/>)}
-
-{/* Moon */}
-<div style={{position:'absolute',top:'40px',right:'80px',width:'50px',height:'50px',background:'radial-gradient(circle at 30% 30%, #fef3c7, #fcd34d)',borderRadius:'50%',boxShadow:'0 0 30px rgba(252,211,77,0.4)'}}/>
+{/* Right side - Mountain (25%, mooie visual) */}
+<div style={{flex:'0 0 280px',position:'relative',overflow:'hidden'}}>
+{/* Sky gradient */}
+<div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #a8d4e6 0%, #d0e8f2 45%, #e8f2f6 65%, #52b788 88%, #2d6a4f 100%)'}}/>
 
 {/* Mountain SVG */}
-<svg viewBox="0 0 500 700" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
-{/* Background mountain */}
-<polygon points="0,700 120,300 240,700" fill="#1e3a5f" opacity="0.4"/>
-<polygon points="280,700 380,350 480,700" fill="#1e3a5f" opacity="0.3"/>
+<svg viewBox="0 0 280 350" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
+
+{/* Far mountain left */}
+<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/>
+<polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
+
+{/* Far mountain right */}
+<polygon points="175,350 245,175 315,350" fill="#96a5c0"/>
+<polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
 
 {/* Main mountain */}
-<polygon points="80,700 250,120 420,700" fill="#2d4a6f"/>
+<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/>
+<polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
 
 {/* Snow cap */}
-<polygon points="220,170 250,120 280,170 265,165 250,180 235,165" fill="#f1f5f9"/>
+<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/>
+<polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
 
-{/* Path with dots */}
-<path d="M140,620 C160,600 180,610 190,580 C200,550 220,560 230,530 C240,500 260,510 270,480 C280,450 300,460 310,430 C320,400 340,410 345,380 C350,350 365,360 370,330 C375,300 385,310 385,280 C385,250 375,240 360,220 C345,200 320,180 290,160 L250,120" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" strokeDasharray="6,6"/>
+{/* Lake */}
+<ellipse cx="140" cy="335" rx="130" ry="20" fill="#40916c" opacity="0.5"/>
 
-{/* Checkpoints along path */}
-{[
-{x:140,y:620,pct:0},{x:190,y:580,pct:14},{x:230,y:530,pct:28},{x:270,y:480,pct:42},
-{x:310,y:430,pct:56},{x:345,y:380,pct:70},{x:370,y:330,pct:84},{x:250,y:120,pct:100}
-].map((cp,i)=>(
-<g key={i}>
-<circle cx={cp.x} cy={cp.y} r={progressPct>=cp.pct?8:5} fill={progressPct>=cp.pct?'#4ade80':'#475569'} stroke={progressPct>=cp.pct?'#86efac':'none'} strokeWidth="2"/>
-{progressPct>=cp.pct&&cp.pct<100&&<circle cx={cp.x} cy={cp.y} r="12" fill="none" stroke="#4ade80" strokeWidth="1" opacity="0.5"/>}
-</g>
-))}
+{/* Red path */}
+<path d={`M${pathPoints.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ')}`} fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
 
-{/* Climber - positioned based on progress */}
-{(()=>{
-const points=[
-{x:140,y:620},{x:190,y:580},{x:230,y:530},{x:270,y:480},
-{x:310,y:430},{x:345,y:380},{x:370,y:330},{x:250,y:120}
-];
-const idx=Math.min(Math.floor(progressPct/14.3),points.length-1);
-const nextIdx=Math.min(idx+1,points.length-1);
-const localPct=(progressPct%14.3)/14.3;
-const cx=points[idx].x+(points[nextIdx].x-points[idx].x)*localPct;
-const cy=points[idx].y+(points[nextIdx].y-points[idx].y)*localPct;
+{/* Checkpoints */}
+{pathPoints.map((cp,i)=>{
+const taskIdx=Math.floor((i/pathPoints.length)*totalCount);
+const isCompleted=taskIdx<completedCount;
 return(
-<g transform={`translate(${cx},${cy-15})`}>
-{/* Head */}
-<circle cx="0" cy="-8" r="7" fill="#fcd34d"/>
-{/* Body */}
-<rect x="-5" y="-2" width="10" height="14" rx="3" fill="#f97316"/>
-{/* Arms */}
-<line x1="-5" y1="2" x2="-10" y2="8" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round"/>
-<line x1="5" y1="2" x2="10" y2="-2" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round"/>
-{/* Legs */}
-<line x1="-3" y1="12" x2="-5" y2="20" stroke="#1e293b" strokeWidth="3" strokeLinecap="round"/>
-<line x1="3" y1="12" x2="6" y2="19" stroke="#1e293b" strokeWidth="3" strokeLinecap="round"/>
-{/* Backpack */}
-<rect x="-4" y="0" width="8" height="8" rx="2" fill="#ef4444"/>
+<circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>
+);
+})}
+
+{/* Climber */}
+{(()=>{
+if(progressPct===100){
+return(<g transform={`translate(${pathPoints[pathPoints.length-1].x},${pathPoints[pathPoints.length-1].y-22})`}><text x="0" y="0" textAnchor="middle" fontSize="22">🎉</text></g>);
+}
+const progress=completedCount/totalCount;
+const floatIdx=progress*(pathPoints.length-1);
+const idx=Math.floor(floatIdx);
+const nextIdx=Math.min(idx+1,pathPoints.length-1);
+const t=floatIdx-idx;
+const cx=pathPoints[idx].x+(pathPoints[nextIdx].x-pathPoints[idx].x)*t;
+const cy=pathPoints[idx].y+(pathPoints[nextIdx].y-pathPoints[idx].y)*t;
+return(
+<g transform={`translate(${cx},${cy-20})`}>
+<ellipse cx="0" cy="18" rx="5" ry="2" fill="rgba(0,0,0,0.15)"/>
+<circle cx="0" cy="-3" r="6" fill="#fcd34d"/>
+<rect x="-5" y="2" width="10" height="12" rx="2" fill="#3b82f6"/>
+<line x1="-5" y1="6" x2="-9" y2="2" stroke="#fcd34d" strokeWidth="2.5" strokeLinecap="round"/>
+<line x1="5" y1="6" x2="9" y2="10" stroke="#fcd34d" strokeWidth="2.5" strokeLinecap="round"/>
+<line x1="-3" y1="14" x2="-4" y2="20" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
+<line x1="3" y1="14" x2="5" y2="19" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
 </g>
 );
 })()}
 
-{/* Flag at top */}
-<g transform="translate(250,100)">
-<line x1="0" y1="0" x2="0" y2="25" stroke="#78350f" strokeWidth="3"/>
-<polygon points="0,0 20,7 0,14" fill={progressPct===100?'#4ade80':'#ef4444'}/>
-{progressPct===100&&<text x="25" y="10" fill="#4ade80" fontSize="12" fontWeight="bold">🎉</text>}
+{/* Flag */}
+<g transform="translate(140,15)">
+<line x1="0" y1="0" x2="0" y2="20" stroke="#78350f" strokeWidth="2"/>
+<polygon points="0,0 18,6 0,12" fill="#ef4444"/>
 </g>
 </svg>
 
 {/* Progress label */}
-<div style={{position:'absolute',bottom:'30px',left:'30px',right:'30px',textAlign:'center'}}>
-<div style={{background:'rgba(30,41,59,0.9)',borderRadius:'12px',padding:'16px',border:'1px solid #334155'}}>
-<div style={{fontSize:'32px',fontWeight:'700',color:'#4ade80',marginBottom:'4px'}}>{progressPct}%</div>
-<div style={{color:'#94a3b8',fontSize:'13px'}}>
-{progressPct===0&&'Begin je reis! 🚀'}
-{progressPct>0&&progressPct<25&&'Goed begonnen! 💪'}
-{progressPct>=25&&progressPct<50&&'Op weg naar de top! 🥾'}
-{progressPct>=50&&progressPct<75&&'Halverwege! ⛰️'}
-{progressPct>=75&&progressPct<100&&'Bijna daar! 🏔️'}
+<div style={{position:'absolute',bottom:'16px',left:'12px',right:'12px'}}>
+<div style={{background:'rgba(15,23,42,0.95)',borderRadius:'12px',padding:'14px',textAlign:'center'}}>
+<div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{progressPct}%</div>
+<div style={{color:'#94a3b8',fontSize:'12px',marginTop:'2px'}}>
+{progressPct===0&&'Start! 🚀'}
+{progressPct>0&&progressPct<25&&'Onderweg 💪'}
+{progressPct>=25&&progressPct<50&&'Goed bezig 🥾'}
+{progressPct>=50&&progressPct<75&&'Halverwege ⛰️'}
+{progressPct>=75&&progressPct<100&&'Bijna! 🏔️'}
 {progressPct===100&&'Top bereikt! 🏆'}
 </div>
 </div>
