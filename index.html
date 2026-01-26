@@ -737,6 +737,7 @@ const [toast,setToast]=useState(null);
 
 // JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
 const getAllTasksForJourney=(clientId)=>{
+if(!clients||clients.length===0)return[];
 const client=clients.find(c=>c.id===clientId);
 if(!client)return[];
 const allTasks=[];
