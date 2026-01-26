@@ -5345,29 +5345,8 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 )}
 
 {/* JOURNEY VIEW - Visuele roadmap met bergbeklimmer */}
-{showJourney&&selectedClient&&(()=>{
-const journeyTasks=getAllTasksForJourney(selectedClient);
-const completedCount=journeyTasks.filter(t=>t.completed).length;
-const totalCount=journeyTasks.length;
-const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
-const currentIndex=journeyTasks.findIndex(t=>!t.completed);
-
-// Group by step
-const stepGroups={};
-journeyTasks.forEach((task,idx)=>{
-if(!stepGroups[task.stepId])stepGroups[task.stepId]={icon:task.stepIcon,name:task.stepName,tasks:[]};
-stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
-});
-
-// Path checkpoints (zigzag omhoog)
-const pathPoints=[
-{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},
-{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}
-];
-
-return(
+{showJourney&&selectedClient&&(
 <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'#0f172a',zIndex:9999,overflow:'hidden',display:'flex'}}>
-
 {/* Left side - Task list (75%) */}
 <div style={{flex:'1 1 75%',padding:'24px 32px',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
@@ -5376,38 +5355,46 @@ return(
 <p style={{color:'#94a3b8',margin:'4px 0 0',fontSize:'14px'}}>{clients.find(c=>c.id===selectedClient)?.name}</p>
 </div>
 <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
-<div style={{background:'#1e293b',padding:'8px 16px',borderRadius:'20px',border:'1px solid #334155'}}>
-<span style={{color:'#4ade80',fontSize:'16px',fontWeight:'700'}}>{completedCount}/{totalCount}</span>
-<span style={{color:'#64748b',fontSize:'14px',marginLeft:'6px'}}>({progressPct}%)</span>
-</div>
+{(()=>{
+const jt=getAllTasksForJourney(selectedClient);
+const cc=jt.filter(t=>t.completed).length;
+const tc=jt.length;
+const pp=tc>0?Math.round((cc/tc)*100):0;
+return <div style={{background:'#1e293b',padding:'8px 16px',borderRadius:'20px',border:'1px solid #334155'}}><span style={{color:'#4ade80',fontSize:'16px',fontWeight:'700'}}>{cc}/{tc}</span><span style={{color:'#64748b',fontSize:'14px',marginLeft:'6px'}}>({pp}%)</span></div>;
+})()}
 {isAdmin&&<button onClick={()=>copyJourneyLink(selectedClient)} style={{padding:'10px 16px',background:'#4ade80',color:'#0f172a',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>🔗 Deel link</button>}
 <button onClick={()=>setShowJourney(false)} style={{padding:'10px 16px',background:'#334155',color:'white',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px'}}>✕ Sluiten</button>
 </div>
 </div>
 
 {/* Progress bar */}
-<div style={{marginBottom:'16px'}}>
-<div style={{height:'8px',background:'#334155',borderRadius:'4px',overflow:'hidden'}}>
-<div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${progressPct}%`,transition:'width 0.5s'}}/>
-</div>
-</div>
+{(()=>{
+const jt=getAllTasksForJourney(selectedClient);
+const pp=jt.length>0?Math.round((jt.filter(t=>t.completed).length/jt.length)*100):0;
+return <div style={{marginBottom:'16px'}}><div style={{height:'8px',background:'#334155',borderRadius:'4px',overflow:'hidden'}}><div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${pp}%`,transition:'width 0.5s'}}/></div></div>;
+})()}
 
-{/* All tasks - grotere items */}
+{/* All tasks */}
 <div style={{flex:1,overflow:'auto',paddingRight:'8px'}}>
-{Object.values(stepGroups).map((group,groupIdx)=>{
+{(()=>{
+const journeyTasks=getAllTasksForJourney(selectedClient);
+const currentIndex=journeyTasks.findIndex(t=>!t.completed);
+const stepGroups={};
+journeyTasks.forEach((task,idx)=>{
+if(!stepGroups[task.stepId])stepGroups[task.stepId]={icon:task.stepIcon,name:task.stepName,tasks:[]};
+stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
+});
+return Object.values(stepGroups).map((group,groupIdx)=>{
 const groupCompleted=group.tasks.filter(t=>t.completed).length;
 const groupTotal=group.tasks.length;
 const allDone=groupCompleted===groupTotal;
 return(
 <div key={groupIdx} style={{marginBottom:'16px'}}>
-{/* Section header */}
 <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'8px',padding:'14px 18px',background:allDone?'rgba(74,222,128,0.15)':'#1e293b',borderRadius:'12px',border:`2px solid ${allDone?'#4ade80':'#334155'}`}}>
 <span style={{fontSize:'24px'}}>{allDone?'✓':group.icon}</span>
 <span style={{color:allDone?'#4ade80':'white',fontWeight:'700',fontSize:'17px',flex:1}}>{group.name}</span>
 <span style={{color:allDone?'#4ade80':'#64748b',fontSize:'14px',background:allDone?'rgba(74,222,128,0.2)':'#334155',padding:'5px 14px',borderRadius:'14px',fontWeight:'600'}}>{groupCompleted}/{groupTotal}</span>
 </div>
-
-{/* Tasks */}
 <div style={{display:'flex',flexDirection:'column',gap:'6px',marginLeft:'12px'}}>
 {group.tasks.map((task)=>{
 const isCurrent=currentIndex===task.globalIndex;
@@ -5425,7 +5412,6 @@ return(
 {isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'5px 14px',borderRadius:'14px',fontSize:'11px',fontWeight:'700'}}>VOLGENDE</span>}
 <span style={{color:'#64748b',fontSize:'18px',transform:isExpanded?'rotate(180deg)':'rotate(0)',transition:'transform 0.2s'}}>▼</span>
 </div>
-{/* Expanded details */}
 {isExpanded&&(
 <div style={{margin:'6px 0 12px 50px',padding:'18px 22px',background:'#1e293b',borderRadius:'12px',border:'1px solid #334155'}}>
 <div style={{display:'flex',flexWrap:'wrap',gap:'20px',marginBottom:'16px'}}>
@@ -5446,7 +5432,8 @@ return(
 </div>
 </div>
 );
-})}
+});
+})()}
 </div>
 
 {!isAdmin&&(
@@ -5456,51 +5443,16 @@ return(
 )}
 </div>
 
-{/* Right side - Mountain (25%, mooie visual) */}
+{/* Right side - Mountain (25%) */}
 <div style={{flex:'0 0 280px',position:'relative',overflow:'hidden'}}>
-{/* Sky gradient */}
 <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #a8d4e6 0%, #d0e8f2 45%, #e8f2f6 65%, #52b788 88%, #2d6a4f 100%)'}}/>
-
-{/* Mountain SVG */}
-<svg viewBox="0 0 280 350" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
-
-{/* Far mountain left */}
-<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/>
-<polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
-
-{/* Far mountain right */}
-<polygon points="175,350 245,175 315,350" fill="#96a5c0"/>
-<polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
-
-{/* Main mountain */}
-<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/>
-<polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
-
-{/* Snow cap */}
-<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/>
-<polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
-
-{/* Lake */}
-<ellipse cx="140" cy="335" rx="130" ry="20" fill="#40916c" opacity="0.5"/>
-
-{/* Red path */}
-<path d={`M${pathPoints.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ')}`} fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-
-{/* Checkpoints */}
-{pathPoints.map((cp,i)=>{
-const taskIdx=Math.floor((i/pathPoints.length)*totalCount);
-const isCompleted=taskIdx<completedCount;
-return(
-<circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>
-);
-})}
-
-{/* Climber */}
 {(()=>{
-if(progressPct===100){
-return(<g transform={`translate(${pathPoints[pathPoints.length-1].x},${pathPoints[pathPoints.length-1].y-22})`}><text x="0" y="0" textAnchor="middle" fontSize="22">🎉</text></g>);
-}
-const progress=completedCount/totalCount;
+const journeyTasks=getAllTasksForJourney(selectedClient);
+const completedCount=journeyTasks.filter(t=>t.completed).length;
+const totalCount=journeyTasks.length;
+const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
+const pathPoints=[{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}];
+const progress=completedCount/totalCount||0;
 const floatIdx=progress*(pathPoints.length-1);
 const idx=Math.floor(floatIdx);
 const nextIdx=Math.min(idx+1,pathPoints.length-1);
@@ -5508,6 +5460,25 @@ const t=floatIdx-idx;
 const cx=pathPoints[idx].x+(pathPoints[nextIdx].x-pathPoints[idx].x)*t;
 const cy=pathPoints[idx].y+(pathPoints[nextIdx].y-pathPoints[idx].y)*t;
 return(
+<svg viewBox="0 0 280 350" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
+<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/>
+<polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
+<polygon points="175,350 245,175 315,350" fill="#96a5c0"/>
+<polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
+<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/>
+<polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
+<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/>
+<polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
+<ellipse cx="140" cy="335" rx="130" ry="20" fill="#40916c" opacity="0.5"/>
+<path d={`M${pathPoints.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ')}`} fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+{pathPoints.map((cp,i)=>{
+const taskIdx=Math.floor((i/pathPoints.length)*totalCount);
+const isCompleted=taskIdx<completedCount;
+return <circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>;
+})}
+{progressPct===100?(
+<g transform={`translate(${pathPoints[pathPoints.length-1].x},${pathPoints[pathPoints.length-1].y-22})`}><text x="0" y="0" textAnchor="middle" fontSize="22">🎉</text></g>
+):(
 <g transform={`translate(${cx},${cy-20})`}>
 <ellipse cx="0" cy="18" rx="5" ry="2" fill="rgba(0,0,0,0.15)"/>
 <circle cx="0" cy="-3" r="6" fill="#fcd34d"/>
@@ -5517,34 +5488,33 @@ return(
 <line x1="-3" y1="14" x2="-4" y2="20" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
 <line x1="3" y1="14" x2="5" y2="19" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
 </g>
-);
-})()}
-
-{/* Flag */}
-<g transform="translate(140,15)">
-<line x1="0" y1="0" x2="0" y2="20" stroke="#78350f" strokeWidth="2"/>
-<polygon points="0,0 18,6 0,12" fill="#ef4444"/>
-</g>
+)}
+<g transform="translate(140,15)"><line x1="0" y1="0" x2="0" y2="20" stroke="#78350f" strokeWidth="2"/><polygon points="0,0 18,6 0,12" fill="#ef4444"/></g>
 </svg>
-
-{/* Progress label */}
+);
+})()}
 <div style={{position:'absolute',bottom:'16px',left:'12px',right:'12px'}}>
+{(()=>{
+const jt=getAllTasksForJourney(selectedClient);
+const pp=jt.length>0?Math.round((jt.filter(t=>t.completed).length/jt.length)*100):0;
+return(
 <div style={{background:'rgba(15,23,42,0.95)',borderRadius:'12px',padding:'14px',textAlign:'center'}}>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{progressPct}%</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{pp}%</div>
 <div style={{color:'#94a3b8',fontSize:'12px',marginTop:'2px'}}>
-{progressPct===0&&'Start! 🚀'}
-{progressPct>0&&progressPct<25&&'Onderweg 💪'}
-{progressPct>=25&&progressPct<50&&'Goed bezig 🥾'}
-{progressPct>=50&&progressPct<75&&'Halverwege ⛰️'}
-{progressPct>=75&&progressPct<100&&'Bijna! 🏔️'}
-{progressPct===100&&'Top bereikt! 🏆'}
-</div>
-</div>
-</div>
+{pp===0&&'Start! 🚀'}
+{pp>0&&pp<25&&'Onderweg 💪'}
+{pp>=25&&pp<50&&'Goed bezig 🥾'}
+{pp>=50&&pp<75&&'Halverwege ⛰️'}
+{pp>=75&&pp<100&&'Bijna! 🏔️'}
+{pp===100&&'Top bereikt! 🏆'}
 </div>
 </div>
 );
 })()}
+</div>
+</div>
+</div>
+)}
 
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
