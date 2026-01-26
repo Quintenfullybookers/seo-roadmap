@@ -537,34 +537,6 @@ tasks:filterTasksForClient(section.tasks,client)
 })).filter(section=>section.tasks.length>0);
 };
 
-// JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
-const getAllTasksForJourney=(clientId)=>{
-const client=clients.find(c=>c.id===clientId);
-if(!client)return[];
-const allTasks=[];
-STEPS.forEach(step=>{
-if(step.type==='planning'||step.type==='rapportages')return;
-if(step.sections){
-const filteredSections=filterSectionsForClient(step.sections,client);
-filteredSections.forEach(section=>{
-section.tasks.forEach(task=>{
-const key=`${clientId}-${step.id}-${task.id}`;
-allTasks.push({
-...task,
-stepId:step.id,
-stepName:step.name,
-stepIcon:step.icon,
-sectionTitle:section.title,
-taskKey:key,
-completed:!!tasks[key]
-});
-});
-});
-}
-});
-return allTasks;
-};
-
 // LOCAL STORAGE
 const saveLocalData=(tasks,customItems,planningItems,notes,deadlines,clients,timeTracking)=>{
 localStorage.setItem('seo-tasks',JSON.stringify(tasks));
@@ -762,6 +734,34 @@ const [editingCustomItem,setEditingCustomItem]=useState(null);
 const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
+
+// JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
+const getAllTasksForJourney=(clientId)=>{
+const client=clients.find(c=>c.id===clientId);
+if(!client)return[];
+const allTasks=[];
+STEPS.forEach(step=>{
+if(step.type==='planning'||step.type==='rapportages')return;
+if(step.sections){
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
+section.tasks.forEach(task=>{
+const key=`${clientId}-${step.id}-${task.id}`;
+allTasks.push({
+...task,
+stepId:step.id,
+stepName:step.name,
+stepIcon:step.icon,
+sectionTitle:section.title,
+taskKey:key,
+completed:!!tasks[key]
+});
+});
+});
+}
+});
+return allTasks;
+};
 
 // INIT
 useEffect(()=>{
