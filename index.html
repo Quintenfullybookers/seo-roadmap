@@ -127,9 +127,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px;margin-top:6px;font-weight:500}
 .client-link{color:var(--ios-blue);text-decoration:none;display:inline-flex;align-items:center;gap:4px;font-size:12px;margin-right:12px;font-weight:500}
 .client-link:hover{text-decoration:underline;opacity:0.8}
-.delete-btn{position:absolute;top:12px;right:12px;background:var(--red-bg);color:var(--red);border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center;opacity:0.4;z-index:10}
-.client-card:hover .delete-btn{opacity:1}
-.delete-btn:hover{background:var(--red);color:var(--white);transform:scale(1.1)}
+.delete-btn{background:var(--red-bg);color:var(--red);border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center}
+.delete-btn:hover{background:var(--red);color:var(--white)}
 .client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;padding:0}
 .stat-box{text-align:center;padding:16px 12px;background:var(--ios-gray-6);border-radius:12px;transition:all .2s}
 .stat-box:hover{background:var(--ios-gray-5);transform:scale(1.02)}
@@ -346,6 +345,8 @@ const STEPS=[
 {id:1,name:'SEO Plan',icon:'🎯',sections:[
 {title:'Analyse',tasks:[
 {id:'1-1',title:'Doelstellingen bepalen',desc:''},
+{id:'1-2',title:'KPIs vaststellen',desc:''},
+{id:'1-3',title:'Doelgroep analyse',desc:''},
 {id:'1-4',title:'Concurrentie analyse',desc:''},
 {id:'1-5',title:'Seizoensplanning',desc:''}
 ]},
@@ -536,6 +537,34 @@ tasks:filterTasksForClient(section.tasks,client)
 })).filter(section=>section.tasks.length>0);
 };
 
+// JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
+const getAllTasksForJourney=(clientId)=>{
+const client=clients.find(c=>c.id===clientId);
+if(!client)return[];
+const allTasks=[];
+STEPS.forEach(step=>{
+if(step.type==='planning'||step.type==='rapportages')return;
+if(step.sections){
+const filteredSections=filterSectionsForClient(step.sections,client);
+filteredSections.forEach(section=>{
+section.tasks.forEach(task=>{
+const key=`${clientId}-${step.id}-${task.id}`;
+allTasks.push({
+...task,
+stepId:step.id,
+stepName:step.name,
+stepIcon:step.icon,
+sectionTitle:section.title,
+taskKey:key,
+completed:!!tasks[key]
+});
+});
+});
+}
+});
+return allTasks;
+};
+
 // LOCAL STORAGE
 const saveLocalData=(tasks,customItems,planningItems,notes,deadlines,clients,timeTracking)=>{
 localStorage.setItem('seo-tasks',JSON.stringify(tasks));
@@ -682,7 +711,6 @@ const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
 const [showArchive,setShowArchive]=useState(false);
 const [showJourney,setShowJourney]=useState(false);
-const [expandedJourneyTask,setExpandedJourneyTask]=useState(null);
 const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
@@ -760,7 +788,7 @@ useEffect(()=>{
 const params=new URLSearchParams(window.location.search);
 const clientParam=params.get('client');
 const journeyParam=params.get('journey');
-console.log('🔍 URL param check - clientParam:',clientParam,'journey:',journeyParam,'clients loaded:',clients.length);
+console.log('🔍 URL param check - clientParam:',clientParam,'clients loaded:',clients.length);
 if(clientParam&&clients.length>0){
 // Convert both to string for comparison since URL params are strings
 const client=clients.find(c=>String(c.id)===String(clientParam));
@@ -881,49 +909,6 @@ textarea.select();
 try{
 document.execCommand('copy');
 setToast({type:'success',message:'✓ Link gekopieerd!'});
-}catch(e){
-alert('Kopieer deze link: '+url);
-}
-document.body.removeChild(textarea);
-}
-};
-
-const copyJourneyLink=(clientId)=>{
-console.log('🏔️ Copy journey link clicked for client:',clientId);
-if(!clientId||clientId==='undefined'){
-console.error('❌ Invalid client ID:',clientId);
-setToast({type:'error',message:'❌ Ongeldige client ID'});
-return;
-}
-const url=`${window.location.origin}${window.location.pathname}?client=${clientId}&journey=true`;
-console.log('📋 Journey URL to copy:',url);
-if(navigator.clipboard&&navigator.clipboard.writeText){
-navigator.clipboard.writeText(url).then(()=>{
-console.log('✅ Journey link copied successfully');
-setToast({type:'success',message:'✓ Journey link gekopieerd!'});
-setTimeout(()=>setToast(null),5000);
-}).catch((err)=>{
-console.error('❌ Clipboard error:',err);
-const textarea=document.createElement('textarea');
-textarea.value=url;
-document.body.appendChild(textarea);
-textarea.select();
-try{
-document.execCommand('copy');
-setToast({type:'success',message:'✓ Journey link gekopieerd!'});
-}catch(e){
-setToast({type:'error',message:'Kopieer handmatig: '+url});
-}
-document.body.removeChild(textarea);
-});
-}else{
-const textarea=document.createElement('textarea');
-textarea.value=url;
-document.body.appendChild(textarea);
-textarea.select();
-try{
-document.execCommand('copy');
-setToast({type:'success',message:'✓ Journey link gekopieerd!'});
 }catch(e){
 alert('Kopieer deze link: '+url);
 }
@@ -2435,34 +2420,6 @@ customList.forEach(item=>{if(item.completed)completedTasks++;});
 return{total:totalTasks,completed:completedTasks};
 };
 
-// JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
-const getAllTasksForJourney=(clientId)=>{
-const client=clients.find(c=>c.id===clientId);
-if(!client)return[];
-const allTasks=[];
-STEPS.forEach(step=>{
-if(step.type==='planning'||step.type==='rapportages')return;
-if(step.sections){
-const filteredSections=filterSectionsForClient(step.sections,client);
-filteredSections.forEach(section=>{
-section.tasks.forEach(task=>{
-const key=`${clientId}-${step.id}-${task.id}`;
-allTasks.push({
-...task,
-stepId:step.id,
-stepName:step.name,
-stepIcon:step.icon,
-sectionTitle:section.title,
-taskKey:key,
-completed:!!tasks[key]
-});
-});
-});
-}
-});
-return allTasks;
-};
-
 const getStatusCounts=()=>{
 const counts={};
 STATUS_OPTIONS.forEach(opt=>counts[opt.key]=0);
@@ -2484,6 +2441,21 @@ const status=client.status||'schema';
 counts[status]=(counts[status]||0)+1;
 });
 return counts;
+};
+
+// Copy journey link to clipboard
+const copyJourneyLink=(clientId)=>{
+const url=`${window.location.origin}${window.location.pathname}?client=${clientId}&journey=true`;
+if(navigator.clipboard&&navigator.clipboard.writeText){
+navigator.clipboard.writeText(url).then(()=>{
+setToast({message:'🔗 Journey link gekopieerd!',type:'success'});
+setTimeout(()=>setToast(null),5000);
+}).catch(()=>{
+prompt('Kopieer deze link:',url);
+});
+}else{
+prompt('Kopieer deze link:',url);
+}
 };
 
 const getFilteredClients=()=>{
@@ -4208,9 +4180,8 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </div>
 {isAdmin&&(
 <div className="banner-buttons">
-<button className="banner-btn" onClick={()=>setShowJourney(true)} style={{background:'linear-gradient(135deg, #1e3a5f, #2d5a87)',color:'white'}}>🏔️ Journey</button>
-<button className="banner-btn" onClick={()=>copyJourneyLink(selectedClient)} style={{background:'#4ade80',color:'#0f172a'}}>🔗 Deel Journey</button>
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
+<button className="banner-btn" onClick={()=>setShowJourney(true)} style={{background:'linear-gradient(135deg, #1e3a5f, #2d5a87)',color:'white'}}>🏔️ Journey</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
 <button className="banner-btn" onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
 <button className="banner-btn" style={{background:'#DC2626',color:'white'}} onClick={exportToPDF}>📄 PDF Export</button>
@@ -5347,7 +5318,6 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 {/* JOURNEY VIEW - Visuele roadmap met bergbeklimmer */}
 {showJourney&&selectedClient&&(
 <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'#0f172a',zIndex:9999,overflow:'hidden',display:'flex'}}>
-{/* Left side - Task list (75%) */}
 <div style={{flex:'1 1 75%',padding:'24px 32px',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)'}}>
 <div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
 <div>
@@ -5355,163 +5325,58 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 <p style={{color:'#94a3b8',margin:'4px 0 0',fontSize:'14px'}}>{clients.find(c=>c.id===selectedClient)?.name}</p>
 </div>
 <div style={{display:'flex',gap:'8px',alignItems:'center'}}>
-{(()=>{
-const jt=getAllTasksForJourney(selectedClient);
-const cc=jt.filter(t=>t.completed).length;
-const tc=jt.length;
-const pp=tc>0?Math.round((cc/tc)*100):0;
-return <div style={{background:'#1e293b',padding:'8px 16px',borderRadius:'20px',border:'1px solid #334155'}}><span style={{color:'#4ade80',fontSize:'16px',fontWeight:'700'}}>{cc}/{tc}</span><span style={{color:'#64748b',fontSize:'14px',marginLeft:'6px'}}>({pp}%)</span></div>;
-})()}
 {isAdmin&&<button onClick={()=>copyJourneyLink(selectedClient)} style={{padding:'10px 16px',background:'#4ade80',color:'#0f172a',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>🔗 Deel link</button>}
 <button onClick={()=>setShowJourney(false)} style={{padding:'10px 16px',background:'#334155',color:'white',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'13px'}}>✕ Sluiten</button>
 </div>
 </div>
-
-{/* Progress bar */}
-{(()=>{
-const jt=getAllTasksForJourney(selectedClient);
-const pp=jt.length>0?Math.round((jt.filter(t=>t.completed).length/jt.length)*100):0;
-return <div style={{marginBottom:'16px'}}><div style={{height:'8px',background:'#334155',borderRadius:'4px',overflow:'hidden'}}><div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${pp}%`,transition:'width 0.5s'}}/></div></div>;
-})()}
-
-{/* All tasks */}
 <div style={{flex:1,overflow:'auto',paddingRight:'8px'}}>
-{(()=>{
-const journeyTasks=getAllTasksForJourney(selectedClient);
-const currentIndex=journeyTasks.findIndex(t=>!t.completed);
-const stepGroups={};
-journeyTasks.forEach((task,idx)=>{
-if(!stepGroups[task.stepId])stepGroups[task.stepId]={icon:task.stepIcon,name:task.stepName,tasks:[]};
-stepGroups[task.stepId].tasks.push({...task,globalIndex:idx});
-});
-return Object.values(stepGroups).map((group,groupIdx)=>{
+{getAllTasksForJourney(selectedClient).length>0&&(
+<div style={{marginBottom:'20px',padding:'16px',background:'#1e293b',borderRadius:'12px',border:'1px solid #334155'}}>
+<div style={{display:'flex',justifyContent:'space-between',marginBottom:'8px'}}>
+<span style={{color:'#94a3b8',fontSize:'14px'}}>Voortgang</span>
+<span style={{color:'#4ade80',fontSize:'16px',fontWeight:'700'}}>{getAllTasksForJourney(selectedClient).filter(t=>t.completed).length}/{getAllTasksForJourney(selectedClient).length}</span>
+</div>
+<div style={{height:'8px',background:'#334155',borderRadius:'4px',overflow:'hidden'}}>
+<div style={{height:'100%',background:'linear-gradient(90deg, #4ade80, #22c55e)',width:`${getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%`,transition:'width 0.5s'}}/>
+</div>
+</div>
+)}
+{Object.entries(getAllTasksForJourney(selectedClient).reduce((acc,task,idx)=>{if(!acc[task.stepId])acc[task.stepId]={icon:task.stepIcon,name:task.stepName,tasks:[]};acc[task.stepId].tasks.push({...task,globalIndex:idx});return acc;},{})).map(([stepId,group])=>{
 const groupCompleted=group.tasks.filter(t=>t.completed).length;
-const groupTotal=group.tasks.length;
-const allDone=groupCompleted===groupTotal;
+const allDone=groupCompleted===group.tasks.length;
+const currentIndex=getAllTasksForJourney(selectedClient).findIndex(t=>!t.completed);
 return(
-<div key={groupIdx} style={{marginBottom:'16px'}}>
+<div key={stepId} style={{marginBottom:'16px'}}>
 <div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'8px',padding:'14px 18px',background:allDone?'rgba(74,222,128,0.15)':'#1e293b',borderRadius:'12px',border:`2px solid ${allDone?'#4ade80':'#334155'}`}}>
 <span style={{fontSize:'24px'}}>{allDone?'✓':group.icon}</span>
 <span style={{color:allDone?'#4ade80':'white',fontWeight:'700',fontSize:'17px',flex:1}}>{group.name}</span>
-<span style={{color:allDone?'#4ade80':'#64748b',fontSize:'14px',background:allDone?'rgba(74,222,128,0.2)':'#334155',padding:'5px 14px',borderRadius:'14px',fontWeight:'600'}}>{groupCompleted}/{groupTotal}</span>
+<span style={{color:allDone?'#4ade80':'#64748b',fontSize:'14px',background:allDone?'rgba(74,222,128,0.2)':'#334155',padding:'5px 14px',borderRadius:'14px',fontWeight:'600'}}>{groupCompleted}/{group.tasks.length}</span>
 </div>
 <div style={{display:'flex',flexDirection:'column',gap:'6px',marginLeft:'12px'}}>
-{group.tasks.map((task)=>{
-const isCurrent=currentIndex===task.globalIndex;
-const isExpanded=expandedJourneyTask===task.id;
-return(
-<div key={task.id}>
-<div onClick={()=>setExpandedJourneyTask(isExpanded?null:task.id)} style={{display:'flex',alignItems:'center',gap:'14px',padding:'16px 18px',background:task.completed?'rgba(74,222,128,0.1)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.03)',border:`2px solid ${task.completed?'rgba(74,222,128,0.4)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'12px',cursor:'pointer',transition:'all 0.2s'}}>
-<div style={{width:'36px',height:'36px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',color:'white',fontWeight:'700',flexShrink:0}}>
-{task.completed?'✓':task.globalIndex+1}
-</div>
-<div style={{flex:1}}>
-<div style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'16px',fontWeight:isCurrent?'600':'500'}}>{task.title}</div>
-<div style={{color:'#64748b',fontSize:'13px',marginTop:'3px'}}>{task.sectionTitle}</div>
-</div>
+{group.tasks.map((task)=>{const isCurrent=currentIndex===task.globalIndex;return(
+<div key={task.id} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}} style={{display:'flex',alignItems:'center',gap:'14px',padding:'16px 18px',background:task.completed?'rgba(74,222,128,0.1)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.03)',border:`2px solid ${task.completed?'rgba(74,222,128,0.4)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'12px',cursor:isAdmin?'pointer':'default',transition:'all 0.2s'}}>
+<div style={{width:'36px',height:'36px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',color:'white',fontWeight:'700',flexShrink:0}}>{task.completed?'✓':task.globalIndex+1}</div>
+<div style={{flex:1}}><div style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'16px',fontWeight:isCurrent?'600':'500'}}>{task.title}</div><div style={{color:'#64748b',fontSize:'13px',marginTop:'3px'}}>{task.sectionTitle}</div></div>
 {isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'5px 14px',borderRadius:'14px',fontSize:'11px',fontWeight:'700'}}>VOLGENDE</span>}
-<span style={{color:'#64748b',fontSize:'18px',transform:isExpanded?'rotate(180deg)':'rotate(0)',transition:'transform 0.2s'}}>▼</span>
+</div>);})}
 </div>
-{isExpanded&&(
-<div style={{margin:'6px 0 12px 50px',padding:'18px 22px',background:'#1e293b',borderRadius:'12px',border:'1px solid #334155'}}>
-<div style={{display:'flex',flexWrap:'wrap',gap:'20px',marginBottom:'16px'}}>
-<div><span style={{color:'#64748b',fontSize:'13px'}}>Sectie: </span><span style={{color:'#e2e8f0',fontSize:'14px',fontWeight:'500'}}>{task.stepIcon} {task.stepName}</span></div>
-<div><span style={{color:'#64748b',fontSize:'13px'}}>Onderdeel: </span><span style={{color:'#e2e8f0',fontSize:'14px',fontWeight:'500'}}>{task.sectionTitle}</span></div>
-<div><span style={{color:'#64748b',fontSize:'13px'}}>Status: </span><span style={{color:task.completed?'#4ade80':'#fbbf24',fontSize:'14px',fontWeight:'600'}}>{task.completed?'✓ Voltooid':'⏳ Open'}</span></div>
+</div>);})}
 </div>
-{isAdmin&&(
-<button onClick={(e)=>{e.stopPropagation();toggleTask(task.stepId,task.id);}} style={{padding:'14px 28px',background:task.completed?'#ef4444':'#4ade80',color:task.completed?'white':'#0f172a',border:'none',borderRadius:'10px',cursor:'pointer',fontSize:'15px',fontWeight:'600',width:'100%'}}>
-{task.completed?'✗ Markeer als open':'✓ Markeer als voltooid'}
-</button>
-)}
+{!isAdmin&&(<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}><span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span></div>)}
 </div>
-)}
-</div>
-);
-})}
-</div>
-</div>
-);
-});
-})()}
-</div>
-
-{!isAdmin&&(
-<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}>
-<span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span>
-</div>
-)}
-</div>
-
-{/* Right side - Mountain (25%) */}
 <div style={{flex:'0 0 280px',position:'relative',overflow:'hidden'}}>
 <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #a8d4e6 0%, #d0e8f2 45%, #e8f2f6 65%, #52b788 88%, #2d6a4f 100%)'}}/>
-{(()=>{
-const journeyTasks=getAllTasksForJourney(selectedClient);
-const completedCount=journeyTasks.filter(t=>t.completed).length;
-const totalCount=journeyTasks.length;
-const progressPct=totalCount>0?Math.round((completedCount/totalCount)*100):0;
-const pathPoints=[{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}];
-const progress=completedCount/totalCount||0;
-const floatIdx=progress*(pathPoints.length-1);
-const idx=Math.floor(floatIdx);
-const nextIdx=Math.min(idx+1,pathPoints.length-1);
-const t=floatIdx-idx;
-const cx=pathPoints[idx].x+(pathPoints[nextIdx].x-pathPoints[idx].x)*t;
-const cy=pathPoints[idx].y+(pathPoints[nextIdx].y-pathPoints[idx].y)*t;
-return(
 <svg viewBox="0 0 280 350" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
-<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/>
-<polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
-<polygon points="175,350 245,175 315,350" fill="#96a5c0"/>
-<polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
-<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/>
-<polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
-<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/>
-<polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
+<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/><polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
+<polygon points="175,350 245,175 315,350" fill="#96a5c0"/><polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
+<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/><polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
+<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/><polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
 <ellipse cx="140" cy="335" rx="130" ry="20" fill="#40916c" opacity="0.5"/>
-<path d={`M${pathPoints.map((p,i)=>`${i===0?'M':'L'}${p.x},${p.y}`).join(' ')}`} fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-{pathPoints.map((cp,i)=>{
-const taskIdx=Math.floor((i/pathPoints.length)*totalCount);
-const isCompleted=taskIdx<completedCount;
-return <circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>;
-})}
-{progressPct===100?(
-<g transform={`translate(${pathPoints[pathPoints.length-1].x},${pathPoints[pathPoints.length-1].y-22})`}><text x="0" y="0" textAnchor="middle" fontSize="22">🎉</text></g>
-):(
-<g transform={`translate(${cx},${cy-20})`}>
-<ellipse cx="0" cy="18" rx="5" ry="2" fill="rgba(0,0,0,0.15)"/>
-<circle cx="0" cy="-3" r="6" fill="#fcd34d"/>
-<rect x="-5" y="2" width="10" height="12" rx="2" fill="#3b82f6"/>
-<line x1="-5" y1="6" x2="-9" y2="2" stroke="#fcd34d" strokeWidth="2.5" strokeLinecap="round"/>
-<line x1="5" y1="6" x2="9" y2="10" stroke="#fcd34d" strokeWidth="2.5" strokeLinecap="round"/>
-<line x1="-3" y1="14" x2="-4" y2="20" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
-<line x1="3" y1="14" x2="5" y2="19" stroke="#1e3a8a" strokeWidth="2.5" strokeLinecap="round"/>
-</g>
-)}
+<path d="M70,285 L115,255 L80,225 L125,195 L90,165 L135,140 L100,115 L140,90 L115,60 L145,38" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+{[{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}].map((cp,i)=>{const jt=getAllTasksForJourney(selectedClient);const cc=jt.filter(t=>t.completed).length;const tc=jt.length;const taskIdx=Math.floor((i/10)*tc);const isCompleted=taskIdx<cc;return <circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>;})}
 <g transform="translate(140,15)"><line x1="0" y1="0" x2="0" y2="20" stroke="#78350f" strokeWidth="2"/><polygon points="0,0 18,6 0,12" fill="#ef4444"/></g>
 </svg>
-);
-})()}
-<div style={{position:'absolute',bottom:'16px',left:'12px',right:'12px'}}>
-{(()=>{
-const jt=getAllTasksForJourney(selectedClient);
-const pp=jt.length>0?Math.round((jt.filter(t=>t.completed).length/jt.length)*100):0;
-return(
-<div style={{background:'rgba(15,23,42,0.95)',borderRadius:'12px',padding:'14px',textAlign:'center'}}>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{pp}%</div>
-<div style={{color:'#94a3b8',fontSize:'12px',marginTop:'2px'}}>
-{pp===0&&'Start! 🚀'}
-{pp>0&&pp<25&&'Onderweg 💪'}
-{pp>=25&&pp<50&&'Goed bezig 🥾'}
-{pp>=50&&pp<75&&'Halverwege ⛰️'}
-{pp>=75&&pp<100&&'Bijna! 🏔️'}
-{pp===100&&'Top bereikt! 🏆'}
-</div>
-</div>
-);
-})()}
-</div>
+<div style={{position:'absolute',bottom:'16px',left:'12px',right:'12px'}}><div style={{background:'rgba(15,23,42,0.95)',borderRadius:'12px',padding:'14px',textAlign:'center'}}><div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%</div><div style={{color:'#94a3b8',fontSize:'12px',marginTop:'2px'}}>Voortgang</div></div></div>
 </div>
 </div>
 )}
