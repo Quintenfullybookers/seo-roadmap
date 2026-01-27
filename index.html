@@ -2668,6 +2668,10 @@ if(monthKey>=currentMonthKey)count++;
 return count;
 })()}</span>
 </div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -3434,6 +3438,10 @@ return count;
 <span className="nav-icon">📋</span>
 <span className="nav-text">Rapportages</span>
 </div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -3621,6 +3629,10 @@ return(
 <div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📋</span>
 <span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
 </div>
 </nav>
 </aside>
@@ -3814,6 +3826,238 @@ return(
 );
 }
 
+// ANALYTICS VIEW
+if(activeView==='analytics'){
+const activeClients=clients.filter(c=>!c.archived);
+
+// Bereken statistieken per klant
+const clientStats=activeClients.map(client=>{
+const jTasks=getAllTasksForJourney(client.id);
+const completed=jTasks.filter(t=>t.completed).length;
+const total=jTasks.length;
+const pct=total>0?Math.round((completed/total)*100):0;
+
+// Uren per klant
+let totalHours=0;
+Object.entries(timeTracking).forEach(([key,entries])=>{
+if(key.startsWith(`${client.id}-`)){
+entries.forEach(e=>totalHours+=parseFloat(e.hours)||0);
+}
+});
+
+return {client,completed,total,pct,totalHours};
+}).sort((a,b)=>b.pct-a.pct);
+
+// Statistieken per PM
+const pmStats={};
+activeClients.forEach(client=>{
+const pm=client.projectManager||'none';
+if(!pmStats[pm])pmStats[pm]={count:0,totalTasks:0,completedTasks:0,totalHours:0};
+pmStats[pm].count++;
+const jTasks=getAllTasksForJourney(client.id);
+pmStats[pm].totalTasks+=jTasks.length;
+pmStats[pm].completedTasks+=jTasks.filter(t=>t.completed).length;
+Object.entries(timeTracking).forEach(([key,entries])=>{
+if(key.startsWith(`${client.id}-`)){
+entries.forEach(e=>pmStats[pm].totalHours+=parseFloat(e.hours)||0);
+}
+});
+});
+
+const pmNames={none:'Niet toegewezen',quinten:'Quinten',roos:'Roos',sylvia:'Sylvia'};
+
+// Uren per maand (laatste 6 maanden)
+const monthlyHours={};
+const now=new Date();
+for(let i=5;i>=0;i--){
+const d=new Date(now.getFullYear(),now.getMonth()-i,1);
+const key=`${d.getFullYear()}-${(d.getMonth()+1).toString().padStart(2,'0')}`;
+monthlyHours[key]=0;
+}
+Object.entries(timeTracking).forEach(([key,entries])=>{
+entries.forEach(e=>{
+const month=e.month;
+if(monthlyHours[month]!==undefined){
+monthlyHours[month]+=parseFloat(e.hours)||0;
+}
+});
+});
+
+const maxMonthHours=Math.max(...Object.values(monthlyHours),1);
+
+// Voltooide taken deze maand
+const currentMonth=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Offline'}
+</span>
+</div>
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+</div>
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+</div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
+</nav>
+</aside>
+<main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
+<div style={{padding:'20px',boxSizing:'border-box'}}>
+<div style={{marginBottom:'24px'}}>
+<h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>📈</span>
+<span>Analytics</span>
+</h1>
+<p style={{fontSize:'14px',color:'var(--text-light)'}}>Overzicht van voortgang, uren en team prestaties</p>
+</div>
+
+{/* Quick Stats */}
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px',marginBottom:'32px'}}>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Klanten</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--blue)'}}>{activeClients.length}</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Gem. Voortgang</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--green)'}}>{clientStats.length>0?Math.round(clientStats.reduce((a,c)=>a+c.pct,0)/clientStats.length):0}%</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Uren</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--orange)'}}>{clientStats.reduce((a,c)=>a+c.totalHours,0).toFixed(1)}u</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Taken Voltooid</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--purple)'}}>{clientStats.reduce((a,c)=>a+c.completed,0)}/{clientStats.reduce((a,c)=>a+c.total,0)}</div>
+</div>
+</div>
+
+{/* Voortgang per Klant - Horizontal Bar Chart */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>📊 Voortgang per Klant</h2>
+<div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
+{clientStats.slice(0,15).map(({client,completed,total,pct})=>(
+<div key={client.id} style={{display:'flex',alignItems:'center',gap:'12px'}}>
+<div style={{width:'140px',fontSize:'13px',fontWeight:'500',color:'var(--text)',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{client.name}</div>
+<div style={{flex:1,height:'24px',background:'var(--bg)',borderRadius:'6px',overflow:'hidden',position:'relative'}}>
+<div style={{height:'100%',background:pct>=75?'var(--green)':pct>=50?'var(--blue)':pct>=25?'var(--orange)':'var(--red)',width:`${pct}%`,borderRadius:'6px',transition:'width 0.5s'}}/>
+<div style={{position:'absolute',right:'8px',top:'50%',transform:'translateY(-50%)',fontSize:'11px',fontWeight:'600',color:'var(--text)'}}>{completed}/{total}</div>
+</div>
+<div style={{width:'45px',textAlign:'right',fontSize:'14px',fontWeight:'700',color:pct>=75?'var(--green)':pct>=50?'var(--blue)':pct>=25?'var(--orange)':'var(--red)'}}>{pct}%</div>
+</div>
+))}
+{clientStats.length>15&&<div style={{fontSize:'13px',color:'var(--text-light)',textAlign:'center',marginTop:'8px'}}>+ {clientStats.length-15} meer klanten...</div>}
+</div>
+</div>
+
+{/* Uren per Maand - Bar Chart */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>⏱️ Uren per Maand (laatste 6 maanden)</h2>
+<div style={{display:'flex',alignItems:'flex-end',gap:'12px',height:'200px',paddingTop:'20px'}}>
+{Object.entries(monthlyHours).map(([month,hours])=>{
+const heightPct=maxMonthHours>0?(hours/maxMonthHours)*100:0;
+const monthName=new Date(month+'-01').toLocaleDateString('nl-NL',{month:'short'});
+return(
+<div key={month} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',height:'100%'}}>
+<div style={{flex:1,width:'100%',display:'flex',flexDirection:'column',justifyContent:'flex-end'}}>
+<div style={{width:'100%',background:'linear-gradient(180deg, var(--blue), var(--purple))',borderRadius:'6px 6px 0 0',height:`${heightPct}%`,minHeight:hours>0?'20px':'4px',transition:'height 0.5s',display:'flex',alignItems:'flex-start',justifyContent:'center',paddingTop:'4px'}}>
+{hours>0&&<span style={{fontSize:'11px',fontWeight:'600',color:'white'}}>{hours.toFixed(1)}</span>}
+</div>
+</div>
+<div style={{marginTop:'8px',fontSize:'12px',color:'var(--text-light)',fontWeight:'500'}}>{monthName}</div>
+</div>
+);
+})}
+</div>
+</div>
+
+{/* Team Dashboard */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>👥 Team Dashboard</h2>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))',gap:'16px'}}>
+{Object.entries(pmStats).map(([pm,stats])=>{
+const pct=stats.totalTasks>0?Math.round((stats.completedTasks/stats.totalTasks)*100):0;
+return(
+<div key={pm} style={{background:'var(--bg)',borderRadius:'10px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{display:'flex',alignItems:'center',gap:'12px',marginBottom:'16px'}}>
+<div style={{width:'48px',height:'48px',borderRadius:'50%',background:'linear-gradient(135deg, var(--blue), var(--purple))',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'20px',color:'white',fontWeight:'700'}}>{pmNames[pm]?pmNames[pm][0]:'?'}</div>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)'}}>{pmNames[pm]||pm}</div>
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>{stats.count} klant{stats.count!==1?'en':''}</div>
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
+<div>
+<div style={{fontSize:'12px',color:'var(--text-light)'}}>Voortgang</div>
+<div style={{fontSize:'20px',fontWeight:'700',color:'var(--green)'}}>{pct}%</div>
+</div>
+<div>
+<div style={{fontSize:'12px',color:'var(--text-light)'}}>Uren</div>
+<div style={{fontSize:'20px',fontWeight:'700',color:'var(--orange)'}}>{stats.totalHours.toFixed(1)}</div>
+</div>
+</div>
+<div style={{marginTop:'12px'}}>
+<div style={{height:'6px',background:'var(--border)',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{height:'100%',background:'var(--green)',width:`${pct}%`,borderRadius:'3px'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'4px'}}>{stats.completedTasks}/{stats.totalTasks} taken</div>
+</div>
+</div>
+);
+})}
+</div>
+</div>
+
+{/* Klanten per Status */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>📋 Maandelijkse Samenvatting</h2>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px'}}>
+{[
+{label:'Schema',status:'schema',color:'var(--purple)',icon:'📋'},
+{label:'Bezig',status:'bezig',color:'var(--blue)',icon:'🔄'},
+{label:'Controle',status:'controle',color:'var(--orange)',icon:'🔍'},
+{label:'Live',status:'live',color:'var(--green)',icon:'✅'}
+].map(({label,status,color,icon})=>{
+const count=activeClients.filter(c=>c.status===status).length;
+return(
+<div key={status} style={{background:'var(--bg)',borderRadius:'10px',padding:'16px',border:`2px solid ${color}`,textAlign:'center'}}>
+<div style={{fontSize:'28px',marginBottom:'8px'}}>{icon}</div>
+<div style={{fontSize:'24px',fontWeight:'700',color}}>{count}</div>
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>{label}</div>
+</div>
+);
+})}
+</div>
+</div>
+
+</div>
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
+</div>
+);
+}
+
 // CONTENT CREATIE VIEW
 if(activeView==='content'){
 const contentItems=getAllContentItems();
@@ -3875,6 +4119,10 @@ return count;
 <div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📋</span>
 <span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
 </div>
 </nav>
 {isAdmin&&(
@@ -5365,19 +5613,19 @@ return(
 </div>
 {!isAdmin&&(<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}><span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span></div>)}
 </div>
-<div style={{flex:'0 0 280px',position:'relative',overflow:'hidden'}}>
+<div style={{flex:'0 0 400px',position:'relative',overflow:'hidden'}}>
 <div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #a8d4e6 0%, #d0e8f2 45%, #e8f2f6 65%, #52b788 88%, #2d6a4f 100%)'}}/>
-<svg viewBox="0 0 280 350" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
-<polygon points="-20,350 65,145 150,350" fill="#8a7ba8"/><polygon points="55,160 65,145 75,160 70,156 65,165 60,156" fill="white" opacity="0.8"/>
-<polygon points="175,350 245,175 315,350" fill="#96a5c0"/><polygon points="235,190 245,175 255,190 250,186 245,195 240,186" fill="white" opacity="0.8"/>
-<polygon points="20,350 145,30 270,350" fill="#5a7a9a"/><polygon points="145,30 200,115 270,350 145,350" fill="#4a6a8a" opacity="0.5"/>
-<polygon points="130,55 145,30 160,55 152,48 145,60 138,48" fill="white"/><polygon points="125,68 145,30 165,68" fill="white" opacity="0.9"/>
-<ellipse cx="140" cy="335" rx="130" ry="20" fill="#40916c" opacity="0.5"/>
-<path d="M70,285 L115,255 L80,225 L125,195 L90,165 L135,140 L100,115 L140,90 L115,60 L145,38" fill="none" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
-{[{x:70,y:285},{x:115,y:255},{x:80,y:225},{x:125,y:195},{x:90,y:165},{x:135,y:140},{x:100,y:115},{x:140,y:90},{x:115,y:60},{x:145,y:38}].map((cp,i)=>{const jt=getAllTasksForJourney(selectedClient);const cc=jt.filter(t=>t.completed).length;const tc=jt.length;const taskIdx=Math.floor((i/10)*tc);const isCompleted=taskIdx<cc;return <circle key={i} cx={cp.x} cy={cp.y} r={8} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="2"/>;})}
-<g transform="translate(140,15)"><line x1="0" y1="0" x2="0" y2="20" stroke="#78350f" strokeWidth="2"/><polygon points="0,0 18,6 0,12" fill="#ef4444"/></g>
+<svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
+<polygon points="-30,500 90,200 210,500" fill="#8a7ba8"/><polygon points="75,220 90,200 105,220 98,215 90,230 82,215" fill="white" opacity="0.8"/>
+<polygon points="250,500 350,250 450,500" fill="#96a5c0"/><polygon points="335,270 350,250 365,270 358,264 350,280 342,264" fill="white" opacity="0.8"/>
+<polygon points="30,500 200,40 370,500" fill="#5a7a9a"/><polygon points="200,40 280,160 370,500 200,500" fill="#4a6a8a" opacity="0.5"/>
+<polygon points="180,75 200,40 220,75 210,65 200,82 190,65" fill="white"/><polygon points="172,95 200,40 228,95" fill="white" opacity="0.9"/>
+<ellipse cx="200" cy="480" rx="180" ry="25" fill="#40916c" opacity="0.5"/>
+<path d="M100,410 L160,365 L115,320 L175,280 L130,235 L190,200 L145,165 L195,125 L165,85 L200,55" fill="none" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
+{[{x:100,y:410},{x:160,y:365},{x:115,y:320},{x:175,y:280},{x:130,y:235},{x:190,y:200},{x:145,y:165},{x:195,y:125},{x:165,y:85},{x:200,y:55}].map((cp,i)=>{const jt=getAllTasksForJourney(selectedClient);const cc=jt.filter(t=>t.completed).length;const tc=jt.length;const taskIdx=Math.floor((i/10)*tc);const isCompleted=taskIdx<cc;return <circle key={i} cx={cp.x} cy={cp.y} r={10} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="3"/>;})}
+<g transform="translate(200,20)"><line x1="0" y1="0" x2="0" y2="28" stroke="#78350f" strokeWidth="3"/><polygon points="0,0 25,8 0,16" fill="#ef4444"/></g>
 </svg>
-<div style={{position:'absolute',bottom:'16px',left:'12px',right:'12px'}}><div style={{background:'rgba(15,23,42,0.95)',borderRadius:'12px',padding:'14px',textAlign:'center'}}><div style={{fontSize:'28px',fontWeight:'700',color:'#4ade80'}}>{getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%</div><div style={{color:'#94a3b8',fontSize:'12px',marginTop:'2px'}}>Voortgang</div></div></div>
+<div style={{position:'absolute',bottom:'20px',left:'16px',right:'16px'}}><div style={{background:'rgba(15,23,42,0.95)',borderRadius:'14px',padding:'18px',textAlign:'center'}}><div style={{fontSize:'36px',fontWeight:'700',color:'#4ade80'}}>{getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%</div><div style={{color:'#94a3b8',fontSize:'14px',marginTop:'4px'}}>Voortgang</div></div></div>
 </div>
 </div>
 )}
