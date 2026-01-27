@@ -5567,8 +5567,9 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 {/* JOURNEY VIEW - Visuele roadmap met bergbeklimmer */}
 {showJourney&&selectedClient&&(
 <div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'#0f172a',zIndex:9999,overflow:'hidden',display:'flex'}}>
-<div style={{flex:'1 1 75%',padding:'24px 32px',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)'}}>
-<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px'}}>
+{/* Linker paneel - Taken lijst */}
+<div style={{width:'60%',padding:'24px 32px',display:'flex',flexDirection:'column',overflow:'hidden',background:'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'16px',flexShrink:0}}>
 <div>
 <h1 style={{color:'white',fontSize:'24px',margin:0,fontWeight:'700'}}>🏔️ SEO Journey</h1>
 <p style={{color:'#94a3b8',margin:'4px 0 0',fontSize:'14px'}}>{clients.find(c=>c.id===selectedClient)?.name}</p>
@@ -5603,29 +5604,59 @@ return(
 </div>
 <div style={{display:'flex',flexDirection:'column',gap:'6px',marginLeft:'12px'}}>
 {group.tasks.map((task)=>{const isCurrent=currentIndex===task.globalIndex;return(
-<div key={task.id} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}} style={{display:'flex',alignItems:'center',gap:'14px',padding:'16px 18px',background:task.completed?'rgba(74,222,128,0.1)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.03)',border:`2px solid ${task.completed?'rgba(74,222,128,0.4)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'12px',cursor:isAdmin?'pointer':'default',transition:'all 0.2s'}}>
-<div style={{width:'36px',height:'36px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'15px',color:'white',fontWeight:'700',flexShrink:0}}>{task.completed?'✓':task.globalIndex+1}</div>
-<div style={{flex:1}}><div style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'16px',fontWeight:isCurrent?'600':'500'}}>{task.title}</div><div style={{color:'#64748b',fontSize:'13px',marginTop:'3px'}}>{task.sectionTitle}</div></div>
-{isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'5px 14px',borderRadius:'14px',fontSize:'11px',fontWeight:'700'}}>VOLGENDE</span>}
+<div key={task.id} onClick={()=>{if(isAdmin)toggleTask(task.stepId,task.id);}} style={{display:'flex',alignItems:'center',gap:'14px',padding:'12px 14px',background:task.completed?'rgba(74,222,128,0.1)':isCurrent?'rgba(251,191,36,0.15)':'rgba(255,255,255,0.03)',border:`2px solid ${task.completed?'rgba(74,222,128,0.4)':isCurrent?'#fbbf24':'#334155'}`,borderRadius:'12px',cursor:isAdmin?'pointer':'default',transition:'all 0.2s'}}>
+<div style={{width:'32px',height:'32px',borderRadius:'50%',background:task.completed?'#4ade80':isCurrent?'#fbbf24':'#475569',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'13px',color:'white',fontWeight:'700',flexShrink:0}}>{task.completed?'✓':task.globalIndex+1}</div>
+<div style={{flex:1,minWidth:0}}><div style={{color:task.completed?'#4ade80':isCurrent?'#fbbf24':'#e2e8f0',fontSize:'14px',fontWeight:isCurrent?'600':'500',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{task.title}</div><div style={{color:'#64748b',fontSize:'12px',marginTop:'2px'}}>{task.sectionTitle}</div></div>
+{isCurrent&&!task.completed&&<span style={{background:'#fbbf24',color:'#000',padding:'4px 10px',borderRadius:'10px',fontSize:'10px',fontWeight:'700',flexShrink:0}}>NU</span>}
 </div>);})}
 </div>
 </div>);})}
 </div>
-{!isAdmin&&(<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center'}}><span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span></div>)}
+{!isAdmin&&(<div style={{marginTop:'12px',padding:'14px',background:'rgba(59,130,246,0.1)',borderRadius:'10px',border:'1px solid rgba(59,130,246,0.3)',textAlign:'center',flexShrink:0}}><span style={{color:'#60a5fa',fontSize:'14px'}}>👀 Je bekijkt de voortgang van dit project</span></div>)}
 </div>
-<div style={{flex:'0 0 400px',position:'relative',overflow:'hidden'}}>
-<div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #a8d4e6 0%, #d0e8f2 45%, #e8f2f6 65%, #52b788 88%, #2d6a4f 100%)'}}/>
-<svg viewBox="0 0 400 500" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
-<polygon points="-30,500 90,200 210,500" fill="#8a7ba8"/><polygon points="75,220 90,200 105,220 98,215 90,230 82,215" fill="white" opacity="0.8"/>
-<polygon points="250,500 350,250 450,500" fill="#96a5c0"/><polygon points="335,270 350,250 365,270 358,264 350,280 342,264" fill="white" opacity="0.8"/>
-<polygon points="30,500 200,40 370,500" fill="#5a7a9a"/><polygon points="200,40 280,160 370,500 200,500" fill="#4a6a8a" opacity="0.5"/>
-<polygon points="180,75 200,40 220,75 210,65 200,82 190,65" fill="white"/><polygon points="172,95 200,40 228,95" fill="white" opacity="0.9"/>
-<ellipse cx="200" cy="480" rx="180" ry="25" fill="#40916c" opacity="0.5"/>
-<path d="M100,410 L160,365 L115,320 L175,280 L130,235 L190,200 L145,165 L195,125 L165,85 L200,55" fill="none" stroke="#ef4444" strokeWidth="4" strokeLinecap="round" strokeLinejoin="round"/>
-{[{x:100,y:410},{x:160,y:365},{x:115,y:320},{x:175,y:280},{x:130,y:235},{x:190,y:200},{x:145,y:165},{x:195,y:125},{x:165,y:85},{x:200,y:55}].map((cp,i)=>{const jt=getAllTasksForJourney(selectedClient);const cc=jt.filter(t=>t.completed).length;const tc=jt.length;const taskIdx=Math.floor((i/10)*tc);const isCompleted=taskIdx<cc;return <circle key={i} cx={cp.x} cy={cp.y} r={10} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="3"/>;})}
-<g transform="translate(200,20)"><line x1="0" y1="0" x2="0" y2="28" stroke="#78350f" strokeWidth="3"/><polygon points="0,0 25,8 0,16" fill="#ef4444"/></g>
+{/* Rechter paneel - Berg visualisatie */}
+<div style={{width:'40%',position:'relative',overflow:'hidden'}}>
+<div style={{position:'absolute',top:0,left:0,right:0,bottom:0,background:'linear-gradient(180deg, #87CEEB 0%, #B0E0E6 30%, #98D8C8 60%, #52b788 85%, #2d6a4f 100%)'}}/>
+<svg viewBox="0 0 400 600" preserveAspectRatio="xMidYMax slice" style={{position:'absolute',bottom:0,left:0,width:'100%',height:'100%'}}>
+{/* Achterste bergen */}
+<polygon points="-40,600 80,280 200,600" fill="#7c8db0"/>
+<polygon points="280,600 380,320 480,600" fill="#8e9cc0"/>
+{/* Hoofdberg */}
+<polygon points="60,600 200,80 340,600" fill="#5a7a9a"/>
+<polygon points="200,80 280,200 340,600 200,600" fill="#4a6a8a" opacity="0.6"/>
+{/* Sneeuwkap */}
+<polygon points="175,130 200,80 225,130" fill="white"/>
+<polygon points="165,150 200,80 235,150 220,140 200,160 180,140" fill="white" opacity="0.9"/>
+{/* Gras onderaan */}
+<ellipse cx="200" cy="580" rx="200" ry="30" fill="#40916c" opacity="0.6"/>
+{/* Klimpad - zigzag over de berg */}
+<path d="M200,550 L160,500 L220,450 L170,400 L230,350 L180,300 L220,250 L190,200 L210,150 L200,100" fill="none" stroke="#ef4444" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" strokeDasharray="0"/>
+{/* Checkpoints op het pad */}
+{[
+{x:200,y:550},{x:160,y:500},{x:220,y:450},{x:170,y:400},{x:230,y:350},
+{x:180,y:300},{x:220,y:250},{x:190,y:200},{x:210,y:150},{x:200,y:100}
+].map((cp,i)=>{
+const jt=getAllTasksForJourney(selectedClient);
+const cc=jt.filter(t=>t.completed).length;
+const tc=jt.length;
+const checkpointProgress=(i+1)/10;
+const completionProgress=tc>0?cc/tc:0;
+const isCompleted=checkpointProgress<=completionProgress;
+return <circle key={i} cx={cp.x} cy={cp.y} r={12} fill={isCompleted?'#4ade80':'white'} stroke={isCompleted?'#22c55e':'#ef4444'} strokeWidth="3"/>;
+})}
+{/* Vlag op de top */}
+<g transform="translate(200,65)">
+<line x1="0" y1="0" x2="0" y2="35" stroke="#5D4037" strokeWidth="4"/>
+<polygon points="0,0 30,10 0,20" fill="#ef4444"/>
+</g>
 </svg>
-<div style={{position:'absolute',bottom:'20px',left:'16px',right:'16px'}}><div style={{background:'rgba(15,23,42,0.95)',borderRadius:'14px',padding:'18px',textAlign:'center'}}><div style={{fontSize:'36px',fontWeight:'700',color:'#4ade80'}}>{getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%</div><div style={{color:'#94a3b8',fontSize:'14px',marginTop:'4px'}}>Voortgang</div></div></div>
+{/* Voortgang overlay */}
+<div style={{position:'absolute',bottom:'24px',left:'20px',right:'20px'}}>
+<div style={{background:'rgba(15,23,42,0.95)',borderRadius:'16px',padding:'20px',textAlign:'center'}}>
+<div style={{fontSize:'42px',fontWeight:'700',color:'#4ade80'}}>{getAllTasksForJourney(selectedClient).length>0?Math.round((getAllTasksForJourney(selectedClient).filter(t=>t.completed).length/getAllTasksForJourney(selectedClient).length)*100):0}%</div>
+<div style={{color:'#94a3b8',fontSize:'14px',marginTop:'4px'}}>Voortgang naar de top</div>
+</div>
+</div>
 </div>
 </div>
 )}
