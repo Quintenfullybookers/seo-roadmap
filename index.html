@@ -718,6 +718,7 @@ const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerS
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
+const [linkFilter,setLinkFilter]=useState('all');
 const [showNotifications,setShowNotifications]=useState(false);
 const [dismissedNotifications,setDismissedNotifications]=useState(JSON.parse(localStorage.getItem('dismissedNotifications')||'[]'));
 const [sortOrder,setSortOrder]=useState('name-asc');
@@ -1616,50 +1617,101 @@ const month=now.getMonth()+1;
 return `${year}-${month.toString().padStart(2,'0')}`;
 };
 
+// Bereken linkbuilding uren: €50 = 1 uur, afgerond naar boven op 0.25
+const calculateLinkbuildingHours=(cost)=>{
+const rawHours=(parseFloat(cost)||0)/50;
+return Math.ceil(rawHours*4)/4;
+};
+
+// Haal linkbuilding uren per klant per maand
+const getLinkbuildingHoursForMonth=(clientId,monthKey)=>{
+const items=customItems[`${clientId}-5`]||[];
+let totalCost=0;
+items.forEach(item=>{
+if(item.date&&item.date.startsWith(monthKey)&&item.cost){
+totalCost+=parseFloat(item.cost)||0;
+}
+});
+return calculateLinkbuildingHours(totalCost);
+};
+
+// Haal linkbuilding entries per klant per maand (voor breakdown)
+const getLinkbuildingEntriesForMonth=(clientId,monthKey)=>{
+const items=customItems[`${clientId}-5`]||[];
+const entries=[];
+items.forEach(item=>{
+if(item.date&&item.date.startsWith(monthKey)&&item.cost){
+const hours=calculateLinkbuildingHours(item.cost);
+entries.push({
+id:`lb-${item.id}`,
+description:`Linkbuilding: ${item.url?.replace(/^https?:\/\/(www\.)?/,'').substring(0,30)||'Link'}`,
+hours:hours,
+stepId:5,
+date:item.date,
+isLinkbuilding:true,
+cost:parseFloat(item.cost)||0
+});
+}
+});
+return entries;
+};
+
 const getClientHours=(clientId)=>{
 const monthKey=getCurrentMonth();
 const key=`${clientId}-${monthKey}`;
 const entries=timeTracking[key];
-// Backwards compatible: if it's a number, return it
-if(typeof entries==='number')return entries;
+let hours=0;
+// Backwards compatible: if it's a number, use it
+if(typeof entries==='number')hours=entries;
 // If it's an array of entries, sum them
-if(Array.isArray(entries)){
-return entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
+else if(Array.isArray(entries)){
+hours=entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
 }
-return 0;
+// Add linkbuilding hours
+hours+=getLinkbuildingHoursForMonth(clientId,monthKey);
+return hours;
 };
 
 const getClientHoursForMonth=(clientId,monthKey)=>{
 const key=`${clientId}-${monthKey}`;
 const entries=timeTracking[key];
-// Backwards compatible: if it's a number, return it
-if(typeof entries==='number')return entries;
+let hours=0;
+// Backwards compatible: if it's a number, use it
+if(typeof entries==='number')hours=entries;
 // If it's an array of entries, sum them
-if(Array.isArray(entries)){
-return entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
+else if(Array.isArray(entries)){
+hours=entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
 }
-return 0;
+// Add linkbuilding hours
+hours+=getLinkbuildingHoursForMonth(clientId,monthKey);
+return hours;
 };
 
 const getClientTimeEntries=(clientId)=>{
 const monthKey=getCurrentMonth();
 const key=`${clientId}-${monthKey}`;
 const entries=timeTracking[key];
-// Backwards compatible: if it's a number, return empty array
-if(typeof entries==='number')return[];
-// If it's an array, return it
-if(Array.isArray(entries))return entries;
-return[];
+let result=[];
+// Backwards compatible: if it's a number, start with empty array
+if(typeof entries==='number')result=[];
+// If it's an array, use it
+else if(Array.isArray(entries))result=[...entries];
+// Add linkbuilding entries
+result=[...result,...getLinkbuildingEntriesForMonth(clientId,monthKey)];
+return result;
 };
 
 const getClientTimeEntriesForMonth=(clientId,monthKey)=>{
 const key=`${clientId}-${monthKey}`;
 const entries=timeTracking[key];
-// Backwards compatible: if it's a number, return empty array
-if(typeof entries==='number')return[];
-// If it's an array, return it
-if(Array.isArray(entries))return entries;
-return[];
+let result=[];
+// Backwards compatible: if it's a number, start with empty array
+if(typeof entries==='number')result=[];
+// If it's an array, use it
+else if(Array.isArray(entries))result=[...entries];
+// Add linkbuilding entries
+result=[...result,...getLinkbuildingEntriesForMonth(clientId,monthKey)];
+return result;
 };
 
 const getClientHoursBreakdown=(clientId)=>{
@@ -2672,6 +2724,18 @@ return count;
 <span className="nav-icon">📈</span>
 <span className="nav-text">Analytics</span>
 </div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-5`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -3442,6 +3506,10 @@ return count;
 <span className="nav-icon">📈</span>
 <span className="nav-text">Analytics</span>
 </div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -3633,6 +3701,10 @@ return(
 <div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
 <span className="nav-text">Analytics</span>
+</div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
 </div>
 </nav>
 </aside>
@@ -3921,6 +3993,10 @@ return(
 <span className="nav-icon">📈</span>
 <span className="nav-text">Analytics</span>
 </div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+</div>
 </nav>
 </aside>
 <main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
@@ -4058,6 +4134,192 @@ return(
 );
 }
 
+// LINKBUILDING VIEW
+if(activeView==='linkbuilding'){
+const activeClients=clients.filter(c=>!c.archived);
+
+// Verzamel alle linkbuilding items van alle klanten
+const allLinks=[];
+activeClients.forEach(client=>{
+const items=customItems[`${client.id}-5`]||[];
+items.forEach(item=>{
+allLinks.push({...item,clientId:client.id,clientName:client.name});
+});
+});
+
+// Sorteer op datum (nieuwste eerst)
+allLinks.sort((a,b)=>{
+if(!a.date&&!b.date)return 0;
+if(!a.date)return 1;
+if(!b.date)return -1;
+return new Date(b.date)-new Date(a.date);
+});
+
+// Bereken totalen
+const totalCost=allLinks.reduce((sum,item)=>sum+(parseFloat(item.cost)||0),0);
+const linksWithCost=allLinks.filter(i=>i.cost&&parseFloat(i.cost)>0);
+
+// Bereken uren: €50 = 1 uur, afgerond naar boven op 0.25
+const calculateHours=(cost)=>{
+const rawHours=(parseFloat(cost)||0)/50;
+return Math.ceil(rawHours*4)/4; // Afgerond naar boven op 0.25
+};
+const totalHours=calculateHours(totalCost);
+
+// Groepeer per maand voor overzicht
+const linksByMonth={};
+allLinks.forEach(link=>{
+const month=link.date?link.date.substring(0,7):'Geen datum';
+if(!linksByMonth[month])linksByMonth[month]={links:[],cost:0};
+linksByMonth[month].links.push(link);
+linksByMonth[month].cost+=parseFloat(link.cost)||0;
+});
+
+// Filter state
+// Filter state is defined at top level
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Offline'}
+</span>
+</div>
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+</div>
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+</div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+</div>
+</nav>
+</aside>
+<main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
+<div style={{padding:'20px',boxSizing:'border-box'}}>
+<div style={{marginBottom:'24px'}}>
+<h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>🔗</span>
+<span>Linkbuilding Overzicht</span>
+</h1>
+<p style={{fontSize:'14px',color:'var(--text-light)'}}>Alle geplaatste links van alle projecten</p>
+</div>
+
+{/* Statistieken */}
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px',marginBottom:'32px'}}>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Links</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--blue)'}}>{allLinks.length}</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Kosten</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--green)'}}>€{totalCost.toFixed(2)}</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Berekende Uren</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--orange)'}}>{totalHours}u</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'4px'}}>€50 = 1 uur</div>
+</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Gem. per Link</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--purple)'}}>€{linksWithCost.length>0?(totalCost/linksWithCost.length).toFixed(0):'0'}</div>
+</div>
+</div>
+
+{/* Filter */}
+<div style={{marginBottom:'20px',display:'flex',gap:'8px',flexWrap:'wrap'}}>
+<button onClick={()=>setLinkFilter('all')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',background:linkFilter==='all'?'var(--blue)':'var(--card)',color:linkFilter==='all'?'white':'var(--text)',cursor:'pointer',fontWeight:'500'}}>Alle ({allLinks.length})</button>
+{activeClients.slice(0,10).map(client=>{
+const count=(customItems[`${client.id}-5`]||[]).length;
+if(count===0)return null;
+return <button key={client.id} onClick={()=>setLinkFilter(client.id)} style={{padding:'8px 16px',borderRadius:'8px',border:'none',background:linkFilter===client.id?'var(--blue)':'var(--card)',color:linkFilter===client.id?'white':'var(--text)',cursor:'pointer',fontWeight:'500'}}>{client.name} ({count})</button>;
+})}
+</div>
+
+{/* Uren per maand overzicht */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'16px'}}>⏱️ Linkbuilding Uren per Maand</h2>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))',gap:'12px'}}>
+{Object.entries(linksByMonth).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6).map(([month,data])=>{
+const hours=calculateHours(data.cost);
+const monthName=month!=='Geen datum'?new Date(month+'-01').toLocaleDateString('nl-NL',{month:'long',year:'numeric'}):month;
+return(
+<div key={month} style={{background:'var(--bg)',borderRadius:'10px',padding:'16px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px'}}>{monthName}</div>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+<div style={{fontSize:'20px',fontWeight:'700',color:'var(--green)'}}>€{data.cost.toFixed(0)}</div>
+<div style={{fontSize:'16px',fontWeight:'600',color:'var(--orange)'}}>{hours}u</div>
+</div>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>{data.links.length} link{data.links.length!==1?'s':''}</div>
+</div>
+);
+})}
+</div>
+</div>
+
+{/* Links lijst */}
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'16px'}}>📋 Alle Links</h2>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).map(link=>{
+const hours=calculateHours(link.cost);
+return(
+<div key={link.id} style={{display:'flex',alignItems:'center',gap:'16px',padding:'16px',background:'var(--bg)',borderRadius:'10px',border:'1px solid var(--border)'}}>
+<div style={{flex:1,minWidth:0}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<a href={link.url?.startsWith('http')?link.url:`https://${link.url}`} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',fontWeight:'600',fontSize:'14px',textDecoration:'none',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{link.url?.replace(/^https?:\/\/(www\.)?/,'').substring(0,50)}{link.url?.length>50?'...':''}</a>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'12px',fontSize:'12px',color:'var(--text-light)'}}>
+<span style={{background:'var(--card)',padding:'2px 8px',borderRadius:'4px'}}>{link.clientName}</span>
+{link.date&&<span>📅 {new Date(link.date).toLocaleDateString('nl-NL')}</span>}
+{link.anchorText&&<span>🏷️ {link.anchorText}</span>}
+</div>
+</div>
+<div style={{textAlign:'right',flexShrink:0}}>
+{link.cost&&<div style={{fontSize:'16px',fontWeight:'700',color:'var(--green)'}}>€{parseFloat(link.cost).toFixed(0)}</div>}
+{link.cost&&<div style={{fontSize:'12px',color:'var(--orange)',fontWeight:'500'}}>{hours}u</div>}
+</div>
+</div>
+);
+})}
+{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).length===0&&(
+<div style={{textAlign:'center',padding:'40px',color:'var(--text-light)'}}>
+<div style={{fontSize:'32px',marginBottom:'8px'}}>🔗</div>
+<div>Geen links gevonden</div>
+</div>
+)}
+</div>
+</div>
+
+</div>
+{toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+</main>
+</div>
+);
+}
+
 // CONTENT CREATIE VIEW
 if(activeView==='content'){
 const contentItems=getAllContentItems();
@@ -4123,6 +4385,10 @@ return count;
 <div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📈</span>
 <span className="nav-text">Analytics</span>
+</div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
 </div>
 </nav>
 {isAdmin&&(
