@@ -4227,44 +4227,24 @@ return(
 <p style={{fontSize:'14px',color:'var(--text-light)',margin:0}}>Alle geplaatste links van alle projecten</p>
 </div>
 
-{/* Statistieken - Compact */}
+{/* Statistieken - Consistent blauw thema */}
 <div style={{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:'wrap'}}>
-<div style={{background:'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)',borderRadius:'16px',padding:'20px 24px',minWidth:'160px',flex:'1',boxShadow:'0 4px 12px rgba(59,130,246,0.25)'}}>
-<div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-<div>
-<div style={{fontSize:'12px',color:'rgba(255,255,255,0.8)',fontWeight:'500',marginBottom:'4px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Links</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#fff'}}>{allLinks.length}</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Links</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>{allLinks.length}</div>
 </div>
-<div style={{fontSize:'32px',opacity:'0.9'}}>🔗</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Kosten</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>€{totalCost.toFixed(2)}</div>
 </div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Berekende Uren</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>{totalHours}u</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px'}}>€50 = 1 uur</div>
 </div>
-<div style={{background:'linear-gradient(135deg, #10b981 0%, #059669 100%)',borderRadius:'16px',padding:'20px 24px',minWidth:'160px',flex:'1',boxShadow:'0 4px 12px rgba(16,185,129,0.25)'}}>
-<div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-<div>
-<div style={{fontSize:'12px',color:'rgba(255,255,255,0.8)',fontWeight:'500',marginBottom:'4px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Kosten</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#fff'}}>€{totalCost.toFixed(0)}</div>
-</div>
-<div style={{fontSize:'32px',opacity:'0.9'}}>💰</div>
-</div>
-</div>
-<div style={{background:'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',borderRadius:'16px',padding:'20px 24px',minWidth:'160px',flex:'1',boxShadow:'0 4px 12px rgba(245,158,11,0.25)'}}>
-<div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-<div>
-<div style={{fontSize:'12px',color:'rgba(255,255,255,0.8)',fontWeight:'500',marginBottom:'4px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Berekende Uren</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#fff'}}>{totalHours}u</div>
-</div>
-<div style={{fontSize:'32px',opacity:'0.9'}}>⏱️</div>
-</div>
-<div style={{fontSize:'10px',color:'rgba(255,255,255,0.7)',marginTop:'4px'}}>€50 = 1 uur</div>
-</div>
-<div style={{background:'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)',borderRadius:'16px',padding:'20px 24px',minWidth:'160px',flex:'1',boxShadow:'0 4px 12px rgba(139,92,246,0.25)'}}>
-<div style={{display:'flex',alignItems:'center',justifyContent:'space-between'}}>
-<div>
-<div style={{fontSize:'12px',color:'rgba(255,255,255,0.8)',fontWeight:'500',marginBottom:'4px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Gem. per Link</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'#fff'}}>€{linksWithCost.length>0?(totalCost/linksWithCost.length).toFixed(0):'0'}</div>
-</div>
-<div style={{fontSize:'32px',opacity:'0.9'}}>📊</div>
-</div>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Gem. per Link</div>
+<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>€{linksWithCost.length>0?(totalCost/linksWithCost.length).toFixed(2):'0'}</div>
 </div>
 </div>
 
@@ -4281,9 +4261,9 @@ return <button key={client.id} onClick={()=>setLinkFilter(client.id)} style={{pa
 </div>
 
 {/* Uren per maand overzicht - Compact cards */}
-<div style={{background:'var(--card)',borderRadius:'16px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
-<h2 style={{fontSize:'16px',fontWeight:'600',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'18px'}}>⏱️</span>
+<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'15px',fontWeight:'600',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'16px'}}>⏱️</span>
 Linkbuilding Uren per Maand
 </h2>
 <div style={{display:'flex',gap:'12px',overflowX:'auto',paddingBottom:'8px'}}>
@@ -4293,14 +4273,14 @@ const monthName=month!=='Geen datum'?new Date(month+'-01').toLocaleDateString('n
 const maxCost=Math.max(...Object.values(linksByMonth).map(m=>m.cost));
 const percentage=maxCost>0?(data.cost/maxCost)*100:0;
 return(
-<div key={month} style={{background:'var(--bg)',borderRadius:'12px',padding:'16px',border:'1px solid var(--border)',minWidth:'150px',flex:'0 0 auto'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',marginBottom:'8px',fontWeight:'500',textTransform:'capitalize'}}>{monthName}</div>
+<div key={month} style={{background:'var(--bg)',borderRadius:'10px',padding:'14px 16px',border:'1px solid var(--border)',minWidth:'140px',flex:'0 0 auto'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginBottom:'6px',fontWeight:'500',textTransform:'capitalize'}}>{monthName}</div>
 <div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'8px'}}>
-<div style={{fontSize:'22px',fontWeight:'700',color:'#10b981'}}>€{data.cost.toFixed(0)}</div>
-<div style={{fontSize:'14px',fontWeight:'600',color:'#f59e0b'}}>{hours}u</div>
+<div style={{fontSize:'18px',fontWeight:'700',color:'var(--blue)'}}>€{data.cost.toFixed(2)}</div>
+<div style={{fontSize:'13px',fontWeight:'600',color:'var(--text-light)'}}>{hours}u</div>
 </div>
-<div style={{background:'var(--border)',borderRadius:'4px',height:'4px',marginBottom:'6px',overflow:'hidden'}}>
-<div style={{background:'linear-gradient(90deg, #10b981, #059669)',height:'100%',width:`${percentage}%`,borderRadius:'4px',transition:'width 0.3s ease'}}/>
+<div style={{background:'var(--border)',borderRadius:'3px',height:'3px',marginBottom:'6px',overflow:'hidden'}}>
+<div style={{background:'var(--blue)',height:'100%',width:`${percentage}%`,borderRadius:'3px',transition:'width 0.3s ease'}}/>
 </div>
 <div style={{fontSize:'11px',color:'var(--text-light)'}}>{data.links.length} link{data.links.length!==1?'s':''}</div>
 </div>
@@ -4310,10 +4290,10 @@ return(
 </div>
 
 {/* Links lijst - Clean table style */}
-<div style={{background:'var(--card)',borderRadius:'16px',border:'1px solid var(--border)',overflow:'hidden'}}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)'}}>
-<h2 style={{fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px',margin:0}}>
-<span style={{fontSize:'18px'}}>📋</span>
+<div style={{background:'var(--card)',borderRadius:'12px',border:'1px solid var(--border)',overflow:'hidden'}}>
+<div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)'}}>
+<h2 style={{fontSize:'15px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px',margin:0}}>
+<span style={{fontSize:'16px'}}>📋</span>
 Alle Links
 <span style={{fontSize:'13px',fontWeight:'500',color:'var(--text-light)',marginLeft:'auto'}}>{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).length} resultaten</span>
 </h2>
@@ -4323,18 +4303,18 @@ Alle Links
 const hours=calculateHours(link.cost);
 const filteredLinks=allLinks.filter(l=>linkFilter==='all'||l.clientId===linkFilter);
 return(
-<div key={link.id} style={{display:'flex',alignItems:'center',gap:'16px',padding:'16px 24px',background:index%2===0?'transparent':'var(--bg)',borderBottom:'1px solid var(--border)',transition:'background 0.15s ease'}} onMouseEnter={e=>e.currentTarget.style.background='var(--blue-light)'} onMouseLeave={e=>e.currentTarget.style.background=index%2===0?'transparent':'var(--bg)'}>
+<div key={link.id} style={{display:'flex',alignItems:'center',gap:'16px',padding:'14px 20px',background:index%2===0?'transparent':'var(--bg)',borderBottom:'1px solid var(--border)',transition:'background 0.15s ease'}} onMouseEnter={e=>e.currentTarget.style.background='var(--blue-light)'} onMouseLeave={e=>e.currentTarget.style.background=index%2===0?'transparent':'var(--bg)'}>
 <div style={{flex:1,minWidth:0}}>
 <a href={link.url?.startsWith('http')?link.url:`https://${link.url}`} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',fontWeight:'600',fontSize:'14px',textDecoration:'none',display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginBottom:'6px'}}>{link.url?.replace(/^https?:\/\/(www\.)?/,'').substring(0,60)}{link.url?.length>60?'...':''}</a>
 <div style={{display:'flex',alignItems:'center',gap:'12px',fontSize:'12px',color:'var(--text-light)'}}>
-<span style={{background:'var(--blue-light)',color:'var(--blue)',padding:'3px 10px',borderRadius:'6px',fontWeight:'500',fontSize:'11px'}}>{link.clientName}</span>
+<span style={{background:'var(--bg)',border:'1px solid var(--border)',padding:'2px 8px',borderRadius:'4px',fontWeight:'500',fontSize:'11px'}}>{link.clientName}</span>
 {link.date&&<span style={{display:'flex',alignItems:'center',gap:'4px'}}>📅 {new Date(link.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'})}</span>}
 {link.anchorText&&<span style={{display:'flex',alignItems:'center',gap:'4px',maxWidth:'200px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>🏷️ {link.anchorText}</span>}
 </div>
 </div>
 <div style={{textAlign:'right',flexShrink:0,minWidth:'70px'}}>
-{link.cost?<><div style={{fontSize:'18px',fontWeight:'700',color:'#10b981'}}>€{parseFloat(link.cost).toFixed(0)}</div>
-<div style={{fontSize:'12px',color:'#f59e0b',fontWeight:'600'}}>{hours}u</div></>:<div style={{fontSize:'13px',color:'var(--text-light)'}}>-</div>}
+{link.cost?<><div style={{fontSize:'16px',fontWeight:'700',color:'var(--blue)'}}>€{parseFloat(link.cost).toFixed(2)}</div>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500'}}>{hours}u</div></>:<div style={{fontSize:'13px',color:'var(--text-light)'}}>-</div>}
 </div>
 </div>
 );
