@@ -522,7 +522,7 @@ if(!tasks||!client)return tasks||[];
 return tasks.filter(task=>{
 if(!task.show)return true; // Geen conditie = altijd tonen
 if(task.show==='hotel')return client.clientType==='hotel';
-if(task.show==='restaurant')return client.clientType==='restaurant';
+if(task.show==='restaurant')return client.clientType==='restaurant'||client.clientType==='strandtent';
 if(task.show==='multi')return client.multiLocation;
 if(task.show==='multilingual')return client.isMultilingual;
 return true;
@@ -686,6 +686,7 @@ const [showJourney,setShowJourney]=useState(false);
 const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
+const [irrelevantTasks,setIrrelevantTasks]=useState({});
 const [customItems,setCustomItems]=useState({});
 const [planningItems,setPlanningItems]=useState({});
 const [notes,setNotes]=useState({});
@@ -749,6 +750,7 @@ const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 const key=`${clientId}-${step.id}-${task.id}`;
+if(irrelevantTasks[key])return; // Skip irrelevante taken
 allTasks.push({
 ...task,
 stepId:step.id,
@@ -945,6 +947,7 @@ const data=testDoc.data();
 // Ensure all clients have IDs
 const clientsWithIds=(data.clients||[]).map(c=>c.id?c:{...c,id:Date.now()+Math.random()});
 setTasks(data.tasks||{});
+setIrrelevantTasks(data.irrelevantTasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
@@ -962,6 +965,7 @@ const data=doc.data();
 // Ensure all clients have IDs
 const clientsWithIds=(data.clients||[]).map(c=>c.id?c:{...c,id:Date.now()+Math.random()});
 setTasks(data.tasks||{});
+setIrrelevantTasks(data.irrelevantTasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
@@ -1010,6 +1014,7 @@ const doc=await db.collection('roadmaps').doc('main').get();
 if(doc.exists){
 const data=doc.data();
 setTasks(data.tasks||{});
+setIrrelevantTasks(data.irrelevantTasks||{});
 setCustomItems(data.customItems||{});
 setPlanningItems(data.planningItems||{});
 setNotes(data.notes||{});
@@ -2291,7 +2296,16 @@ if(!isAdmin)return;
 const key=`${selectedClient}-${stepId}-${taskId}`;
 const newTasks={...tasks,[key]:!tasks[key]};
 setTasks(newTasks);
-saveData({tasks:newTasks,customItems,planningItems,clients});
+saveData({tasks:newTasks,customItems,planningItems,clients,irrelevantTasks});
+};
+
+const toggleIrrelevant=(stepId,taskId,e)=>{
+if(e)e.stopPropagation();
+if(!isAdmin)return;
+const key=`${selectedClient}-${stepId}-${taskId}`;
+const newIrrelevant={...irrelevantTasks,[key]:!irrelevantTasks[key]};
+setIrrelevantTasks(newIrrelevant);
+saveData({tasks,customItems,planningItems,clients,irrelevantTasks:newIrrelevant});
 };
 
 const addCustomItem=(stepId,text)=>{
@@ -2435,8 +2449,9 @@ if(step.sections){
 const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
-totalTasks++;
 const key=`${clientId}-${step.id}-${task.id}`;
+if(irrelevantTasks[key])return; // Skip irrelevante taken
+totalTasks++;
 if(tasks[key])completedTasks++;
 });
 });
@@ -2460,8 +2475,9 @@ if(step.sections){
 const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
-totalTasks++;
 const key=`${clientId}-${step.id}-${task.id}`;
+if(irrelevantTasks[key])return; // Skip irrelevante taken
+totalTasks++;
 if(tasks[key])completedTasks++;
 });
 });
@@ -2887,8 +2903,8 @@ return(
 <div>
 <h3 className="client-name">{client.name}</h3>
 <div style={{display:'flex',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
-<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:(client.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(client.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
-{(client.clientType||'hotel')==='hotel'?'🏨 Hotel':'🍽️ Restaurant'}
+<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:(client.clientType||'hotel')==='hotel'?'#dbeafe':client.clientType==='strandtent'?'#fef3c7':'#fef3c7',color:(client.clientType||'hotel')==='hotel'?'#1d4ed8':client.clientType==='strandtent'?'#b45309':'#92400e',fontWeight:'600'}}>
+{(client.clientType||'hotel')==='hotel'?'🏨 Hotel':client.clientType==='strandtent'?'🏖️ Strandtent':'🍽️ Restaurant'}
 </span>
 {client.multiLocation&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
 {client.isMultilingual&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#ecfdf5',color:'#047857',fontWeight:'600'}}>🌍 Meertalig</span>}
@@ -3192,6 +3208,9 @@ return(
 🏨 Hotel
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+🏖️ Strandtent
+</button>
 🍽️ Restaurant
 </button>
 </div>
@@ -3300,6 +3319,9 @@ return(
 </button>
 <button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
+</button>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
+🏖️ Strandtent
 </button>
 </div>
 </div>
@@ -4750,8 +4772,8 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </h3>
 <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
 <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
-<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:(currentClient.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(currentClient.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
-{(currentClient.clientType||'hotel')==='hotel'?'🏨 Hotel':'🍽️ Restaurant'}
+<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:(currentClient.clientType||'hotel')==='hotel'?'#dbeafe':currentClient.clientType==='strandtent'?'#e0f2fe':'#fef3c7',color:(currentClient.clientType||'hotel')==='hotel'?'#1d4ed8':currentClient.clientType==='strandtent'?'#0369a1':'#92400e',fontWeight:'600'}}>
+{(currentClient.clientType||'hotel')==='hotel'?'🏨 Hotel':currentClient.clientType==='strandtent'?'🏖️ Strandtent':'🍽️ Restaurant'}
 </span>
 {currentClient.multiLocation&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
 {currentClient.isMultilingual&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#ecfdf5',color:'#047857',fontWeight:'600'}}>🌍 Meertalig</span>}
@@ -5315,13 +5337,15 @@ onShowDeadlineModal={(key,title,currentDeadline)=>{setDeadlineModalTask({key,tit
 {section.tasks.map(task=>{
 const key=`${selectedClient}-${currentStep.id}-${task.id}`;
 const isChecked=!!tasks[key];
+const isIrrelevant=!!irrelevantTasks[key];
 return(
-<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isAdmin?'clickable':''}`} onClick={()=>{if(isAdmin)toggleTask(currentStep.id,task.id);}}>
-<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`}>{isChecked&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}</div>
-<div className="task-content">
+<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isIrrelevant?'irrelevant':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{opacity:0.5,textDecoration:'line-through'}:{}} onClick={()=>{if(isAdmin&&!isIrrelevant)toggleTask(currentStep.id,task.id);}}>
+<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{background:'var(--gray-4)',borderColor:'var(--gray-4)'}:{}}>{isChecked&&!isIrrelevant&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}{isIrrelevant&&<span style={{color:'var(--text-light)',fontSize:'12px'}}>—</span>}</div>
+<div className="task-content" style={{flex:1}}>
 <div className="task-title">{task.title}</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
 </div>
+{isAdmin&&<button onClick={(e)=>toggleIrrelevant(currentStep.id,task.id,e)} style={{padding:'4px 8px',fontSize:'11px',background:isIrrelevant?'var(--blue)':'transparent',color:isIrrelevant?'white':'var(--text-light)',border:`1px solid ${isIrrelevant?'var(--blue)':'var(--border)'}`,borderRadius:'4px',cursor:'pointer',whiteSpace:'nowrap'}}>{isIrrelevant?'Relevant':'Niet relevant'}</button>}
 </div>
 );
 })}
@@ -5562,6 +5586,9 @@ return(
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+🏖️ Strandtent
 </button>
 </div>
 </div>
