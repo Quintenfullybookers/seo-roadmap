@@ -1679,7 +1679,7 @@ hours=entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
 }
 // Add linkbuilding hours
 hours+=getLinkbuildingHoursForMonth(clientId,monthKey);
-return hours;
+return Math.round(hours*100)/100;
 };
 
 const getClientHoursForMonth=(clientId,monthKey)=>{
@@ -1694,7 +1694,7 @@ hours=entries.reduce((sum,entry)=>sum+(entry.hours||0),0);
 }
 // Add linkbuilding hours
 hours+=getLinkbuildingHoursForMonth(clientId,monthKey);
-return hours;
+return Math.round(hours*100)/100;
 };
 
 const getClientTimeEntries=(clientId)=>{
@@ -2965,9 +2965,9 @@ return(
 </div>
 {client.budget>0&&(()=>{
 const budget=client.budget;
-const hours=getClientHours(client.id);
+const hours=Math.round(getClientHours(client.id)*100)/100;
 const percentage=budget>0?Math.round((hours/budget)*100):0;
-const remaining=Math.max(0,budget-hours);
+const remaining=Math.round(Math.max(0,budget-hours)*100)/100;
 const getGreenShade=(pct)=>{
 if(pct>=90)return '#6ee7b7';
 if(pct>=70)return '#10b981';
