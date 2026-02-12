@@ -251,6 +251,16 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .joke-text{font-size:11px;color:var(--text-light);font-style:italic;line-height:1.4}
 .export-btn{margin:16px 24px 0;padding:10px 16px;background:var(--green);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;justify-content:center}
 .export-btn:hover{background:#059669;transform:translateY(-1px);box-shadow:var(--shadow)}
+.celebration-overlay{position:fixed;inset:0;pointer-events:none;z-index:99999;overflow:hidden}
+.confetti{position:absolute;width:10px;height:10px;opacity:0;animation:confetti-fall 3s ease-out forwards}
+.confetti.circle{border-radius:50%}
+.confetti.square{border-radius:2px}
+.confetti.star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
+@keyframes confetti-fall{0%{transform:translateY(-100px) rotate(0deg) scale(0);opacity:1}10%{transform:translateY(0) rotate(180deg) scale(1);opacity:1}100%{transform:translateY(100vh) rotate(720deg) scale(0.5);opacity:0}}
+.firework{position:absolute;width:6px;height:6px;border-radius:50%;animation:firework-explode 1s ease-out forwards}
+@keyframes firework-explode{0%{transform:scale(0);opacity:1}50%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
+.sparkle{position:absolute;font-size:24px;animation:sparkle-pop 1s ease-out forwards}
+@keyframes sparkle-pop{0%{transform:scale(0) rotate(0deg);opacity:1}50%{transform:scale(1.5) rotate(180deg);opacity:1}100%{transform:scale(0) rotate(360deg);opacity:0}}
 </style>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -561,6 +571,72 @@ const icons={success:'✅',error:'❌',info:'💾'};
 return(<div className={`toast toast-${type}`}><div className="toast-icon">{icons[type]}</div><div className="toast-text">{message}</div></div>);
 }
 
+// CELEBRATION COMPONENT
+function Celebration(){
+const [particles,setParticles]=useState([]);
+useEffect(()=>{
+const colors=['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dfe6e9','#fd79a8','#a29bfe','#00b894','#e17055','#fdcb6e','#6c5ce7'];
+const emojis=['⭐','✨','🌟','💫','🎉','🎊','🥳','👏','💪','🔥','❤️','💯'];
+const newParticles=[];
+
+// Confetti
+for(let i=0;i<50;i++){
+newParticles.push({
+id:`confetti-${i}`,
+type:'confetti',
+shape:['circle','square','star'][Math.floor(Math.random()*3)],
+color:colors[Math.floor(Math.random()*colors.length)],
+left:Math.random()*100,
+delay:Math.random()*0.5,
+size:Math.random()*8+6
+});
+}
+
+// Fireworks
+for(let i=0;i<20;i++){
+newParticles.push({
+id:`firework-${i}`,
+type:'firework',
+color:colors[Math.floor(Math.random()*colors.length)],
+left:20+Math.random()*60,
+top:20+Math.random()*40,
+delay:Math.random()*0.8
+});
+}
+
+// Sparkles/Emojis
+for(let i=0;i<15;i++){
+newParticles.push({
+id:`sparkle-${i}`,
+type:'sparkle',
+emoji:emojis[Math.floor(Math.random()*emojis.length)],
+left:Math.random()*100,
+top:Math.random()*60,
+delay:Math.random()*0.5
+});
+}
+
+setParticles(newParticles);
+},[]);
+
+return(
+<div className="celebration-overlay">
+{particles.map(p=>{
+if(p.type==='confetti'){
+return <div key={p.id} className={`confetti ${p.shape}`} style={{left:`${p.left}%`,backgroundColor:p.color,animationDelay:`${p.delay}s`,width:`${p.size}px`,height:`${p.size}px`}}/>;
+}
+if(p.type==='firework'){
+return <div key={p.id} className="firework" style={{left:`${p.left}%`,top:`${p.top}%`,backgroundColor:p.color,animationDelay:`${p.delay}s`,boxShadow:`0 0 10px ${p.color}, 0 0 20px ${p.color}`}}/>;
+}
+if(p.type==='sparkle'){
+return <div key={p.id} className="sparkle" style={{left:`${p.left}%`,top:`${p.top}%`,animationDelay:`${p.delay}s`}}>{p.emoji}</div>;
+}
+return null;
+})}
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -683,6 +759,7 @@ const [syncStatus,setSyncStatus]=useState('connecting');
 const [activeView,setActiveView]=useState('dashboard');
 const [showArchive,setShowArchive]=useState(false);
 const [showJourney,setShowJourney]=useState(false);
+const [showCelebration,setShowCelebration]=useState(false);
 const [activeStep,setActiveStep]=useState(1);
 const [selectedClient,setSelectedClient]=useState(null);
 const [tasks,setTasks]=useState({});
@@ -2335,12 +2412,22 @@ setToast({type:'success',message:'✓ PDF gedownload'});
 };
 
 // TASK FUNCTIONS
+const triggerCelebration=()=>{
+setShowCelebration(true);
+setTimeout(()=>setShowCelebration(false),3000);
+};
+
 const toggleTask=(stepId,taskId)=>{
 if(!isAdmin)return;
 const key=`${selectedClient}-${stepId}-${taskId}`;
+const wasCompleted=tasks[key];
 const newTasks={...tasks,[key]:!tasks[key]};
 setTasks(newTasks);
 saveData({tasks:newTasks,customItems,planningItems,clients});
+// Trigger celebration when completing a task (not uncompleting)
+if(!wasCompleted){
+triggerCelebration();
+}
 };
 
 const toggleIrrelevant=(stepId,taskId,e)=>{
@@ -6065,6 +6152,7 @@ return <circle key={i} cx={cp.x} cy={cp.y} r={12} fill={isCompleted?'#4ade80':'w
 )}
 
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
+{showCelebration&&<Celebration/>}
 </div>
 );
 }
