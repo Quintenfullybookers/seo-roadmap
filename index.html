@@ -520,7 +520,7 @@ multi:[
 const filterTasksForClient=(tasks,client)=>{
 if(!tasks||!client)return tasks||[];
 return tasks.filter(task=>{
-if(!task.show)return true; // Geen conditie = altijd tonen
+if(!task.show)return true;
 if(task.show==='hotel')return client.clientType==='hotel';
 if(task.show==='restaurant')return client.clientType==='restaurant'||client.clientType==='strandtent';
 if(task.show==='multi')return client.multiLocation;
@@ -703,6 +703,11 @@ const [editingNote,setEditingNote]=useState(null);
 const [showDeadlineModal,setShowDeadlineModal]=useState(false);
 const [deadlineModalTask,setDeadlineModalTask]=useState(null);
 const [showTimeModal,setShowTimeModal]=useState(false);
+const [showBulkTimeModal,setShowBulkTimeModal]=useState(false);
+const [bulkTimeHours,setBulkTimeHours]=useState('');
+const [bulkTimeDescription,setBulkTimeDescription]=useState('');
+const [bulkTimeStep,setBulkTimeStep]=useState('7');
+const [bulkTimeClients,setBulkTimeClients]=useState([]);
 const [timeModalClient,setTimeModalClient]=useState(null);
 const [timeModalHours,setTimeModalHours]=useState('');
 const [timeModalDescription,setTimeModalDescription]=useState('');
@@ -750,7 +755,7 @@ const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 const key=`${clientId}-${step.id}-${task.id}`;
-if(irrelevantTasks[key])return; // Skip irrelevante taken
+if(irrelevantTasks[key])return;
 allTasks.push({
 ...task,
 stepId:step.id,
@@ -1844,6 +1849,45 @@ setEditingTimeEntry(null);
 setToast({type:'success',message:'✓ Entry bijgewerkt'});
 };
 
+const saveBulkTime=()=>{
+if(!isAdmin)return;
+if(!bulkTimeHours||bulkTimeClients.length===0){
+setToast({type:'error',message:'Vul uren in en selecteer minimaal 1 klant'});
+return;
+}
+const totalHours=parseFloat(bulkTimeHours);
+const hoursPerClient=Math.round((totalHours/bulkTimeClients.length)*100)/100;
+const monthKey=getCurrentMonth();
+let newTimeTracking={...timeTracking};
+
+bulkTimeClients.forEach(clientId=>{
+const key=`${clientId}-${monthKey}`;
+const entries=timeTracking[key];
+let currentEntries=[];
+if(typeof entries==='number'){
+currentEntries=[{id:Date.now()-1000,hours:entries,description:'Migratie oude data',date:new Date().toISOString()}];
+}else if(Array.isArray(entries)){
+currentEntries=entries;
+}
+const newEntry={
+id:Date.now()+Math.random(),
+hours:hoursPerClient,
+description:bulkTimeDescription.trim()||'Bulk registratie',
+date:new Date().toISOString(),
+stepId:bulkTimeStep?parseInt(bulkTimeStep):null
+};
+newTimeTracking[key]=[...currentEntries,newEntry];
+});
+
+setTimeTracking(newTimeTracking);
+saveData({tasks,customItems,planningItems,notes,deadlines,clients,timeTracking:newTimeTracking});
+setShowBulkTimeModal(false);
+setBulkTimeHours('');
+setBulkTimeDescription('');
+setBulkTimeClients([]);
+setToast({type:'success',message:`✓ ${totalHours}u verdeeld over ${bulkTimeClients.length} klanten (${hoursPerClient}u per klant)`});
+};
+
 const openTimeModal=(client,monthKey=null,entry=null)=>{
 if(!isAdmin)return;
 setTimeModalClient(client);
@@ -2296,7 +2340,7 @@ if(!isAdmin)return;
 const key=`${selectedClient}-${stepId}-${taskId}`;
 const newTasks={...tasks,[key]:!tasks[key]};
 setTasks(newTasks);
-saveData({tasks:newTasks,customItems,planningItems,clients,irrelevantTasks});
+saveData({tasks:newTasks,customItems,planningItems,clients});
 };
 
 const toggleIrrelevant=(stepId,taskId,e)=>{
@@ -2450,7 +2494,7 @@ const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 const key=`${clientId}-${step.id}-${task.id}`;
-if(irrelevantTasks[key])return; // Skip irrelevante taken
+if(irrelevantTasks[key])return;
 totalTasks++;
 if(tasks[key])completedTasks++;
 });
@@ -2476,7 +2520,7 @@ const filteredSections=filterSectionsForClient(step.sections,client);
 filteredSections.forEach(section=>{
 section.tasks.forEach(task=>{
 const key=`${clientId}-${step.id}-${task.id}`;
-if(irrelevantTasks[key])return; // Skip irrelevante taken
+if(irrelevantTasks[key])return;
 totalTasks++;
 if(tasks[key])completedTasks++;
 });
@@ -2903,7 +2947,7 @@ return(
 <div>
 <h3 className="client-name">{client.name}</h3>
 <div style={{display:'flex',gap:'6px',marginTop:'6px',flexWrap:'wrap'}}>
-<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:(client.clientType||'hotel')==='hotel'?'#dbeafe':client.clientType==='strandtent'?'#fef3c7':'#fef3c7',color:(client.clientType||'hotel')==='hotel'?'#1d4ed8':client.clientType==='strandtent'?'#b45309':'#92400e',fontWeight:'600'}}>
+<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:(client.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(client.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
 {(client.clientType||'hotel')==='hotel'?'🏨 Hotel':client.clientType==='strandtent'?'🏖️ Strandtent':'🍽️ Restaurant'}
 </span>
 {client.multiLocation&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
@@ -3142,6 +3186,12 @@ return(
 <div className="add-text">Nieuwe Klant</div>
 </div>
 )}
+{isAdmin&&(
+<div className="add-client-card" onClick={()=>{setBulkTimeClients(clients.filter(c=>!c.archived).map(c=>c.id));setShowBulkTimeModal(true);}} style={{background:'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}>
+<div className="add-icon" style={{color:'white'}}>⏱️</div>
+<div className="add-text" style={{color:'white'}}>Bulk Uren</div>
+</div>
+)}
 {!isAdmin&&(
 <div className="add-client-card" style={{position:'relative',cursor:'not-allowed',opacity:0.6}}>
 <div className="add-icon">🔒</div>
@@ -3208,10 +3258,10 @@ return(
 🏨 Hotel
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+🍽️ Restaurant
+</button>
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
-</button>
-🍽️ Restaurant
 </button>
 </div>
 </div>
@@ -3407,6 +3457,66 @@ return(
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={editClient}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowEditModal(false);setEditingClient(null);}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{showBulkTimeModal&&(
+<div className="modal-overlay" onClick={()=>{setShowBulkTimeModal(false);setBulkTimeHours('');setBulkTimeDescription('');setBulkTimeClients([]);}}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'550px'}}>
+<h2 className="modal-title">⏱️ Bulk Uren Registreren</h2>
+<p style={{fontSize:'14px',color:'var(--text-light)',marginBottom:'16px'}}>Verdeel uren gelijk over meerdere klanten</p>
+<div className="input-group">
+<label className="input-label">Totaal aantal uren *</label>
+<input type="number" className="modal-input" step="0.5" placeholder="bijv. 4" value={bulkTimeHours} onChange={(e)=>setBulkTimeHours(e.target.value)} autoFocus/>
+{bulkTimeHours&&bulkTimeClients.length>0&&(
+<div style={{fontSize:'12px',color:'var(--blue)',marginTop:'4px'}}>
+= {(parseFloat(bulkTimeHours)/bulkTimeClients.length).toFixed(2)}u per klant
+</div>
+)}
+</div>
+<div className="input-group">
+<label className="input-label">Omschrijving (voor alle klanten) *</label>
+<input type="text" className="modal-input" placeholder="bijv. Maandelijkse check & optimalisatie" value={bulkTimeDescription} onChange={(e)=>setBulkTimeDescription(e.target.value)}/>
+</div>
+<div className="input-group">
+<label className="input-label">Stap</label>
+<select className="modal-input" value={bulkTimeStep} onChange={(e)=>setBulkTimeStep(e.target.value)}>
+{STEPS.filter(s=>s.type!=='planning').map(step=>(
+<option key={step.id} value={step.id}>{step.icon} {step.name}</option>
+))}
+</select>
+</div>
+<div className="input-group">
+<label className="input-label">Klanten ({bulkTimeClients.length} geselecteerd)</label>
+<div style={{display:'flex',gap:'8px',marginBottom:'8px'}}>
+<button type="button" onClick={()=>setBulkTimeClients(clients.filter(c=>!c.archived).map(c=>c.id))} style={{padding:'6px 12px',fontSize:'12px',border:'1px solid var(--border)',borderRadius:'6px',background:'var(--bg)',cursor:'pointer'}}>Selecteer alle</button>
+<button type="button" onClick={()=>setBulkTimeClients([])} style={{padding:'6px 12px',fontSize:'12px',border:'1px solid var(--border)',borderRadius:'6px',background:'var(--bg)',cursor:'pointer'}}>Deselecteer alle</button>
+</div>
+<div style={{maxHeight:'200px',overflowY:'auto',border:'1px solid var(--border)',borderRadius:'8px',padding:'8px'}}>
+{clients.filter(c=>!c.archived).map(client=>(
+<label key={client.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'8px',borderRadius:'6px',cursor:'pointer',background:bulkTimeClients.includes(client.id)?'var(--blue-light)':'transparent'}}>
+<input type="checkbox" checked={bulkTimeClients.includes(client.id)} onChange={(e)=>{if(e.target.checked){setBulkTimeClients([...bulkTimeClients,client.id]);}else{setBulkTimeClients(bulkTimeClients.filter(id=>id!==client.id));}}}/>
+<span style={{fontSize:'14px',fontWeight:bulkTimeClients.includes(client.id)?'600':'400'}}>{client.name}</span>
+</label>
+))}
+</div>
+</div>
+<div style={{padding:'12px',background:'linear-gradient(135deg, #fef3c7 0%, #fde68a 100%)',borderRadius:'8px',marginBottom:'16px',border:'1px solid #f59e0b'}}>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<span style={{fontSize:'20px'}}>💡</span>
+<div>
+<div style={{fontSize:'13px',fontWeight:'600',color:'#92400e'}}>Voorbeeld:</div>
+<div style={{fontSize:'12px',color:'#a16207'}}>{bulkTimeHours||'4'} uur ÷ {bulkTimeClients.length||'10'} klanten = {bulkTimeClients.length>0&&bulkTimeHours?(parseFloat(bulkTimeHours)/bulkTimeClients.length).toFixed(2):'0.40'}u per klant</div>
+</div>
+</div>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" onClick={saveBulkTime} style={{background:'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)'}}>
+⏱️ {bulkTimeHours&&bulkTimeClients.length>0?`${bulkTimeHours}u verdelen over ${bulkTimeClients.length} klanten`:'Uren Verdelen'}
+</button>
+<button className="btn btn-secondary" onClick={()=>{setShowBulkTimeModal(false);setBulkTimeHours('');setBulkTimeDescription('');setBulkTimeClients([]);}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -4021,7 +4131,8 @@ return(
 </div>
 </nav>
 </aside>
-<main className="main">
+<main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
+<div style={{padding:'20px',boxSizing:'border-box'}}>
 <div style={{marginBottom:'24px'}}>
 <h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
 <span>📈</span>
@@ -4032,26 +4143,26 @@ return(
 
 {/* Quick Stats */}
 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px',marginBottom:'32px'}}>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
 <div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Klanten</div>
 <div style={{fontSize:'32px',fontWeight:'700',color:'var(--blue)'}}>{activeClients.length}</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
 <div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Gem. Voortgang</div>
 <div style={{fontSize:'32px',fontWeight:'700',color:'var(--green)'}}>{clientStats.length>0?Math.round(clientStats.reduce((a,c)=>a+c.pct,0)/clientStats.length):0}%</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
 <div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Uren</div>
 <div style={{fontSize:'32px',fontWeight:'700',color:'var(--orange)'}}>{clientStats.reduce((a,c)=>a+c.totalHours,0).toFixed(1)}u</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
 <div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Taken Voltooid</div>
 <div style={{fontSize:'32px',fontWeight:'700',color:'var(--purple)'}}>{clientStats.reduce((a,c)=>a+c.completed,0)}/{clientStats.reduce((a,c)=>a+c.total,0)}</div>
 </div>
 </div>
 
 {/* Voortgang per Klant - Horizontal Bar Chart */}
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
 <h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>📊 Voortgang per Klant</h2>
 <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
 {clientStats.slice(0,15).map(({client,completed,total,pct})=>(
@@ -4069,7 +4180,7 @@ return(
 </div>
 
 {/* Uren per Maand - Bar Chart */}
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
 <h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>⏱️ Uren per Maand (laatste 6 maanden)</h2>
 <div style={{display:'flex',alignItems:'flex-end',gap:'12px',height:'200px',paddingTop:'20px'}}>
 {Object.entries(monthlyHours).map(([month,hours])=>{
@@ -4090,7 +4201,7 @@ return(
 </div>
 
 {/* Team Dashboard */}
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)',marginBottom:'24px'}}>
 <h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>👥 Team Dashboard</h2>
 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(280px, 1fr))',gap:'16px'}}>
 {Object.entries(pmStats).map(([pm,stats])=>{
@@ -4127,7 +4238,7 @@ return(
 </div>
 
 {/* Klanten per Status */}
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'24px',border:'1px solid var(--border)'}}>
 <h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'20px',display:'flex',alignItems:'center',gap:'8px'}}>📋 Maandelijkse Samenvatting</h2>
 <div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px'}}>
 {[
@@ -4148,6 +4259,7 @@ return(
 </div>
 </div>
 
+</div>
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4237,117 +4349,103 @@ return(
 </div>
 </nav>
 </aside>
-<main className="main">
-<div style={{marginBottom:'28px'}}>
-<h1 style={{fontSize:'26px',fontWeight:'700',color:'var(--text)',marginBottom:'6px',display:'flex',alignItems:'center',gap:'10px'}}>
-<span style={{fontSize:'28px'}}>🔗</span>
+<main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
+<div style={{padding:'20px',boxSizing:'border-box'}}>
+<div style={{marginBottom:'24px'}}>
+<h1 style={{fontSize:'28px',fontWeight:'700',color:'var(--text)',marginBottom:'8px',display:'flex',alignItems:'center',gap:'12px'}}>
+<span>🔗</span>
 <span>Linkbuilding Overzicht</span>
 </h1>
-<p style={{fontSize:'14px',color:'var(--text-light)',margin:0}}>Alle geplaatste links van alle projecten</p>
+<p style={{fontSize:'14px',color:'var(--text-light)'}}>Alle geplaatste links van alle projecten</p>
 </div>
 
-{/* Statistieken - Consistent blauw thema */}
-<div style={{display:'flex',gap:'12px',marginBottom:'24px',flexWrap:'wrap'}}>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Links</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>{allLinks.length}</div>
+{/* Statistieken */}
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fit, minmax(200px, 1fr))',gap:'16px',marginBottom:'32px'}}>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Links</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--blue)'}}>{allLinks.length}</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Totaal Kosten</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>€{totalCost.toFixed(2)}</div>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Totaal Kosten</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--green)'}}>€{totalCost.toFixed(2)}</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Berekende Uren</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>{totalHours}u</div>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px'}}>€50 = 1 uur</div>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Berekende Uren</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--orange)'}}>{totalHours}u</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'4px'}}>€50 = 1 uur</div>
 </div>
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px 24px',minWidth:'160px',flex:'1',border:'1px solid var(--border)'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500',marginBottom:'6px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Gem. per Link</div>
-<div style={{fontSize:'28px',fontWeight:'700',color:'var(--blue)'}}>€{linksWithCost.length>0?(totalCost/linksWithCost.length).toFixed(2):'0'}</div>
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'8px'}}>Gem. per Link</div>
+<div style={{fontSize:'32px',fontWeight:'700',color:'var(--purple)'}}>€{linksWithCost.length>0?(totalCost/linksWithCost.length).toFixed(0):'0'}</div>
 </div>
 </div>
 
-{/* Filter - Pills style */}
-<div style={{marginBottom:'24px'}}>
-<div style={{display:'flex',gap:'8px',flexWrap:'wrap',padding:'4px',background:'var(--bg)',borderRadius:'12px',border:'1px solid var(--border)'}}>
-<button onClick={()=>setLinkFilter('all')} style={{padding:'10px 18px',borderRadius:'8px',border:'none',background:linkFilter==='all'?'var(--blue)':'transparent',color:linkFilter==='all'?'white':'var(--text)',cursor:'pointer',fontWeight:'600',fontSize:'13px',transition:'all 0.2s ease'}}>Alle ({allLinks.length})</button>
+{/* Filter */}
+<div style={{marginBottom:'20px',display:'flex',gap:'8px',flexWrap:'wrap'}}>
+<button onClick={()=>setLinkFilter('all')} style={{padding:'8px 16px',borderRadius:'8px',border:'none',background:linkFilter==='all'?'var(--blue)':'var(--white)',color:linkFilter==='all'?'white':'var(--text)',cursor:'pointer',fontWeight:'500'}}>Alle ({allLinks.length})</button>
 {activeClients.slice(0,10).map(client=>{
 const count=(customItems[`${client.id}-5`]||[]).length;
 if(count===0)return null;
-return <button key={client.id} onClick={()=>setLinkFilter(client.id)} style={{padding:'10px 18px',borderRadius:'8px',border:'none',background:linkFilter===client.id?'var(--blue)':'transparent',color:linkFilter===client.id?'white':'var(--text)',cursor:'pointer',fontWeight:'600',fontSize:'13px',transition:'all 0.2s ease'}}>{client.name} ({count})</button>;
+return <button key={client.id} onClick={()=>setLinkFilter(client.id)} style={{padding:'8px 16px',borderRadius:'8px',border:'none',background:linkFilter===client.id?'var(--blue)':'var(--white)',color:linkFilter===client.id?'white':'var(--text)',cursor:'pointer',fontWeight:'500'}}>{client.name} ({count})</button>;
 })}
 </div>
-</div>
 
-{/* Uren per maand overzicht - Compact cards */}
-<div style={{background:'var(--card)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)',marginBottom:'24px'}}>
-<h2 style={{fontSize:'15px',fontWeight:'600',color:'var(--text)',marginBottom:'16px',display:'flex',alignItems:'center',gap:'8px'}}>
-<span style={{fontSize:'16px'}}>⏱️</span>
-Linkbuilding Uren per Maand
-</h2>
-<div style={{display:'flex',gap:'12px',overflowX:'auto',paddingBottom:'8px'}}>
+{/* Uren per maand overzicht */}
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)',marginBottom:'24px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'16px'}}>⏱️ Linkbuilding Uren per Maand</h2>
+<div style={{display:'grid',gridTemplateColumns:'repeat(auto-fill, minmax(180px, 1fr))',gap:'12px'}}>
 {Object.entries(linksByMonth).sort((a,b)=>b[0].localeCompare(a[0])).slice(0,6).map(([month,data])=>{
 const hours=calculateHours(data.cost);
-const monthName=month!=='Geen datum'?new Date(month+'-01').toLocaleDateString('nl-NL',{month:'short',year:'numeric'}):month;
-const maxCost=Math.max(...Object.values(linksByMonth).map(m=>m.cost));
-const percentage=maxCost>0?(data.cost/maxCost)*100:0;
+const monthName=month!=='Geen datum'?new Date(month+'-01').toLocaleDateString('nl-NL',{month:'long',year:'numeric'}):month;
 return(
-<div key={month} style={{background:'var(--bg)',borderRadius:'10px',padding:'14px 16px',border:'1px solid var(--border)',minWidth:'140px',flex:'0 0 auto'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)',marginBottom:'6px',fontWeight:'500',textTransform:'capitalize'}}>{monthName}</div>
-<div style={{display:'flex',alignItems:'baseline',gap:'8px',marginBottom:'8px'}}>
-<div style={{fontSize:'18px',fontWeight:'700',color:'var(--blue)'}}>€{data.cost.toFixed(2)}</div>
-<div style={{fontSize:'13px',fontWeight:'600',color:'var(--text-light)'}}>{hours}u</div>
+<div key={month} style={{background:'var(--bg)',borderRadius:'10px',padding:'16px',border:'1px solid var(--border)'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'4px'}}>{monthName}</div>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'baseline'}}>
+<div style={{fontSize:'20px',fontWeight:'700',color:'var(--green)'}}>€{data.cost.toFixed(0)}</div>
+<div style={{fontSize:'16px',fontWeight:'600',color:'var(--orange)'}}>{hours}u</div>
 </div>
-<div style={{background:'var(--border)',borderRadius:'3px',height:'3px',marginBottom:'6px',overflow:'hidden'}}>
-<div style={{background:'var(--blue)',height:'100%',width:`${percentage}%`,borderRadius:'3px',transition:'width 0.3s ease'}}/>
-</div>
-<div style={{fontSize:'11px',color:'var(--text-light)'}}>{data.links.length} link{data.links.length!==1?'s':''}</div>
+<div style={{fontSize:'12px',color:'var(--text-light)',marginTop:'4px'}}>{data.links.length} link{data.links.length!==1?'s':''}</div>
 </div>
 );
 })}
 </div>
 </div>
 
-{/* Links lijst - Clean table style */}
-<div style={{background:'var(--card)',borderRadius:'12px',border:'1px solid var(--border)',overflow:'hidden'}}>
-<div style={{padding:'16px 20px',borderBottom:'1px solid var(--border)'}}>
-<h2 style={{fontSize:'15px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px',margin:0}}>
-<span style={{fontSize:'16px'}}>📋</span>
-Alle Links
-<span style={{fontSize:'13px',fontWeight:'500',color:'var(--text-light)',marginLeft:'auto'}}>{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).length} resultaten</span>
-</h2>
-</div>
-<div style={{maxHeight:'600px',overflowY:'auto'}}>
-{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).map((link,index)=>{
+{/* Links lijst */}
+<div style={{background:'var(--white)',borderRadius:'12px',padding:'20px',border:'1px solid var(--border)'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',color:'var(--text)',marginBottom:'16px'}}>📋 Alle Links</h2>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).map(link=>{
 const hours=calculateHours(link.cost);
-const filteredLinks=allLinks.filter(l=>linkFilter==='all'||l.clientId===linkFilter);
 return(
-<div key={link.id} style={{display:'flex',alignItems:'center',gap:'16px',padding:'14px 20px',background:index%2===0?'transparent':'var(--bg)',borderBottom:'1px solid var(--border)',transition:'background 0.15s ease'}} onMouseEnter={e=>e.currentTarget.style.background='var(--blue-light)'} onMouseLeave={e=>e.currentTarget.style.background=index%2===0?'transparent':'var(--bg)'}>
+<div key={link.id} style={{display:'flex',alignItems:'center',gap:'16px',padding:'16px',background:'var(--bg)',borderRadius:'10px',border:'1px solid var(--border)'}}>
 <div style={{flex:1,minWidth:0}}>
-<a href={link.url?.startsWith('http')?link.url:`https://${link.url}`} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',fontWeight:'600',fontSize:'14px',textDecoration:'none',display:'block',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis',marginBottom:'6px'}}>{link.url?.replace(/^https?:\/\/(www\.)?/,'').substring(0,60)}{link.url?.length>60?'...':''}</a>
+<div style={{display:'flex',alignItems:'center',gap:'8px',marginBottom:'4px'}}>
+<a href={link.url?.startsWith('http')?link.url:`https://${link.url}`} target="_blank" rel="noopener noreferrer" style={{color:'var(--blue)',fontWeight:'600',fontSize:'14px',textDecoration:'none',whiteSpace:'nowrap',overflow:'hidden',textOverflow:'ellipsis'}}>{link.url?.replace(/^https?:\/\/(www\.)?/,'').substring(0,50)}{link.url?.length>50?'...':''}</a>
+</div>
 <div style={{display:'flex',alignItems:'center',gap:'12px',fontSize:'12px',color:'var(--text-light)'}}>
-<span style={{background:'var(--bg)',border:'1px solid var(--border)',padding:'2px 8px',borderRadius:'4px',fontWeight:'500',fontSize:'11px'}}>{link.clientName}</span>
-{link.date&&<span style={{display:'flex',alignItems:'center',gap:'4px'}}>📅 {new Date(link.date).toLocaleDateString('nl-NL',{day:'numeric',month:'short',year:'numeric'})}</span>}
-{link.anchorText&&<span style={{display:'flex',alignItems:'center',gap:'4px',maxWidth:'200px',overflow:'hidden',textOverflow:'ellipsis',whiteSpace:'nowrap'}}>🏷️ {link.anchorText}</span>}
+<span style={{background:'var(--white)',padding:'2px 8px',borderRadius:'4px'}}>{link.clientName}</span>
+{link.date&&<span>📅 {new Date(link.date).toLocaleDateString('nl-NL')}</span>}
+{link.anchorText&&<span>🏷️ {link.anchorText}</span>}
 </div>
 </div>
-<div style={{textAlign:'right',flexShrink:0,minWidth:'70px'}}>
-{link.cost?<><div style={{fontSize:'16px',fontWeight:'700',color:'var(--blue)'}}>€{parseFloat(link.cost).toFixed(2)}</div>
-<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'500'}}>{hours}u</div></>:<div style={{fontSize:'13px',color:'var(--text-light)'}}>-</div>}
+<div style={{textAlign:'right',flexShrink:0}}>
+{link.cost&&<div style={{fontSize:'16px',fontWeight:'700',color:'var(--green)'}}>€{parseFloat(link.cost).toFixed(0)}</div>}
+{link.cost&&<div style={{fontSize:'12px',color:'var(--orange)',fontWeight:'500'}}>{hours}u</div>}
 </div>
 </div>
 );
 })}
 {allLinks.filter(link=>linkFilter==='all'||link.clientId===linkFilter).length===0&&(
-<div style={{textAlign:'center',padding:'60px 20px',color:'var(--text-light)'}}>
-<div style={{fontSize:'48px',marginBottom:'12px',opacity:0.5}}>🔗</div>
-<div style={{fontSize:'15px',fontWeight:'500'}}>Geen links gevonden</div>
-<div style={{fontSize:'13px',marginTop:'4px'}}>Voeg links toe via de klant roadmap</div>
+<div style={{textAlign:'center',padding:'40px',color:'var(--text-light)'}}>
+<div style={{fontSize:'32px',marginBottom:'8px'}}>🔗</div>
+<div>Geen links gevonden</div>
 </div>
 )}
 </div>
 </div>
 
+</div>
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4768,7 +4866,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </h3>
 <div style={{display:'flex',flexDirection:'column',gap:'12px'}}>
 <div style={{display:'flex',gap:'6px',flexWrap:'wrap'}}>
-<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:(currentClient.clientType||'hotel')==='hotel'?'#dbeafe':currentClient.clientType==='strandtent'?'#e0f2fe':'#fef3c7',color:(currentClient.clientType||'hotel')==='hotel'?'#1d4ed8':currentClient.clientType==='strandtent'?'#0369a1':'#92400e',fontWeight:'600'}}>
+<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:(currentClient.clientType||'hotel')==='hotel'?'#dbeafe':'#fef3c7',color:(currentClient.clientType||'hotel')==='hotel'?'#1d4ed8':'#92400e',fontWeight:'600'}}>
 {(currentClient.clientType||'hotel')==='hotel'?'🏨 Hotel':currentClient.clientType==='strandtent'?'🏖️ Strandtent':'🍽️ Restaurant'}
 </span>
 {currentClient.multiLocation&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
@@ -5335,13 +5433,13 @@ const key=`${selectedClient}-${currentStep.id}-${task.id}`;
 const isChecked=!!tasks[key];
 const isIrrelevant=!!irrelevantTasks[key];
 return(
-<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isIrrelevant?'irrelevant':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{opacity:0.5,textDecoration:'line-through'}:{}} onClick={()=>{if(isAdmin&&!isIrrelevant)toggleTask(currentStep.id,task.id);}}>
-<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{background:'var(--gray-4)',borderColor:'var(--gray-4)'}:{}}>{isChecked&&!isIrrelevant&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}{isIrrelevant&&<span style={{color:'var(--text-light)',fontSize:'12px'}}>—</span>}</div>
-<div className="task-content" style={{flex:1}}>
+<div key={task.id} className={`task-card ${isChecked?'completed':''} ${isIrrelevant?'irrelevant':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{opacity:0.5}:{}} onClick={()=>{if(isAdmin&&!isIrrelevant)toggleTask(currentStep.id,task.id);}}>
+<div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{background:'var(--ios-gray-4)',borderColor:'var(--ios-gray-4)'}:{}}>{isChecked&&!isIrrelevant&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}{isIrrelevant&&<span style={{color:'var(--text-light)',fontSize:'12px'}}>—</span>}</div>
+<div className="task-content" style={{flex:1,textDecoration:isIrrelevant?'line-through':'none'}}>
 <div className="task-title">{task.title}</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
 </div>
-{isAdmin&&<button onClick={(e)=>toggleIrrelevant(currentStep.id,task.id,e)} style={{padding:'4px 8px',fontSize:'11px',background:isIrrelevant?'var(--blue)':'transparent',color:isIrrelevant?'white':'var(--text-light)',border:`1px solid ${isIrrelevant?'var(--blue)':'var(--border)'}`,borderRadius:'4px',cursor:'pointer',whiteSpace:'nowrap'}}>{isIrrelevant?'Relevant':'Niet relevant'}</button>}
+{isAdmin&&<button onClick={(e)=>toggleIrrelevant(currentStep.id,task.id,e)} style={{padding:'4px 8px',fontSize:'11px',background:isIrrelevant?'var(--blue)':'transparent',color:isIrrelevant?'white':'var(--text-light)',border:`1px solid ${isIrrelevant?'var(--blue)':'var(--border)'}`,borderRadius:'4px',cursor:'pointer',whiteSpace:'nowrap',marginLeft:'8px'}}>{isIrrelevant?'Relevant':'Niet relevant'}</button>}
 </div>
 );
 })}
