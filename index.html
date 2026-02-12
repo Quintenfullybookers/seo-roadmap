@@ -1350,7 +1350,7 @@ const budgetPercentage=totalBudget>0?Math.round((totalHours/totalBudget)*100):0;
 
 return{
 totalBudget,
-totalHours,
+totalHours:Math.round(totalHours*100)/100,
 budgetPercentage,
 avgProgress,
 completedTasks,
