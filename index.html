@@ -251,16 +251,19 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .joke-text{font-size:11px;color:var(--text-light);font-style:italic;line-height:1.4}
 .export-btn{margin:16px 24px 0;padding:10px 16px;background:var(--green);color:white;border:none;border-radius:6px;font-size:13px;font-weight:600;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;justify-content:center}
 .export-btn:hover{background:#059669;transform:translateY(-1px);box-shadow:var(--shadow)}
-.celebration-overlay{position:fixed;inset:0;pointer-events:none;z-index:99999;overflow:hidden}
-.confetti{position:absolute;width:10px;height:10px;opacity:0;animation:confetti-fall 3s ease-out forwards}
+.celebration-overlay{position:fixed;inset:0;pointer-events:none;z-index:99999;overflow:hidden;display:flex;align-items:center;justify-content:center}
+.celebration-center{position:relative;width:300px;height:300px}
+.confetti{position:absolute;width:10px;height:10px;opacity:0;animation:confetti-fall 2.5s ease-out forwards}
 .confetti.circle{border-radius:50%}
 .confetti.square{border-radius:2px}
 .confetti.star{clip-path:polygon(50% 0%,61% 35%,98% 35%,68% 57%,79% 91%,50% 70%,21% 91%,32% 57%,2% 35%,39% 35%)}
-@keyframes confetti-fall{0%{transform:translateY(-100px) rotate(0deg) scale(0);opacity:1}10%{transform:translateY(0) rotate(180deg) scale(1);opacity:1}100%{transform:translateY(100vh) rotate(720deg) scale(0.5);opacity:0}}
-.firework{position:absolute;width:6px;height:6px;border-radius:50%;animation:firework-explode 1s ease-out forwards}
-@keyframes firework-explode{0%{transform:scale(0);opacity:1}50%{transform:scale(1);opacity:1}100%{transform:scale(2);opacity:0}}
-.sparkle{position:absolute;font-size:24px;animation:sparkle-pop 1s ease-out forwards}
-@keyframes sparkle-pop{0%{transform:scale(0) rotate(0deg);opacity:1}50%{transform:scale(1.5) rotate(180deg);opacity:1}100%{transform:scale(0) rotate(360deg);opacity:0}}
+@keyframes confetti-fall{0%{transform:translateY(0) rotate(0deg) scale(0);opacity:1}20%{transform:translateY(-50px) rotate(180deg) scale(1);opacity:1}100%{transform:translateY(150px) rotate(720deg) scale(0.3);opacity:0}}
+.firework{position:absolute;width:8px;height:8px;border-radius:50%;animation:firework-explode 1.2s ease-out forwards}
+@keyframes firework-explode{0%{transform:scale(0);opacity:1}50%{transform:scale(1.5);opacity:1}100%{transform:scale(3);opacity:0}}
+.sparkle{position:absolute;font-size:32px;animation:sparkle-pop 1.5s ease-out forwards}
+@keyframes sparkle-pop{0%{transform:scale(0) rotate(0deg);opacity:1}40%{transform:scale(1.8) rotate(180deg);opacity:1}100%{transform:scale(0) rotate(360deg);opacity:0}}
+.celebration-text{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;font-weight:700;color:#4ade80;text-shadow:0 0 20px rgba(74,222,128,0.5);animation:text-pop 0.5s ease-out forwards;white-space:nowrap}
+@keyframes text-pop{0%{transform:translate(-50%,-50%) scale(0);opacity:0}50%{transform:translate(-50%,-50%) scale(1.2);opacity:1}100%{transform:translate(-50%,-50%) scale(1);opacity:1}}
 </style>
 <script crossorigin src="https://unpkg.com/react@18/umd/react.production.min.js"></script>
 <script crossorigin src="https://unpkg.com/react-dom@18/umd/react-dom.production.min.js"></script>
@@ -575,44 +578,51 @@ return(<div className={`toast toast-${type}`}><div className="toast-icon">{icons
 function Celebration(){
 const [particles,setParticles]=useState([]);
 useEffect(()=>{
-const colors=['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#dfe6e9','#fd79a8','#a29bfe','#00b894','#e17055','#fdcb6e','#6c5ce7'];
+const colors=['#ff6b6b','#4ecdc4','#45b7d1','#96ceb4','#ffeaa7','#fd79a8','#a29bfe','#00b894','#e17055','#fdcb6e','#6c5ce7','#4ade80'];
 const emojis=['⭐','✨','🌟','💫','🎉','🎊','🥳','👏','💪','🔥','❤️','💯'];
 const newParticles=[];
 
-// Confetti
-for(let i=0;i<50;i++){
+// Confetti - cirkel rond het midden
+for(let i=0;i<40;i++){
+const angle=(i/40)*Math.PI*2;
+const distance=80+Math.random()*60;
 newParticles.push({
 id:`confetti-${i}`,
 type:'confetti',
 shape:['circle','square','star'][Math.floor(Math.random()*3)],
 color:colors[Math.floor(Math.random()*colors.length)],
-left:Math.random()*100,
-delay:Math.random()*0.5,
+x:150+Math.cos(angle)*distance,
+y:150+Math.sin(angle)*distance,
+delay:Math.random()*0.3,
 size:Math.random()*8+6
 });
 }
 
-// Fireworks
-for(let i=0;i<20;i++){
+// Fireworks - ring rond het midden
+for(let i=0;i<12;i++){
+const angle=(i/12)*Math.PI*2;
+const distance=60+Math.random()*40;
 newParticles.push({
 id:`firework-${i}`,
 type:'firework',
 color:colors[Math.floor(Math.random()*colors.length)],
-left:20+Math.random()*60,
-top:20+Math.random()*40,
-delay:Math.random()*0.8
+x:150+Math.cos(angle)*distance,
+y:150+Math.sin(angle)*distance,
+delay:0.1+Math.random()*0.4
 });
 }
 
-// Sparkles/Emojis
-for(let i=0;i<15;i++){
+// Sparkles/Emojis - dichter bij het midden
+for(let i=0;i<8;i++){
+const angle=(i/8)*Math.PI*2;
+const distance=40+Math.random()*50;
 newParticles.push({
 id:`sparkle-${i}`,
 type:'sparkle',
 emoji:emojis[Math.floor(Math.random()*emojis.length)],
-left:Math.random()*100,
-top:Math.random()*60,
-delay:Math.random()*0.5
+x:150+Math.cos(angle)*distance,
+y:150+Math.sin(angle)*distance,
+delay:Math.random()*0.2
 });
 }
 
@@ -621,18 +631,21 @@ setParticles(newParticles);
 
 return(
 <div className="celebration-overlay">
+<div className="celebration-center">
+<div className="celebration-text">✓</div>
 {particles.map(p=>{
 if(p.type==='confetti'){
-return <div key={p.id} className={`confetti ${p.shape}`} style={{left:`${p.left}%`,backgroundColor:p.color,animationDelay:`${p.delay}s`,width:`${p.size}px`,height:`${p.size}px`}}/>;
+return <div key={p.id} className={`confetti ${p.shape}`} style={{left:`${p.x}px`,top:`${p.y}px`,backgroundColor:p.color,animationDelay:`${p.delay}s`,width:`${p.size}px`,height:`${p.size}px`}}/>;
 }
 if(p.type==='firework'){
-return <div key={p.id} className="firework" style={{left:`${p.left}%`,top:`${p.top}%`,backgroundColor:p.color,animationDelay:`${p.delay}s`,boxShadow:`0 0 10px ${p.color}, 0 0 20px ${p.color}`}}/>;
+return <div key={p.id} className="firework" style={{left:`${p.x}px`,top:`${p.y}px`,backgroundColor:p.color,animationDelay:`${p.delay}s`,boxShadow:`0 0 10px ${p.color}, 0 0 20px ${p.color}`}}/>;
 }
 if(p.type==='sparkle'){
-return <div key={p.id} className="sparkle" style={{left:`${p.left}%`,top:`${p.top}%`,animationDelay:`${p.delay}s`}}>{p.emoji}</div>;
+return <div key={p.id} className="sparkle" style={{left:`${p.x}px`,top:`${p.y}px`,animationDelay:`${p.delay}s`}}>{p.emoji}</div>;
 }
 return null;
 })}
+</div>
 </div>
 );
 }
@@ -5443,7 +5456,7 @@ return(
 {/* NOTITIES IN TO DO OVERZICHT */}
 {(()=>{
 const clientNotes=getClientNotes(selectedClient);
-if(clientNotes.length===0&&!isAdmin)return null;
+if(clientNotes.length===0)return null;
 return(
 <div style={{marginTop:'20px',paddingTop:'16px',borderTop:`2px solid ${darkMode?'#5D4E0A':'#F4D03F'}`}}>
 <div style={{fontSize:'14px',fontWeight:'600',color:darkMode?'#FDE047':'#9A7B0A',marginBottom:'12px',display:'flex',alignItems:'center',gap:'8px'}}>
