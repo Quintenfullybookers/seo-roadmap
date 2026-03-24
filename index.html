@@ -2967,18 +2967,8 @@ return(
 </div>
 </div>
 </div>
-<div className="stat-card">
-<div className="stat-icon">📈</div>
-<div className="stat-value">{stats.avgProgress}%</div>
-<div className="stat-label">Gem. voortgang</div>
-<div className="stat-subtitle">{stats.activeProjects} actieve projecten</div>
-</div>
-<div className="stat-card">
-<div className="stat-icon">✅</div>
-<div className="stat-value">{stats.completedTasks}</div>
-<div className="stat-label">Afgeronde taken</div>
-<div className="stat-subtitle">van {stats.totalTasks} totaal</div>
-</div>
+
+
 <div className={`stat-card ${stats.urgentDeadlines>0?'urgent':''}`}>
 <div className="stat-icon">{stats.urgentDeadlines>0?'⚠️':'✨'}</div>
 <div className="stat-value">{stats.urgentDeadlines}</div>
