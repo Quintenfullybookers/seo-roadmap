@@ -63,17 +63,18 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
 .status-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
-.dashboard-stats{background:linear-gradient(135deg,#1E3A5F 0%,#152A45 100%);border-radius:16px;padding:28px;margin-bottom:32px;box-shadow:var(--shadow-lg);color:white}
-.dashboard-stats h3{font-size:20px;margin-bottom:20px;font-weight:700;display:flex;align-items:center;gap:8px}
-.stats-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:20px}
-.stat-card{background:rgba(255,255,255,0.35);backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);border-radius:16px;padding:20px;border:0.5px solid rgba(255,255,255,0.5);transition:all 0.3s ease}
-.stat-card:hover{background:rgba(255,255,255,0.35);transform:translateY(-4px);box-shadow:0 8px 16px rgba(0,0,0,0.2)}
-.stat-value{font-size:32px;font-weight:700;margin-bottom:4px;line-height:1;text-shadow:0 2px 8px rgba(0,0,0,0.3),0 1px 4px rgba(0,0,0,0.4);color:white}
-.dashboard-stats .stat-label{font-size:13px;opacity:1;font-weight:700;text-shadow:0 1px 4px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.4);color:white}
-.dashboard-stats .stat-subtitle{font-size:12px;opacity:1;margin-top:4px;text-shadow:0 1px 4px rgba(0,0,0,0.3),0 1px 2px rgba(0,0,0,0.4);color:white;font-weight:500}
-.stat-icon{font-size:24px;margin-bottom:8px}
-.stat-card.urgent{background:rgba(239,68,68,0.3);border-color:rgba(239,68,68,0.5)}
-.stat-card.urgent:hover{background:rgba(239,68,68,0.4)}
+.dashboard-stats{margin-bottom:24px}
+.dashboard-stats h3{display:none}
+.stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
+.stat-card{background:var(--white);border:1px solid var(--border);border-radius:12px;padding:16px 20px;transition:border-color .15s}
+.stat-card:hover{border-color:var(--ios-gray-3)}
+.stat-value{font-size:32px;font-weight:700;margin-bottom:2px;line-height:1;color:var(--text)}
+.dashboard-stats .stat-label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:var(--text-light);margin-bottom:6px;display:block}
+.dashboard-stats .stat-subtitle{font-size:12px;color:var(--text-light);margin-top:4px;font-weight:400}
+.stat-icon{font-size:18px;margin-bottom:6px}
+.stat-card.urgent{border-left:3px solid var(--ios-red)}
+.stat-card.urgent .stat-value{color:var(--ios-red)}
+.stat-card.urgent:hover{border-color:var(--ios-red)}
 .notification-bell{position:relative;cursor:pointer;padding:8px;border-radius:8px;transition:all 0.2s;display:flex;align-items:center;gap:8px}
 .notification-bell:hover{background:var(--gray-bg)}
 .notification-badge{position:absolute;top:4px;right:4px;background:var(--red);color:white;border-radius:50%;width:18px;height:18px;font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;animation:pulse 2s infinite}
@@ -2953,25 +2954,21 @@ return(
 <h3>📊 Overzicht deze maand</h3>
 <div className="stats-grid">
 <div className="stat-card">
-<div className="stat-icon">📦</div>
-<div className="stat-icon">📦</div>
-<div className="stat-value">{stats.totalHours}u</div>
 <div className="stat-label">Gewerkte uren</div>
+<div className="stat-value">{stats.totalHours}u</div>
 <div className="stat-subtitle">van {stats.totalBudget}u pakket ({stats.budgetPercentage}%)</div>
 </div>
 <div className="stat-card">
-<div className="stat-icon">🕐</div>
-<div className="stat-value" style={{color:'var(--ios-green)'}}>{stats.totalRemaining}u</div>
 <div className="stat-label">Resterend</div>
+<div className="stat-value" style={{color:'var(--ios-green)'}}>{stats.totalRemaining}u</div>
 <div className="stat-subtitle">nog beschikbaar deze maand</div>
 </div>
 
 
 <div className={`stat-card ${stats.urgentDeadlines>0?'urgent':''}`}>
-<div className="stat-icon">{stats.urgentDeadlines>0?'⚠️':'✨'}</div>
+<div className="stat-label">Urgente deadlines</div>
 <div className="stat-value">{stats.urgentDeadlines}</div>
-<div className="stat-label">Urgent</div>
-<div className="stat-subtitle">Deadlines komende 7 dagen</div>
+<div className="stat-subtitle">komende 7 dagen</div>
 </div>
 </div>
 </div>
