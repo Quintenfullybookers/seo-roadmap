@@ -1444,6 +1444,7 @@ const budgetPercentage=totalBudget>0?Math.round((totalHours/totalBudget)*100):0;
 return{
 totalBudget,
 totalHours:Math.round(totalHours*10)/10,
+totalRemaining:Math.round(Math.max(0,totalBudget-totalHours)*10)/10,
 budgetPercentage,
 avgProgress,
 completedTasks,
@@ -2953,9 +2954,18 @@ return(
 <div className="stats-grid">
 <div className="stat-card">
 <div className="stat-icon">📦</div>
-<div className="stat-value">{stats.totalHours}u</div>
 <div className="stat-label">Gewerkte uren</div>
-<div className="stat-subtitle">van {stats.totalBudget}u pakket ({stats.budgetPercentage}%)</div>
+<div style={{display:'flex',alignItems:'baseline',gap:'12px',marginTop:'4px'}}>
+<div>
+<div className="stat-value">{stats.totalHours}u</div>
+<div className="stat-subtitle">gebruikt</div>
+</div>
+<div style={{width:'1px',height:'32px',background:'var(--ios-gray-4)'}}/>
+<div>
+<div className="stat-value" style={{color:'var(--ios-green)'}}>{stats.totalRemaining}u</div>
+<div className="stat-subtitle">resterend</div>
+</div>
+</div>
 </div>
 <div className="stat-card">
 <div className="stat-icon">📈</div>
