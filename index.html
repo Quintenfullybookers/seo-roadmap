@@ -654,6 +654,75 @@ return null;
 );
 }
 
+// SE RANKING WIDGET
+function SeRankingWidget({sheetUrl}){
+const [data,setData]=useState(null);
+const [loading,setLoading]=useState(true);
+const [error,setError]=useState(null);
+
+useEffect(()=>{
+const match=sheetUrl.match(/\/spreadsheets\/d\/([a-zA-Z0-9-_]+)/);
+if(!match){setError('Ongeldige Sheet URL');setLoading(false);return;}
+const sheetId=match[1];
+const csvUrl=`https://docs.google.com/spreadsheets/d/${sheetId}/export?format=csv`;
+fetch(csvUrl)
+.then(r=>{if(!r.ok)throw new Error('Sheet niet toegankelijk');return r.text();})
+.then(csv=>{
+const rows=csv.trim().split('
+').map(r=>r.split(','));
+if(rows.length<2){setData({top3:0,top10:0,top20:0,up:0,down:0,total:0});return;}
+const header=rows[0].map(h=>h.toLowerCase().replace(/"/g,'').trim());
+const posIdx=header.findIndex(h=>h.includes('positie')||h.includes('position')||h.includes('rank'));
+const changeIdx=header.findIndex(h=>h.includes('verander')||h.includes('change')||h.includes('diff'));
+if(posIdx===-1){setError('Geen positie-kolom gevonden');setLoading(false);return;}
+let top3=0,top10=0,top20=0,up=0,down=0,total=0;
+rows.slice(1).forEach(row=>{
+const pos=parseInt((row[posIdx]||'').replace(/"/g,''));
+const change=changeIdx>=0?parseInt((row[changeIdx]||'0').replace(/"/g,'').replace('+','')):0;
+if(isNaN(pos)||pos<=0)return;
+total++;
+if(pos<=3)top3++;
+if(pos<=10)top10++;
+if(pos<=20)top20++;
+if(!isNaN(change)){if(change>0)up++;else if(change<0)down++;}
+});
+setData({top3,top10,top20,up,down,total});
+setLoading(false);
+})
+.catch(e=>{setError('Sheet niet bereikbaar — zet delen aan');setLoading(false);});
+},[sheetUrl]);
+
+if(loading)return(<div style={{marginTop:'12px',padding:'10px 12px',background:'var(--ios-gray-6)',borderRadius:'10px',fontSize:'12px',color:'var(--text-light)'}}>📊 Rankings laden...</div>);
+if(error)return(<div style={{marginTop:'12px',padding:'10px 12px',background:'var(--ios-red-bg)',borderRadius:'10px',fontSize:'11px',color:'var(--ios-red)'}}>⚠️ {error}</div>);
+if(!data)return null;
+return(
+<div style={{marginTop:'12px',padding:'12px',background:'var(--ios-blue-light)',borderRadius:'10px',border:'1px solid rgba(30,58,95,0.1)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.6px',color:'var(--ios-blue)',marginBottom:'8px',display:'flex',justifyContent:'space-between'}}>
+<span>📊 SE Ranking — live</span>
+<span style={{fontWeight:'400',opacity:.7}}>{data.total} keywords</span>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'repeat(4,1fr)',gap:'6px'}}>
+<div style={{background:'white',borderRadius:'7px',padding:'8px',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,.06)'}}>
+<div style={{fontSize:'18px',fontWeight:'700',color:'var(--ios-green)',lineHeight:1}}>{data.top3}</div>
+<div style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'.4px',color:'var(--text-light)',marginTop:'3px'}}>Top 3</div>
+</div>
+<div style={{background:'white',borderRadius:'7px',padding:'8px',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,.06)'}}>
+<div style={{fontSize:'18px',fontWeight:'700',color:'var(--blue)',lineHeight:1}}>{data.top10}</div>
+<div style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'.4px',color:'var(--text-light)',marginTop:'3px'}}>Top 10</div>
+</div>
+<div style={{background:'white',borderRadius:'7px',padding:'8px',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,.06)'}}>
+<div style={{fontSize:'18px',fontWeight:'700',color:'var(--ios-green)',lineHeight:1}}>▲{data.up}</div>
+<div style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'.4px',color:'var(--text-light)',marginTop:'3px'}}>Gestegen</div>
+</div>
+<div style={{background:'white',borderRadius:'7px',padding:'8px',textAlign:'center',boxShadow:'0 1px 3px rgba(0,0,0,.06)'}}>
+<div style={{fontSize:'18px',fontWeight:'700',color:data.down>0?'var(--ios-red)':'var(--text-light)',lineHeight:1}}>{data.down>0?`▼${data.down}`:0}</div>
+<div style={{fontSize:'9px',textTransform:'uppercase',letterSpacing:'.4px',color:'var(--text-light)',marginTop:'3px'}}>Gedaald</div>
+</div>
+</div>
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -814,7 +883,7 @@ const [expandedMonth,setExpandedMonth]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
-const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});
+const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',seRankingSheet:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
@@ -835,6 +904,9 @@ const [editingCustomItem,setEditingCustomItem]=useState(null);
 const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
+const [showStatusmeetingModal,setShowStatusmeetingModal]=useState(false);
+const [statusmeetings,setStatusmeetings]=useState({});
+const [statusmeetingDraft,setStatusmeetingDraft]=useState({tevredenheid:3,besproken:'',actiepunten:[{text:'',planningMonth:'current'}]});
 
 // JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
 const getAllTasksForJourney=(clientId)=>{
@@ -1172,7 +1244,7 @@ const updatedClients=[...clients,client];
 setClients(updatedClients);
 saveData({tasks,customItems,planningItems,clients:updatedClients});
 setShowModal(false);
-setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
+setNewClient({name:'',website:'',seRanking:'',seRankingSheet:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
 setToast({type:'success',message:'✓ Klant toegevoegd'});
 };
 
@@ -1983,6 +2055,18 @@ setBulkTimeClients([]);
 setToast({type:'success',message:`✓ ${totalHours}u verdeeld over ${bulkTimeClients.length} klanten (${hoursPerClient}u per klant)`});
 };
 
+const saveStatusmeeting=(clientId,meeting)=>{
+const key=`statusmeeting_${clientId}`;
+const existing=JSON.parse(localStorage.getItem(key)||'[]');
+const newMeeting={...meeting,id:Date.now(),date:new Date().toISOString()};
+const updated=[newMeeting,...existing];
+localStorage.setItem(key,JSON.stringify(updated));
+setStatusmeetings(prev=>({...prev,[clientId]:updated}));
+};
+const getStatusmeetings=(clientId)=>{
+const key=`statusmeeting_${clientId}`;
+return JSON.parse(localStorage.getItem(key)||'[]');
+};
 const openTimeModal=(client,monthKey=null,entry=null)=>{
 if(!isAdmin)return;
 setTimeModalClient(client);
@@ -3153,6 +3237,7 @@ return(
 <div className="stat-label">Custom</div>
 </div>
 </div>
+{client.seRankingSheet&&<SeRankingWidget sheetUrl={client.seRankingSheet}/>}
 <div className="progress-section">
 <div className="progress-label">
 <span>Voortgang</span>
@@ -3417,6 +3502,12 @@ return(
 </div>
 </div>
 <div className="input-group">
+<label className="input-label">SE Ranking — Google Sheet URL <span style={{fontWeight:'400',color:'var(--text-light)'}}>(voor live rankings op dashboard)</span></label>
+<input type="text" className="modal-input" placeholder="https://docs.google.com/spreadsheets/d/..." value={newClient.seRankingSheet||''} onChange={(e)=>setNewClient({...newClient,seRankingSheet:e.target.value})}/>
+</div>
+<div style={{display:'none'}}>
+</div>
+<div className="input-group">
 <label className="input-label">Pakket (uren)</label>
 <input type="number" className="modal-input" min="0" step="1" placeholder="0" value={newClient.budget||''} onChange={(e)=>setNewClient({...newClient,budget:parseInt(e.target.value)||0})}/>
 </div>
@@ -3444,7 +3535,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',seRankingSheet:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -3525,6 +3616,12 @@ return(
 <label className="input-label">Looker Studio Link</label>
 <input type="text" className="modal-input" placeholder="https://..." value={editingClient.lookerStudio||''} onChange={(e)=>setEditingClient({...editingClient,lookerStudio:e.target.value})}/>
 </div>
+</div>
+<div className="input-group">
+<label className="input-label">SE Ranking — Google Sheet URL <span style={{fontWeight:'400',color:'var(--text-light)'}}>(voor live rankings op dashboard)</span></label>
+<input type="text" className="modal-input" placeholder="https://docs.google.com/spreadsheets/d/..." value={editingClient.seRankingSheet||''} onChange={(e)=>setEditingClient({...editingClient,seRankingSheet:e.target.value})}/>
+</div>
+<div style={{display:'none'}}>
 </div>
 <div className="input-group">
 <label className="input-label">Pakket (uren)</label>
@@ -3667,6 +3764,105 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 </div>
 )}
 
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
 );
@@ -3886,6 +4082,105 @@ return count;
 </div>
 )}
 
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4122,6 +4417,105 @@ return(
 })()}
 
 </div>
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4358,6 +4752,105 @@ return(
 </div>
 
 </div>
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4544,6 +5037,105 @@ return(
 </div>
 
 </div>
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4845,6 +5437,105 @@ setActiveView('roadmap');
 )}
 </div>
 
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4926,6 +5617,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 {isAdmin&&(
 <div className="banner-buttons">
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
+{isAdmin&&<button className="banner-btn" style={{background:'#7C3AED',color:'white'}} onClick={()=>{setStatusmeetingDraft({tevredenheid:3,besproken:'',actiepunten:[{text:'',planningMonth:'current'}]});setShowStatusmeetingModal(true);}}>📋 Statusmeeting</button>}
 <button className="banner-btn" onClick={()=>setShowJourney(true)} style={{background:'linear-gradient(135deg, #1e3a5f, #2d5a87)',color:'white'}}>🏔️ Journey</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
 <button className="banner-btn" onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
@@ -5239,6 +5931,47 @@ return(
 })}
 </div>
 </div>
+
+{isAdmin&&(()=>{
+const meetings=getStatusmeetings(selectedClient);
+if(meetings.length===0)return null;
+const emojis=['😞','😕','😐','🙂','😄'];
+return(
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px',marginBottom:'16px'}}>
+<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<span>📋</span> Statusmeetings ({meetings.length})
+</h3>
+{meetings.slice(0,5).map(m=>(
+<div key={m.id} style={{background:'var(--ios-gray-6)',borderRadius:'10px',padding:'14px',marginBottom:'10px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px'}}>
+<span style={{fontSize:'28px'}}>{emojis[m.tevredenheid-1]}</span>
+<div style={{flex:1}}>
+<div style={{fontSize:'12px',color:'var(--text-light)'}}>{new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+<div style={{fontSize:'13px',fontWeight:'600',color:'#7C3AED',marginTop:'1px'}}>Tevredenheid: {['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'][m.tevredenheid-1]}</div>
+</div>
+</div>
+{m.besproken&&(
+<div style={{marginBottom:'8px'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'4px'}}>Besproken</div>
+<div style={{fontSize:'13px',color:'var(--text)',lineHeight:'1.5'}}>{m.besproken}</div>
+</div>
+)}
+{m.actiepunten&&m.actiepunten.filter(a=>a.text).length>0&&(
+<div>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'4px'}}>Actiepunten</div>
+{m.actiepunten.filter(a=>a.text).map((a,i)=>(
+<div key={i} style={{fontSize:'13px',color:'var(--text)',display:'flex',alignItems:'center',gap:'6px',marginBottom:'3px'}}>
+<span style={{color:'#7C3AED',fontWeight:'700'}}>·</span>{a.text}
+<span style={{fontSize:'10px',background:'#F3E8FF',color:'#7C3AED',padding:'1px 6px',borderRadius:'4px',fontWeight:'600'}}>{a.planningMonth==='next'?'Volgende maand':'Deze maand'}</span>
+</div>
+))}
+</div>
+)}
+</div>
+))}
+</div>
+);
+})()}
 
 {(()=>{
 const clientNotes=getClientNotes(selectedClient);
@@ -5865,7 +6598,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',seRankingSheet:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -6162,6 +6895,105 @@ return <circle key={i} cx={cp.x} cy={cp.y} r={12} fill={isCompleted?'#4ade80':'w
 </div>
 )}
 
+{/* STATUSMEETING MODAL */}
+{showStatusmeetingModal&&isAdmin&&(()=>{
+const currentClient=clients.find(c=>c.id===selectedClient);
+if(!currentClient)return null;
+const planning=getClientPlanning(selectedClient);
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+const now=new Date();
+const currentMonthName=monthNames[now.getMonth()+1];
+const nextMonth=now.getMonth()===11?1:now.getMonth()+2;
+const nextMonthName=monthNames[nextMonth];
+const emojis=['😞','😕','😐','🙂','😄'];
+const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
+const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
+const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,idx)=>idx!==i)}));
+const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,idx)=>idx===i?{...a,[field]:val}:a)}));
+const handleSave=()=>{
+const draft=statusmeetingDraft;
+if(!draft.besproken.trim()&&draft.actiepunten.every(a=>!a.text.trim())){
+setToast({type:'error',message:'Vul minimaal iets in bij "Wat besproken"'});return;
+}
+saveStatusmeeting(selectedClient,draft);
+// Add actiepunten to planning
+const validActies=draft.actiepunten.filter(a=>a.text.trim());
+if(validActies.length>0){
+const currentMonthKey=`${now.getFullYear()}-${String(now.getMonth()+1).padStart(2,'0')}`;
+const nextMonthKey=`${now.getMonth()===11?now.getFullYear()+1:now.getFullYear()}-${String(nextMonth).padStart(2,'0')}`;
+validActies.forEach(actie=>{
+const monthKey=actie.planningMonth==='next'?nextMonthKey:currentMonthKey;
+const newItem={id:`sm-${Date.now()}-${Math.random()}`,text:actie.text,completed:false};
+setPlanningItems(prev=>{
+const clientPlanning=prev[selectedClient]||{};
+const monthPlanning=clientPlanning[monthKey]||{items:[]};
+return{...prev,[selectedClient]:{...clientPlanning,[monthKey]:{...monthPlanning,items:[...(monthPlanning.items||[]),newItem]}}};
+});
+});
+}
+setShowStatusmeetingModal(false);
+setToast({type:'success',message:'✓ Statusmeeting opgeslagen & actiepunten toegevoegd aan planning'});
+};
+return(
+<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
+<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}} onClick={e=>e.stopPropagation()}>
+<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
+<div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
+<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {new Date().toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
+</div>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 10px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
+</div>
+<div style={{padding:'24px'}}>
+{/* TEVREDENHEID */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
+<div style={{display:'flex',gap:'8px',justifyContent:'center'}}>
+{emojis.map((emoji,i)=>(
+<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 14px',borderRadius:'12px',border:`2px solid ${statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'}`,background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer',transition:'all .15s',flex:1}}>
+<span style={{fontSize:'28px'}}>{emoji}</span>
+<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center',lineHeight:'1.2'}}>{emojiLabels[i]}</span>
+</button>
+))}
+</div>
+</div>
+{/* WAT BESPROKEN */}
+<div style={{marginBottom:'24px'}}>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
+<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is tijdens de meeting..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',lineHeight:'1.5'}}/>
+</div>
+{/* ACTIEPUNTEN */}
+<div>
+<div style={{fontSize:'13px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
+<span>Actiepunten → Planning</span>
+<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'8px'}}>
+{statusmeetingDraft.actiepunten.map((actie,i)=>(
+<div key={i} style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={`Actiepunt ${i+1}...`} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none',fontWeight:'600'}}>
+<option value="current">{currentMonthName}</option>
+<option value="next">{nextMonthName}</option>
+</select>
+{statusmeetingDraft.actiepunten.length>1&&(
+<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer',fontSize:'14px'}}>✕</button>
+)}
+</div>
+))}
+</div>
+<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
+💡 Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
+</div>
+</div>
+</div>
+<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
+<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
+<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>✓ Opslaan</button>
+</div>
+</div>
+);
+})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 {showCelebration&&<Celebration/>}
 </div>
