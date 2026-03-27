@@ -3356,7 +3356,6 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
@@ -3379,14 +3378,13 @@ return(
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px'}}>
+<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele
+📍 Enkele locatie
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Meerdere
+📍📍 Multi-locatie
 </button>
-</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
@@ -3472,7 +3470,6 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={editingClient.name} onChange={(e)=>setEditingClient({...editingClient,name:e.target.value})} autoFocus/>
 </div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
@@ -3495,14 +3492,13 @@ return(
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px'}}>
+<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
 <button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele
+📍 Enkele locatie
 </button>
 <button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Meerdere
+📍📍 Multi-locatie
 </button>
-</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
@@ -6369,7 +6365,6 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
 <div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
@@ -6392,14 +6387,13 @@ return(
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px'}}>
+<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele
+📍 Enkele locatie
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Meerdere
+📍📍 Multi-locatie
 </button>
-</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
