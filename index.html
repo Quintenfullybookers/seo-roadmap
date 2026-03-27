@@ -3359,20 +3359,20 @@ return(
 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'flex',gap:'8px'}}>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
+<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel'||!newClient.clientType?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'||!newClient.clientType?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'||!newClient.clientType?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
 🎪 Evenementenlocatie
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
 🏨🍽️ Hotel & Restaurant
 </button>
 </div>
@@ -3475,20 +3475,20 @@ return(
 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'flex',gap:'8px'}}>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${(editingClient.clientType||'hotel')==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:(editingClient.clientType||'hotel')==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:(editingClient.clientType||'hotel')==='hotel'?'600':'400'}}>
+<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${(editingClient.clientType||'hotel')==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:(editingClient.clientType||'hotel')==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:(editingClient.clientType||'hotel')==='hotel'?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='evenement'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='evenement'?'600':'400'}}>
 🎪 Evenementenlocatie
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel_restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='hotel_restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='hotel_restaurant'?'600':'400'}}>
 🏨🍽️ Hotel & Restaurant
 </button>
 </div>
@@ -3727,7 +3727,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -4037,7 +4037,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -4364,7 +4364,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -4691,7 +4691,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -4968,7 +4968,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -5360,7 +5360,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
@@ -5827,14 +5827,12 @@ return(
 </div>
 {m.besproken&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5'}}>{m.besproken}</div>}
 {m.actiepunten&&m.actiepunten.filter(a=>a.text).length>0&&(
-<div style={{display:'flex',flexDirection:'column',gap:'4px'}}>
-{m.actiepunten.filter(a=>a.text).map((a,i)=>(
-<div key={i} style={{fontSize:'12px',color:'var(--text)',display:'flex',alignItems:'center',gap:'6px'}}>
+<div>{m.actiepunten.filter(a=>a.text).map((a,i)=>(
+<div key={i} style={{fontSize:'12px',color:'var(--text)',display:'flex',alignItems:'center',gap:'6px',marginBottom:'3px'}}>
 <span style={{color:'#7C3AED',fontWeight:'700'}}>·</span>{a.text}
 <span style={{fontSize:'10px',background:'#F3E8FF',color:'#7C3AED',padding:'1px 6px',borderRadius:'4px'}}>{a.planningMonth==='next'?'Volgende maand':'Deze maand'}</span>
 </div>
-))}
-</div>
+))}</div>
 )}
 </div>
 ))}
@@ -6374,20 +6372,20 @@ return(
 <div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'flex',gap:'8px'}}>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
+<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel'||!newClient.clientType?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'||!newClient.clientType?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'||!newClient.clientType?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
 🎪 Evenementenlocatie
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
 🏨🍽️ Hotel & Restaurant
 </button>
 </div>
@@ -6810,7 +6808,7 @@ return(
 <div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
 <div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
 <div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>Statusmeeting</div>
+<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
 <div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
 </div>
 <button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
