@@ -3505,8 +3505,6 @@ return(
 <label className="input-label">SE Ranking — Google Sheet URL <span style={{fontWeight:'400',color:'var(--text-light)'}}>(voor live rankings op dashboard)</span></label>
 <input type="text" className="modal-input" placeholder="https://docs.google.com/spreadsheets/d/..." value={newClient.seRankingSheet||''} onChange={(e)=>setNewClient({...newClient,seRankingSheet:e.target.value})}/>
 </div>
-<div style={{display:'none'}}>
-</div>
 <div className="input-group">
 <label className="input-label">Pakket (uren)</label>
 <input type="number" className="modal-input" min="0" step="1" placeholder="0" value={newClient.budget||''} onChange={(e)=>setNewClient({...newClient,budget:parseInt(e.target.value)||0})}/>
@@ -3620,8 +3618,6 @@ return(
 <div className="input-group">
 <label className="input-label">SE Ranking — Google Sheet URL <span style={{fontWeight:'400',color:'var(--text-light)'}}>(voor live rankings op dashboard)</span></label>
 <input type="text" className="modal-input" placeholder="https://docs.google.com/spreadsheets/d/..." value={editingClient.seRankingSheet||''} onChange={(e)=>setEditingClient({...editingClient,seRankingSheet:e.target.value})}/>
-</div>
-<div style={{display:'none'}}>
 </div>
 <div className="input-group">
 <label className="input-label">Pakket (uren)</label>
