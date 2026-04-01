@@ -659,6 +659,8 @@ function LocatiesView({selectedClient,isAdmin,getLocatieData,addStad,deleteStad,
 const [newStadNaam,setNewStadNaam]=useState('');
 const [newLocInputs,setNewLocInputs]=useState({});
 const [tick,setTick]=useState(0);
+const [openSteden,setOpenSteden]=useState({});
+const toggleStad=(id)=>setOpenSteden(p=>({...p,[id]:!p[id]}));
 const stadData=getLocatieData(selectedClient);
 const seoVelden=[{key:'metaTitel',label:'Meta Titel'},{key:'metaOmschrijving',label:'Meta omschrijving'},{key:'hKoppen',label:'H-koppen'},{key:'tekst',label:'Tekst'}];
 const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'}];
@@ -703,13 +705,16 @@ return a+(s2+g===(seoVelden.length+gmbVelden.length)?1:0);
 },0);
 return(
 <div key={stad.id} style={{marginBottom:'28px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px',paddingBottom:'8px',borderBottom:'2px solid var(--border)'}}>
-<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px',paddingBottom:'8px',borderBottom:'2px solid var(--border)',cursor:'pointer'}} onClick={()=>toggleStad(stad.id)}>
+<span style={{fontSize:'13px',color:'var(--text-light)',transition:'transform .2s',display:'inline-block',transform:openSteden[stad.id]?'rotate(90deg)':'rotate(0deg)'}}>▶</span>
+<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px',flex:1}}>
 🏙️ {stad.stad}
 <span style={{fontSize:'12px',fontWeight:'400',color:'var(--text-light)'}}>{stad.locaties.length} locaties · {stadKlaar} klaar</span>
 </div>
-{isAdmin&&<button onClick={()=>{if(confirm('Stad "'+stad.stad+'" en alle locaties verwijderen?')){deleteStad(selectedClient,stad.id);setTick(t=>t+1);}}} style={{padding:'3px 8px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'11px',marginLeft:'auto'}}>🗑️ Verwijder stad</button>}
+{isAdmin&&<button onClick={(e)=>{e.stopPropagation();if(confirm('Stad "'+stad.stad+'" en alle locaties verwijderen?')){deleteStad(selectedClient,stad.id);setTick(t=>t+1);}}} style={{padding:'3px 8px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'11px'}}>🗑️ Verwijder stad</button>}
 </div>
+{openSteden[stad.id]&&(
+<div>
 {isAdmin&&(
 <div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
 <input type="text" placeholder={'Locatie toevoegen in '+stad.stad+'...'} value={newLocInputs[stad.id]||''} onChange={e=>setNewLocInputs(p=>({...p,[stad.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter')doAddLoc(stad.id);}} style={{flex:1,padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
@@ -764,6 +769,8 @@ return(
 </div>
 );
 })}
+</div>
+)}
 </div>
 );
 })}
