@@ -654,6 +654,123 @@ return null;
 );
 }
 
+// LOCATIES VIEW COMPONENT
+function LocatiesView({selectedClient,isAdmin,getLocatieData,addStad,deleteStad,addLocatie,updateLocatieCheck,deleteLocatie}){
+const [newStadNaam,setNewStadNaam]=useState('');
+const [newLocInputs,setNewLocInputs]=useState({});
+const [tick,setTick]=useState(0);
+const stadData=getLocatieData(selectedClient);
+const seoVelden=[{key:'metaTitel',label:'Meta Titel'},{key:'metaOmschrijving',label:'Meta omschrijving'},{key:'hKoppen',label:'H-koppen'},{key:'tekst',label:'Tekst'}];
+const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'}];
+const totaalLocaties=stadData.reduce((a,s)=>a+s.locaties.length,0);
+const totaalKlaar=stadData.reduce((a,s)=>a+s.locaties.reduce((b,l)=>{
+const s2=seoVelden.filter(v=>l.seo[v.key]).length;
+const g=gmbVelden.filter(v=>l.gmb[v.key]).length;
+return b+(s2+g===(seoVelden.length+gmbVelden.length)?1:0);
+},0),0);
+const doAddStad=()=>{if(newStadNaam.trim()){addStad(selectedClient,newStadNaam);setNewStadNaam('');setTick(t=>t+1);}};
+const doAddLoc=(stadId)=>{const n=(newLocInputs[stadId]||'').trim();if(n){addLocatie(selectedClient,stadId,n);setNewLocInputs(p=>({...p,[stadId]:''}));setTick(t=>t+1);}};
+const doCheck=(stadId,locId,sectie,veld,val)=>{updateLocatieCheck(selectedClient,stadId,locId,sectie,veld,val);setTick(t=>t+1);};
+return(
+<div style={{maxWidth:'900px'}}>
+{totaalLocaties>0&&(
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',padding:'14px 18px',marginBottom:'20px',display:'flex',alignItems:'center',gap:'16px'}}>
+<div style={{fontSize:'13px',color:'var(--text-light)'}}>Totaal</div>
+<div style={{fontSize:'15px',fontWeight:'600',color:'var(--text)'}}>{totaalLocaties} locaties · {totaalKlaar} volledig klaar</div>
+<div style={{flex:1,height:'6px',background:'var(--border)',borderRadius:'3px',maxWidth:'200px'}}>
+<div style={{width:(totaalLocaties>0?Math.round((totaalKlaar/totaalLocaties)*100):0)+'%',height:'6px',background:'var(--ios-green)',borderRadius:'3px',transition:'width .3s'}}/>
+</div>
+</div>
+)}
+{isAdmin&&(
+<div style={{display:'flex',gap:'8px',marginBottom:'24px'}}>
+<input type="text" placeholder="Stad toevoegen (bijv. Amsterdam)..." value={newStadNaam} onChange={e=>setNewStadNaam(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')doAddStad();}} style={{flex:1,padding:'10px 14px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
+<button onClick={doAddStad} style={{padding:'10px 20px',background:'var(--blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>+ Stad</button>
+</div>
+)}
+{stadData.length===0&&(
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'40px',textAlign:'center',color:'var(--text-light)'}}>
+<div style={{fontSize:'32px',marginBottom:'12px'}}>🏙️</div>
+<div style={{fontSize:'15px',fontWeight:'600',marginBottom:'4px'}}>Nog geen steden toegevoegd</div>
+{isAdmin&&<div style={{fontSize:'13px'}}>Voeg hierboven een stad toe om te beginnen</div>}
+</div>
+)}
+{stadData.map(stad=>{
+const stadKlaar=stad.locaties.reduce((a,l)=>{
+const s2=seoVelden.filter(v=>l.seo[v.key]).length;
+const g=gmbVelden.filter(v=>l.gmb[v.key]).length;
+return a+(s2+g===(seoVelden.length+gmbVelden.length)?1:0);
+},0);
+return(
+<div key={stad.id} style={{marginBottom:'28px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px',paddingBottom:'8px',borderBottom:'2px solid var(--border)'}}>
+<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
+🏙️ {stad.stad}
+<span style={{fontSize:'12px',fontWeight:'400',color:'var(--text-light)'}}>{stad.locaties.length} locaties · {stadKlaar} klaar</span>
+</div>
+{isAdmin&&<button onClick={()=>{if(confirm('Stad "'+stad.stad+'" en alle locaties verwijderen?')){deleteStad(selectedClient,stad.id);setTick(t=>t+1);}}} style={{padding:'3px 8px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'11px',marginLeft:'auto'}}>🗑️ Verwijder stad</button>}
+</div>
+{isAdmin&&(
+<div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
+<input type="text" placeholder={'Locatie toevoegen in '+stad.stad+'...'} value={newLocInputs[stad.id]||''} onChange={e=>setNewLocInputs(p=>({...p,[stad.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter')doAddLoc(stad.id);}} style={{flex:1,padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
+<button onClick={()=>doAddLoc(stad.id)} style={{padding:'8px 14px',background:'var(--ios-blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>+ Locatie</button>
+</div>
+)}
+{stad.locaties.length===0&&(
+<div style={{padding:'14px',background:'var(--ios-gray-6)',borderRadius:'8px',fontSize:'13px',color:'var(--text-light)',textAlign:'center',marginBottom:'8px'}}>Nog geen locaties in {stad.stad}</div>
+)}
+{stad.locaties.map(loc=>{
+const seoKlaar=seoVelden.filter(v=>loc.seo[v.key]).length;
+const gmbKlaar=gmbVelden.filter(v=>loc.gmb[v.key]).length;
+const totK=seoKlaar+gmbKlaar;
+const tot=seoVelden.length+gmbVelden.length;
+const pct=Math.round((totK/tot)*100);
+return(
+<div key={loc.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',marginBottom:'8px',overflow:'hidden'}}>
+<div style={{padding:'10px 14px',background:'var(--ios-gray-6)',display:'flex',alignItems:'center',gap:'10px',borderBottom:'1px solid var(--border)'}}>
+<span style={{fontSize:'15px'}}>📍</span>
+<div style={{flex:1}}>
+<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{loc.naam}</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'1px'}}>{totK} / {tot} voltooid</div>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
+<div style={{width:'70px',height:'5px',background:'var(--border)',borderRadius:'3px'}}>
+<div style={{width:pct+'%',height:'5px',background:pct===100?'var(--ios-green)':pct>=50?'var(--blue)':'var(--ios-orange)',borderRadius:'3px',transition:'width .3s'}}/>
+</div>
+<span style={{fontSize:'12px',fontWeight:'600',color:pct===100?'var(--ios-green)':'var(--text)',minWidth:'32px'}}>{pct}%</span>
+{isAdmin&&<button onClick={()=>{if(confirm('Locatie "'+loc.naam+'" verwijderen?')){deleteLocatie(selectedClient,stad.id,loc.id);setTick(t=>t+1);}}} style={{padding:'3px 7px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'5px',cursor:'pointer',fontSize:'11px'}}>🗑️</button>}
+</div>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
+<div style={{padding:'12px 14px',borderRight:'1px solid var(--border)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--ios-blue)',marginBottom:'8px'}}>SEO geoptimaliseerd</div>
+{seoVelden.map(v=>(
+<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
+<input type="checkbox" checked={loc.seo[v.key]||false} onChange={e=>isAdmin&&doCheck(stad.id,loc.id,'seo',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'var(--blue)',cursor:isAdmin?'pointer':'default'}}/>
+<span style={{fontSize:'12px',color:loc.seo[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.seo[v.key]?'line-through':''}}>{v.label}</span>
+</label>
+))}
+</div>
+<div style={{padding:'12px 14px'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'#16a34a',marginBottom:'8px'}}>GMB</div>
+{gmbVelden.map(v=>(
+<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
+<input type="checkbox" checked={loc.gmb[v.key]||false} onChange={e=>isAdmin&&doCheck(stad.id,loc.id,'gmb',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'#16a34a',cursor:isAdmin?'pointer':'default'}}/>
+<span style={{fontSize:'12px',color:loc.gmb[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.gmb[v.key]?'line-through':''}}>{v.label}</span>
+</label>
+))}
+</div>
+</div>
+</div>
+);
+})}
+</div>
+);
+})}
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -5551,117 +5668,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 )}
 </header>
 
-{activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&(()=>{
-const stadData=getLocatieData(selectedClient);
-const [newStadNaam,setNewStadNaam]=React.useState('');
-const [newLocInputs,setNewLocInputs]=React.useState({});
-const seoVelden=[{key:'metaTitel',label:'Meta Titel'},{key:'metaOmschrijving',label:'Meta omschrijving'},{key:'hKoppen',label:'H-koppen'},{key:'tekst',label:'Tekst'}];
-const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'}];
-const totaalLocaties=stadData.reduce((a,s)=>a+s.locaties.length,0);
-const totaalKlaar=stadData.reduce((a,s)=>a+s.locaties.reduce((b,l)=>{
-const seo=seoVelden.filter(v=>l.seo[v.key]).length;
-const gmb=gmbVelden.filter(v=>l.gmb[v.key]).length;
-return b+(seo+gmb===(seoVelden.length+gmbVelden.length)?1:0);
-},0),0);
-return(
-<div style={{maxWidth:'900px'}}>
-{totaalLocaties>0&&(
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',padding:'14px 18px',marginBottom:'20px',display:'flex',alignItems:'center',gap:'16px'}}>
-<div style={{fontSize:'13px',color:'var(--text-light)'}}>Totaal</div>
-<div style={{fontSize:'15px',fontWeight:'600',color:'var(--text)'}}>{totaalLocaties} locaties · {totaalKlaar} volledig klaar</div>
-<div style={{flex:1,height:'6px',background:'var(--border)',borderRadius:'3px',maxWidth:'200px'}}>
-<div style={{width:(totaalLocaties>0?Math.round((totaalKlaar/totaalLocaties)*100):0)+'%',height:'6px',background:'var(--ios-green)',borderRadius:'3px',transition:'width .3s'}}/>
-</div>
-</div>
-)}
-{isAdmin&&(
-<div style={{display:'flex',gap:'8px',marginBottom:'24px'}}>
-<input type="text" placeholder="Stad toevoegen (bijv. Amsterdam)..." value={newStadNaam} onChange={e=>setNewStadNaam(e.target.value)} onKeyDown={e=>{if(e.key==='Enter'&&newStadNaam.trim()){addStad(selectedClient,newStadNaam);setNewStadNaam('');}}} style={{flex:1,padding:'10px 14px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
-<button onClick={()=>{if(newStadNaam.trim()){addStad(selectedClient,newStadNaam);setNewStadNaam('');}}} style={{padding:'10px 20px',background:'var(--blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>+ Stad</button>
-</div>
-)}
-{stadData.length===0&&(
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'40px',textAlign:'center',color:'var(--text-light)'}}>
-<div style={{fontSize:'32px',marginBottom:'12px'}}>🏙️</div>
-<div style={{fontSize:'15px',fontWeight:'600',marginBottom:'4px'}}>Nog geen steden toegevoegd</div>
-{isAdmin&&<div style={{fontSize:'13px'}}>Voeg hierboven een stad toe om te beginnen</div>}
-</div>
-)}
-{stadData.map(stad=>{
-const stadKlaar=stad.locaties.reduce((a,l)=>{
-const s=seoVelden.filter(v=>l.seo[v.key]).length;
-const g=gmbVelden.filter(v=>l.gmb[v.key]).length;
-return a+(s+g===(seoVelden.length+gmbVelden.length)?1:0);
-},0);
-return(
-<div key={stad.id} style={{marginBottom:'24px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px'}}>
-<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
-🏙️ {stad.stad}
-<span style={{fontSize:'12px',fontWeight:'400',color:'var(--text-light)'}}>({stad.locaties.length} locaties · {stadKlaar} klaar)</span>
-</div>
-{isAdmin&&<button onClick={()=>{if(confirm('Stad "'+stad.stad+'" en alle locaties verwijderen?'))deleteStad(selectedClient,stad.id);}} style={{padding:'3px 8px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'11px',marginLeft:'auto'}}>🗑️ Verwijder stad</button>}
-</div>
-{isAdmin&&(
-<div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
-<input type="text" placeholder={'Locatie toevoegen in '+stad.stad+'...'} value={newLocInputs[stad.id]||''} onChange={e=>setNewLocInputs(p=>({...p,[stad.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&(newLocInputs[stad.id]||'').trim()){addLocatie(selectedClient,stad.id,(newLocInputs[stad.id]||'').trim());setNewLocInputs(p=>({...p,[stad.id]:''}));}}} style={{flex:1,padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
-<button onClick={()=>{if((newLocInputs[stad.id]||'').trim()){addLocatie(selectedClient,stad.id,(newLocInputs[stad.id]||'').trim());setNewLocInputs(p=>({...p,[stad.id]:''}));}}} style={{padding:'8px 14px',background:'var(--ios-blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>+ Locatie</button>
-</div>
-)}
-{stad.locaties.length===0&&(
-<div style={{padding:'16px',background:'var(--ios-gray-6)',borderRadius:'8px',fontSize:'13px',color:'var(--text-light)',textAlign:'center'}}>Nog geen locaties in {stad.stad}</div>
-)}
-{stad.locaties.map(loc=>{
-const seoKlaar=seoVelden.filter(v=>loc.seo[v.key]).length;
-const gmbKlaar=gmbVelden.filter(v=>loc.gmb[v.key]).length;
-const totK=seoKlaar+gmbKlaar;
-const tot=seoVelden.length+gmbVelden.length;
-const pct=Math.round((totK/tot)*100);
-return(
-<div key={loc.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',marginBottom:'8px',overflow:'hidden'}}>
-<div style={{padding:'10px 14px',background:'var(--ios-gray-6)',display:'flex',alignItems:'center',gap:'10px',borderBottom:'1px solid var(--border)'}}>
-<span style={{fontSize:'15px'}}>📍</span>
-<div style={{flex:1}}>
-<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{loc.naam}</div>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'1px'}}>{totK} / {tot} voltooid</div>
-</div>
-<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-<div style={{width:'70px',height:'5px',background:'var(--border)',borderRadius:'3px'}}>
-<div style={{width:pct+'%',height:'5px',background:pct===100?'var(--ios-green)':pct>=50?'var(--blue)':'var(--ios-orange)',borderRadius:'3px',transition:'width .3s'}}/>
-</div>
-<span style={{fontSize:'12px',fontWeight:'600',color:pct===100?'var(--ios-green)':'var(--text)',minWidth:'32px'}}>{pct}%</span>
-{isAdmin&&<button onClick={()=>{if(confirm('Locatie "'+loc.naam+'" verwijderen?'))deleteLocatie(selectedClient,stad.id,loc.id);}} style={{padding:'3px 7px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'5px',cursor:'pointer',fontSize:'11px'}}>🗑️</button>}
-</div>
-</div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
-<div style={{padding:'12px 14px',borderRight:'1px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--ios-blue)',marginBottom:'8px'}}>SEO geoptimaliseerd</div>
-{seoVelden.map(v=>(
-<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
-<input type="checkbox" checked={loc.seo[v.key]||false} onChange={e=>isAdmin&&updateLocatieCheck(selectedClient,stad.id,loc.id,'seo',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'var(--blue)',cursor:isAdmin?'pointer':'default'}}/>
-<span style={{fontSize:'12px',color:loc.seo[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.seo[v.key]?'line-through':''}}>{v.label}</span>
-</label>
-))}
-</div>
-<div style={{padding:'12px 14px'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'#16a34a',marginBottom:'8px'}}>GMB</div>
-{gmbVelden.map(v=>(
-<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
-<input type="checkbox" checked={loc.gmb[v.key]||false} onChange={e=>isAdmin&&updateLocatieCheck(selectedClient,stad.id,loc.id,'gmb',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'#16a34a',cursor:isAdmin?'pointer':'default'}}/>
-<span style={{fontSize:'12px',color:loc.gmb[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.gmb[v.key]?'line-through':''}}>{v.label}</span>
-</label>
-))}
-</div>
-</div>
-</div>
-);
-})}
-</div>
-);
-})}
-</div>
-);
-})()}
+{activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&<LocatiesView selectedClient={selectedClient} isAdmin={isAdmin} getLocatieData={getLocatieData} addStad={addStad} deleteStad={deleteStad} addLocatie={addLocatie} updateLocatieCheck={updateLocatieCheck} deleteLocatie={deleteLocatie}/>}
 
 {activeStep==='overview'&&(
 <div className="overview-content" style={{maxWidth:'900px'}}>
