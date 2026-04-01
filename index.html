@@ -663,7 +663,7 @@ const [openSteden,setOpenSteden]=useState({});
 const toggleStad=(id)=>setOpenSteden(p=>({...p,[id]:!p[id]}));
 const stadData=getLocatieData(selectedClient);
 const seoVelden=[{key:'metaTitel',label:'Meta Titel'},{key:'metaOmschrijving',label:'Meta omschrijving'},{key:'hKoppen',label:'H-koppen'},{key:'tekst',label:'Tekst'}];
-const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'}];
+const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'},{key:'menu',label:'Menu'}];
 const totaalLocaties=stadData.reduce((a,s)=>a+s.locaties.length,0);
 const totaalKlaar=stadData.reduce((a,s)=>a+s.locaties.reduce((b,l)=>{
 const s2=seoVelden.filter(v=>l.seo[v.key]).length;
