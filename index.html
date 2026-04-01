@@ -28,11 +28,11 @@ body.dark-mode .notes-section div[style*="background: white"]{background:#1C1C1E
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
-.sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
-.logo{padding:0 20px 20px;border-bottom:0.5px solid var(--border);margin-bottom:16px}
-.logo-text{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.5px;margin-bottom:4px}
-.logo-subtitle{font-size:24px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
-.sync-status{padding:0 24px 16px;font-size:12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px}
+.sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);scrollbar-width:thin}
+.logo{padding:0 16px 14px;border-bottom:0.5px solid var(--border);margin-bottom:10px}
+.logo-text{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.5px;margin-bottom:2px}
+.logo-subtitle{font-size:20px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
+.sync-status{padding:0 16px 10px;font-size:11px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
 .sync-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .sync-connected{background:var(--green)}
 .sync-connecting{background:var(--orange);animation:pulse 1.5s infinite}
@@ -52,11 +52,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .save-status-dot.saving{background:var(--orange);animation:pulse 1s infinite}
 .save-status-dot.success{background:var(--green)}
 .save-status-dot.error{background:var(--red)}
-.nav-item{padding:10px 16px;margin:0 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;border-radius:10px;border-left:none}
+.nav-item{padding:8px 12px;margin:0 8px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:8px;border-radius:10px;border-left:none}
 .nav-item:hover{background:var(--ios-gray-6)}
 .nav-item.active{background:var(--ios-blue-light);color:var(--ios-blue);border-left:none;font-weight:600}
-.nav-icon{font-size:18px}
-.nav-text{flex:1;font-size:14px;font-weight:500}
+.nav-icon{font-size:16px}
+.nav-text{flex:1;font-size:13px;font-weight:500}
 .nav-count{font-size:12px;color:var(--text-light);background:var(--gray-bg);padding:2px 8px;border-radius:12px}
 .main{flex:1;padding:48px 64px;max-width:1800px;margin-left:280px}
 .header{margin-bottom:32px}
