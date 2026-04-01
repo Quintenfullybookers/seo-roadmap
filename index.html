@@ -655,7 +655,7 @@ return null;
 }
 
 // LOCATIES VIEW COMPONENT
-function LocatiesView({selectedClient,isAdmin,getLocatieData,addStad,deleteStad,addLocatie,updateLocatieCheck,deleteLocatie}){
+function LocatiesView({selectedClient,isAdmin,getLocatieData,addStad,deleteStad,addLocatie,updateLocatieCheck,updateLocatieOpmerking,deleteLocatie}){
 const [newStadNaam,setNewStadNaam]=useState('');
 const [newLocInputs,setNewLocInputs]=useState({});
 const [tick,setTick]=useState(0);
@@ -766,6 +766,13 @@ return(
 ))}
 </div>
 </div>
+{isAdmin?(
+<div style={{padding:'10px 14px',borderTop:'1px solid var(--border)'}}>
+<textarea value={loc.opmerking||''} onChange={e=>{updateLocatieOpmerking(selectedClient,stad.id,loc.id,e.target.value);setTick(t=>t+1);}} placeholder="Opmerking toevoegen..." style={{width:'100%',padding:'8px 10px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',fontFamily:'inherit',resize:'vertical',minHeight:'52px',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
+</div>
+):(loc.opmerking&&(
+<div style={{padding:'10px 14px',borderTop:'1px solid var(--border)',fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>{loc.opmerking}</div>
+))}
 </div>
 );
 })}
@@ -2121,11 +2128,15 @@ const deleteStad=(clientId,stadId)=>{
 saveLocatieData(clientId,getLocatieData(clientId).filter(s=>s.id!==stadId));
 };
 const addLocatie=(clientId,stadId,naam)=>{
-const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:[...s.locaties,{id:'loc_'+Date.now(),naam,seo:{metaTitel:false,metaOmschrijving:false,hKoppen:false,tekst:false},gmb:{aangemaakt:false,infoAangeleverd:false,geoptimaliseerd:false,reviewsAuto:false}}]}:s);
+const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:[...s.locaties,{id:'loc_'+Date.now(),naam,opmerking:'',seo:{metaTitel:false,metaOmschrijving:false,hKoppen:false,tekst:false},gmb:{aangemaakt:false,infoAangeleverd:false,geoptimaliseerd:false,reviewsAuto:false}}]}:s);
 saveLocatieData(clientId,data);
 };
 const updateLocatieCheck=(clientId,stadId,locId,sectie,veld,val)=>{
 const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.map(l=>l.id===locId?{...l,[sectie]:{...l[sectie],[veld]:val}}:l)}:s);
+saveLocatieData(clientId,data);
+};
+const updateLocatieOpmerking=(clientId,stadId,locId,tekst)=>{
+const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.map(l=>l.id===locId?{...l,opmerking:tekst}:l)}:s);
 saveLocatieData(clientId,data);
 };
 const deleteLocatie=(clientId,stadId,locId)=>{
@@ -5675,7 +5686,7 @@ Project: <span className="banner-client">{currentClient.name}</span>
 )}
 </header>
 
-{activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&<LocatiesView selectedClient={selectedClient} isAdmin={isAdmin} getLocatieData={getLocatieData} addStad={addStad} deleteStad={deleteStad} addLocatie={addLocatie} updateLocatieCheck={updateLocatieCheck} deleteLocatie={deleteLocatie}/>}
+{activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&<LocatiesView selectedClient={selectedClient} isAdmin={isAdmin} getLocatieData={getLocatieData} addStad={addStad} deleteStad={deleteStad} addLocatie={addLocatie} updateLocatieCheck={updateLocatieCheck} updateLocatieOpmerking={updateLocatieOpmerking} deleteLocatie={deleteLocatie}/>}
 
 {activeStep==='overview'&&(
 <div className="overview-content" style={{maxWidth:'900px'}}>
