@@ -785,6 +785,50 @@ return(
 );
 }
 
+// TASK INFO BUTTON COMPONENT
+function TaskInfoButton({taskTitle,stepName}){
+const [show,setShow]=React.useState(false);
+const [info,setInfo]=React.useState(null);
+const [loading,setLoading]=React.useState(false);
+const cacheKey='taskinfo_'+taskTitle.replace(/\s+/g,'_').toLowerCase();
+
+const loadInfo=async()=>{
+if(info)return;
+const cached=localStorage.getItem(cacheKey);
+if(cached){setInfo(cached);return;}
+setLoading(true);
+try{
+const res=await fetch('https://api.anthropic.com/v1/messages',{
+method:'POST',
+headers:{'Content-Type':'application/json'},
+body:JSON.stringify({
+model:'claude-sonnet-4-20250514',
+max_tokens:1000,
+system:'Je bent een SEO expert. Geef een korte, praktische uitleg van de SEO-taak. Schrijf in het Nederlands. Max 3 zinnen: wat het is, waarom het belangrijk is, en waar/hoe je het doet. Wees concreet en direct.',
+messages:[{role:'user',content:`Leg kort uit wat deze SEO-taak inhoudt: "${taskTitle}" (onderdeel van: ${stepName}). Geef ook aan waar je dit kunt uitvoeren of vinden.`}]
+})
+});
+const data=await res.json();
+const text=data.content?.[0]?.text||'Geen uitleg beschikbaar.';
+localStorage.setItem(cacheKey,text);
+setInfo(text);
+}catch(e){setInfo('Kon uitleg niet laden.');}
+setLoading(false);
+};
+
+return(
+<div style={{position:'relative',display:'inline-flex',marginLeft:'6px'}} onMouseEnter={()=>{setShow(true);loadInfo();}} onMouseLeave={()=>setShow(false)}>
+<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'16px',height:'16px',borderRadius:'50%',background:'var(--ios-gray-5)',color:'var(--text-light)',fontSize:'10px',fontWeight:'700',cursor:'help',flexShrink:0,userSelect:'none'}}>i</span>
+{show&&(
+<div style={{position:'absolute',bottom:'calc(100% + 6px)',left:'50%',transform:'translateX(-50%)',width:'260px',background:document.body.classList.contains('dark-mode')?'#2C2C2E':'#1E2939',color:'white',borderRadius:'10px',padding:'10px 12px',fontSize:'12px',lineHeight:'1.5',zIndex:9999,pointerEvents:'none',boxShadow:'0 4px 16px rgba(0,0,0,0.3)'}}>
+{loading?<span style={{opacity:.7}}>Uitleg laden...</span>:info}
+<div style={{position:'absolute',top:'100%',left:'50%',transform:'translateX(-50%)',width:0,height:0,borderLeft:'5px solid transparent',borderRight:'5px solid transparent',borderTop:`5px solid ${document.body.classList.contains('dark-mode')?'#2C2C2E':'#1E2939'}`}}/>
+</div>
+)}
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -6301,7 +6345,10 @@ return(
 <div key={task.id} className={`task-card ${isChecked?'completed':''} ${isIrrelevant?'irrelevant':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{opacity:0.5}:{}} onClick={()=>{if(isAdmin&&!isIrrelevant)toggleTask(currentStep.id,task.id);}}>
 <div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{background:'var(--ios-gray-4)',borderColor:'var(--ios-gray-4)'}:{}}>{isChecked&&!isIrrelevant&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}{isIrrelevant&&<span style={{color:'var(--text-light)',fontSize:'12px'}}>—</span>}</div>
 <div className="task-content" style={{flex:1,textDecoration:isIrrelevant?'line-through':'none'}}>
-<div className="task-title">{task.title}</div>
+<div className="task-title" style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:'2px'}}>
+{task.title}
+<TaskInfoButton taskTitle={task.title} stepName={currentStep?.name||'SEO'}/>
+</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
 </div>
 {isAdmin&&<button onClick={(e)=>toggleIrrelevant(currentStep.id,task.id,e)} style={{padding:'4px 8px',fontSize:'11px',background:isIrrelevant?'var(--blue)':'transparent',color:isIrrelevant?'white':'var(--text-light)',border:`1px solid ${isIrrelevant?'var(--blue)':'var(--border)'}`,borderRadius:'4px',cursor:'pointer',whiteSpace:'nowrap',marginLeft:'8px'}}>{isIrrelevant?'Relevant':'Niet relevant'}</button>}
