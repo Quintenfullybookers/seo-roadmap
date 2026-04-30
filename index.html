@@ -946,6 +946,173 @@ return(
 );
 }
 
+// ACTIEOVERZICHT COMPONENT
+function ActieoverzichtView({clients,tasks,customItems,planningItems,getClientHours,timeTracking,isAdmin,setSelectedClient,setActiveView,setActiveStep}){
+const now=new Date();
+const nowKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+const monthNames={1:'Jan',2:'Feb',3:'Mrt',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
+const monthLabel=monthNames[now.getMonth()+1]+' '+now.getFullYear();
+
+const CATS={
+seo:{label:'On-page SEO',bg:'#eff6ff',color:'#1d4ed8'},
+technisch:{label:'Technisch',bg:'#eff6ff',color:'#1d4ed8'},
+gmb:{label:'GMB',bg:'#fdf4ff',color:'#7e22ce'},
+content:{label:'Content',bg:'#f0fdf4',color:'#15803d'},
+linkbuilding:{label:'Linkbuilding',bg:'#fff7ed',color:'#c2410c'},
+rapportage:{label:'Rapportage',bg:'#f8fafc',color:'#475569'},
+setup:{label:'Setup',bg:'#f0f9ff',color:'#0369a1'},
+};
+
+const getCat=(stepId,title)=>{
+const t=title.toLowerCase();
+if(stepId===2||t.includes('gmb')||t.includes('google my business')||t.includes('reviews')||t.includes('profiel'))return CATS.gmb;
+if(stepId===5||t.includes('link')||t.includes('backlink')||t.includes('gastblog')||t.includes('directory')||t.includes('tripadvisor'))return CATS.linkbuilding;
+if(stepId===4||t.includes('content')||t.includes('tekst')||t.includes('blog')||t.includes('menu'))return CATS.content;
+if(stepId===6||t.includes('rapport')||t.includes('analytics')||t.includes('meten'))return CATS.rapportage;
+if(stepId===8||t.includes('setup')||t.includes('meting')||t.includes('instellen')||t.includes('koppelen'))return CATS.setup;
+if(stepId===3||t.includes('pagespeed')||t.includes('schema')||t.includes('sitemap')||t.includes('robots')||t.includes('ssl')||t.includes('redirect')||t.includes('canonical'))return CATS.technisch;
+return CATS.seo;
+};
+
+const STEPS_MAP={1:'SEO Plan',2:'GMB',3:'Technisch',4:'Content',5:'Linkbuilding',6:'Meten',8:'Setup'};
+
+const activeClients=clients.filter(c=>!c.archived);
+
+const clientData=activeClients.map(client=>{
+const hours=getClientHours(client.id);
+const budget=client.budget||0;
+const budgetPct=budget>0?Math.round((hours/budget)*100):0;
+const isUrgent=budgetPct>=80||client.status==='kritiek';
+const isAttention=client.status==='aandacht'||budgetPct>=60;
+
+// Gather open tasks from roadmap steps
+const openTaken=[];
+const STEP_IDS=[1,2,3,4,5,6,8];
+STEP_IDS.forEach(stepId=>{
+const stepData=window.STEPS_DATA?.[stepId];
+if(!stepData)return;
+(stepData.sections||[]).forEach(section=>{
+(section.tasks||[]).forEach(task=>{
+const key=client.id+'-'+stepId+'-'+task.id;
+const done=!!(tasks[key]);
+const irrelevant=!!(window.IRRELEVANT_DATA?.[key]);
+if(!done&&!irrelevant){
+openTaken.push({text:task.title,stepId,cat:getCat(stepId,task.title),key});
+}
+});
+});
+});
+
+// Check carried over planning items
+const carriedTaken=[];
+const clientPlanning=planningItems[client.id]||{};
+const prevMonthDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+const prevKey=prevMonthDate.getFullYear()+'-'+String(prevMonthDate.getMonth()+1).padStart(2,'0');
+const prevItems=(clientPlanning[prevKey]||{items:[]}).items||[];
+prevItems.filter(i=>!i.completed).forEach(i=>{
+carriedTaken.push({text:i.text,carried:true,cat:getCat(0,i.text)});
+});
+
+// This month planning items
+const thisMonthItems=(clientPlanning[nowKey]||{items:[]}).items||[];
+const planningTaken=thisMonthItems.filter(i=>!i.completed).map(i=>({text:i.text,cat:getCat(0,i.text),fromPlanning:true}));
+
+const allOpen=[...carriedTaken,...planningTaken,...openTaken.slice(0,5)];
+
+return{client,hours,budget,budgetPct,isUrgent,isAttention,openTaken:allOpen,totalOpen:openTaken.length};
+}).sort((a,b)=>{
+const scoreA=(a.isUrgent?3:a.isAttention?2:1);
+const scoreB=(b.isUrgent?3:b.isAttention?2:1);
+return scoreB-scoreA;
+});
+
+const statusColor={top:'#10b981',schema:'#3b82f6',aandacht:'#f59e0b',kritiek:'#ef4444',opstartfase:'#94a3b8'};
+const statusLabel={top:'Top',schema:'Op schema',aandacht:'Aandacht',kritiek:'Kritiek',opstartfase:'Opstartfase'};
+
+return(
+<div style={{maxWidth:'1000px'}}>
+<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)'}}>Actieoverzicht — {monthLabel}</div>
+<div style={{marginLeft:'auto',display:'flex',gap:'6px',flexWrap:'wrap'}}>
+<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#ef4444',display:'inline-block'}}></span>Urgent</span>
+<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#f59e0b',display:'inline-block'}}></span>Aandacht</span>
+<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#10b981',display:'inline-block'}}></span>Op schema</span>
+</div>
+</div>
+
+{clientData.map(({client,hours,budget,budgetPct,isUrgent,isAttention,openTaken,totalOpen})=>{
+const borderColor=isUrgent?'#ef4444':isAttention?'#f59e0b':statusColor[client.status]||'#94a3b8';
+const initials=(client.name||'??').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const avatarBg=isUrgent?'#fef2f2':isAttention?'#fffbeb':client.status==='top'?'#f0fdf4':'var(--ios-gray-6)';
+const avatarColor=isUrgent?'#ef4444':isAttention?'#b45309':client.status==='top'?'#15803d':'var(--text-light)';
+
+return(
+<div key={client.id} style={{background:'var(--white)',border:`0.5px solid var(--border)`,borderLeft:`3px solid ${borderColor}`,borderRadius:'12px',overflow:'hidden',marginBottom:'10px',cursor:'pointer'}} onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
+<div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px',borderBottom:'0.5px solid var(--border)'}}>
+<div style={{width:'32px',height:'32px',borderRadius:'8px',background:avatarBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'600',color:avatarColor,flexShrink:0}}>{initials}</div>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{client.name}</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'1px',display:'flex',gap:'10px',flexWrap:'wrap'}}>
+{client.website&&<span>{client.website.replace(/https?:\/\//,'')}</span>}
+{budget>0&&<span style={{color:budgetPct>=80?'#ef4444':'var(--text-light)',fontWeight:budgetPct>=80?'600':'400'}}>{hours}/{budget}u{budgetPct>=80?' ⚠':''}</span>}
+<span>{totalOpen} taken open</span>
+</div>
+</div>
+<div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0}}>
+<span style={{background:statusColor[client.status]||'#94a3b8',color:'white',padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:'600'}}>{statusLabel[client.status]||client.status}</span>
+</div>
+</div>
+
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0'}}>
+<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:isUrgent?'#ef4444':isAttention?'#f59e0b':'var(--text-light)',marginBottom:'8px'}}>Nu doen</div>
+{openTaken.length===0?(
+<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Alle taken afgerond</div>
+):(
+<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
+{openTaken.slice(0,4).map((t,i)=>(
+<div key={i} style={{display:'flex',alignItems:'flex-start',gap:'6px',fontSize:'12px'}}>
+<span style={{width:'14px',height:'14px',borderRadius:'3px',background:t.carried?'#fffbeb':'var(--ios-gray-6)',border:`1px solid ${t.carried?'#fcd34d':'var(--border)'}`,flexShrink:0,marginTop:'1px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',color:t.carried?'#b45309':'transparent'}}>{t.carried?'↻':''}</span>
+<span style={{color:'var(--text)',lineHeight:'1.4',flex:1}}>{t.text}{t.carried&&<span style={{fontSize:'10px',background:'#fffbeb',color:'#b45309',padding:'1px 5px',borderRadius:'3px',marginLeft:'4px'}}>doorgeschoven</span>}</span>
+</div>
+))}
+{openTaken.length>4&&<div style={{fontSize:'11px',color:'var(--text-lighter)'}}>+{openTaken.length-4} meer taken</div>}
+</div>
+)}
+</div>
+<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Categorie</div>
+<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
+{openTaken.slice(0,4).map((t,i)=>(
+<span key={i} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:'5px',fontSize:'11px',fontWeight:'500',background:t.cat.bg,color:t.cat.color,alignSelf:'flex-start'}}>{t.cat.label}</span>
+))}
+</div>
+</div>
+<div style={{padding:'12px 14px'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Budget</div>
+{budget>0?(
+<div>
+<div style={{display:'flex',justifyContent:'space-between',fontSize:'12px',marginBottom:'5px'}}>
+<span style={{color:'var(--text-light)'}}>Verbruikt</span>
+<span style={{fontWeight:'600',color:budgetPct>=80?'#ef4444':'var(--text)'}}>{budgetPct}%</span>
+</div>
+<div style={{height:'5px',background:'var(--ios-gray-5)',borderRadius:'3px',marginBottom:'8px'}}>
+<div style={{width:Math.min(100,budgetPct)+'%',height:'5px',borderRadius:'3px',background:budgetPct>=80?'#ef4444':budgetPct>=60?'#f59e0b':'#10b981',transition:'width .3s'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)'}}>{hours}u gebruikt · {Math.max(0,Math.round((budget-hours)*10)/10)}u resterend</div>
+</div>
+):(
+<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen pakket ingesteld</div>
+)}
+</div>
+</div>
+</div>
+);
+})}
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -3248,6 +3415,10 @@ Bekijken
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
+<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🎯</span>
+<span className="nav-text">Actieoverzicht</span>
+</div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
@@ -3310,12 +3481,35 @@ return count;
 )}
 </aside>
 <main className="main">
+{activeView==='dashboard'&&(
 <header className="header">
 <h1 className="title">Klanten Dashboard</h1>
 <p className="subtitle">Overzicht van alle SEO projecten</p>
 </header>
+)}
 
-{(()=>{
+{activeView==='actieoverzicht'&&(
+<header className="header">
+<h1 className="title">🎯 Actieoverzicht</h1>
+<p className="subtitle">Wat moet er nu gebeuren per klant</p>
+</header>
+)}
+
+<ActieoverzichtView
+clients={clients}
+tasks={tasks}
+customItems={customItems}
+planningItems={planningItems}
+getClientHours={getClientHours}
+timeTracking={timeTracking}
+isAdmin={isAdmin}
+setSelectedClient={setSelectedClient}
+setActiveView={setActiveView}
+setActiveStep={setActiveStep}
+style={{display:activeView==='actieoverzicht'?'block':'none'}}
+/>
+
+{activeView==='dashboard'&&(()=>{
 const upcoming=getAllUpcomingDeadlines();
 if(upcoming.length===0)return null;
 return(
@@ -3429,7 +3623,7 @@ Alle PMs
 </>
 )}
 
-<div className="dashboard-grid">
+{activeView==='dashboard'&&<div className="dashboard-grid">
 {filteredClients.map(client=>{
 const stats=getClientStats(client.id);
 const progress=getClientProgress(client.id);
@@ -3706,6 +3900,7 @@ return(
 </div>
 )}
 
+</div>}
 <div className="joke-footer">
 <div className="joke-text">{SEO_JOKES[Math.floor(Math.random()*SEO_JOKES.length)]}</div>
 </div>
@@ -4207,6 +4402,10 @@ return(
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🎯</span>
+<span className="nav-text">Actieoverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
@@ -5448,6 +5647,10 @@ return(
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🎯</span>
+<span className="nav-text">Actieoverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
