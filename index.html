@@ -804,6 +804,148 @@ return(
 );
 }
 
+// PROJECTPLANNING VIEW COMPONENT
+function ProjectplanningView({selectedClient,isAdmin,currentClient,getProjectPlanning,saveProjectPlanning,initProjectPlanning,updatePlanningTaak,addPlanningTaak,deletePlanningTaak,addPlanningFase}){
+const [tick,setTick]=useState(0);
+const [setupMode,setSetupMode]=useState(false);
+const [setupDate,setSetupDate]=useState(new Date().toISOString().slice(0,7));
+const [newTaakInputs,setNewTaakInputs]=useState({});
+const [addingFase,setAddingFase]=useState(false);
+const [newFaseLabel,setNewFaseLabel]=useState('');
+const [newFaseDatum,setNewFaseDatum]=useState('');
+const data=getProjectPlanning(selectedClient);
+const now=new Date();
+const nowKey=now.toISOString().slice(0,7);
+const clientType=currentClient?.clientType||'hotel';
+
+if(!data){
+return(
+<div style={{maxWidth:'700px'}}>
+<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'32px',textAlign:'center'}}>
+<div style={{fontSize:'32px',marginBottom:'12px'}}>🗓️</div>
+<div style={{fontSize:'16px',fontWeight:'600',marginBottom:'6px'}}>Nog geen projectplanning aangemaakt</div>
+<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'20px'}}>Selecteer een startmaand en kies een template op basis van het klanttype</div>
+{isAdmin&&(
+<div>
+<div style={{display:'flex',gap:'10px',justifyContent:'center',alignItems:'center',marginBottom:'16px'}}>
+<label style={{fontSize:'13px',color:'var(--text-light)'}}>Startmaand:</label>
+<input type="month" value={setupDate} onChange={e=>setSetupDate(e.target.value)} style={{padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)'}}/>
+</div>
+<button onClick={()=>{initProjectPlanning(selectedClient,clientType,setupDate+'-01');setTick(t=>t+1);}} style={{padding:'12px 28px',background:'var(--blue)',color:'white',border:'none',borderRadius:'10px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>
+Aanmaken met {clientType==='hotel'?'Hotel':clientType==='restaurant'?'Restaurant':clientType==='strandtent'?'Strandtent':clientType==='evenement'?'Evenementenlocatie':'Hotel & Restaurant'} template
+</button>
+</div>
+)}
+</div>
+</div>
+);
+}
+
+const currentFaseIdx=data.findIndex(f=>f.datum===nowKey);
+const activeFase=currentFaseIdx>=0?currentFaseIdx:data.findIndex(f=>f.datum>nowKey);
+
+const monthNames={1:'Jan',2:'Feb',3:'Mrt',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
+const formatMaand=(d)=>{if(!d)return'';const[y,m]=d.split('-');return monthNames[parseInt(m)]+' '+y;};
+
+// Check doorgeschoven taken
+const allData=data;
+const carried={};
+allData.forEach((f,fi)=>{
+if(fi===0)return;
+const prev=allData[fi-1];
+prev.taken.filter(t=>!t.done).forEach(t=>{
+if(!carried[f.id])carried[f.id]=[];
+carried[f.id].push({...t,carriedFrom:prev.label});
+});
+});
+
+return(
+<div style={{maxWidth:'960px'}}>
+{isAdmin&&(
+<div style={{display:'flex',gap:'8px',marginBottom:'16px',justifyContent:'flex-end'}}>
+{addingFase?(
+<div style={{display:'flex',gap:'8px',alignItems:'center',background:'var(--white)',padding:'8px 12px',borderRadius:'8px',border:'1px solid var(--border)'}}>
+<input placeholder="Label (bijv. Maand 8)" value={newFaseLabel} onChange={e=>setNewFaseLabel(e.target.value)} style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:'6px',fontSize:'12px',fontFamily:'inherit',width:'140px',background:'var(--white)',color:'var(--text)'}}/>
+<input type="month" value={newFaseDatum} onChange={e=>setNewFaseDatum(e.target.value)} style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:'6px',fontSize:'12px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)'}}/>
+<button onClick={()=>{if(newFaseLabel&&newFaseDatum){addPlanningFase(selectedClient,newFaseLabel,newFaseDatum);setAddingFase(false);setNewFaseLabel('');setNewFaseDatum('');setTick(t=>t+1);}}} style={{padding:'6px 12px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',cursor:'pointer'}}>Toevoegen</button>
+<button onClick={()=>setAddingFase(false)} style={{padding:'6px 10px',background:'var(--ios-gray-6)',border:'none',borderRadius:'6px',fontSize:'12px',cursor:'pointer',color:'var(--text)'}}>✕</button>
+</div>
+):(
+<button onClick={()=>setAddingFase(true)} style={{padding:'7px 14px',background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',cursor:'pointer',color:'var(--text-light)'}}>+ Maand toevoegen</button>
+)}
+<button onClick={()=>{if(confirm('Planning resetten? Alle data gaat verloren.')){saveProjectPlanning(selectedClient,null);localStorage.removeItem('projectplanning_'+selectedClient);setTick(t=>t+1);}}} style={{padding:'7px 14px',background:'var(--ios-red-bg)',border:'none',borderRadius:'8px',fontSize:'12px',cursor:'pointer',color:'var(--ios-red)'}}>↺ Reset</button>
+</div>
+)}
+
+<div style={{overflowX:'auto',paddingBottom:'8px'}}>
+<div style={{display:'flex',minWidth:'max-content',gap:'0',marginBottom:'12px'}}>
+{data.map((fase,fi)=>{
+const isCurrent=fase.datum===nowKey||(fi===activeFase&&activeFase>=0);
+const isPast=fase.datum<nowKey&&fase.datum!==nowKey;
+const totalDone=fase.taken.filter(t=>t.done).length;
+const totalAll=fase.taken.length;
+const pct=totalAll>0?Math.round((totalDone/totalAll)*100):0;
+const bg=isPast?'#10b981':isCurrent?'#1d6aaa':'#94a3b8';
+const arrowStyle={
+background:bg,
+padding:'10px '+(fi===data.length-1?'14px':'22px')+' 10px '+(fi===0?'14px':'22px'),
+clipPath:fi===0?'polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)':fi===data.length-1?'polygon(0 0,100% 0,100% 100%,0 100%,14px 50%)':'polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%)',
+minWidth:'130px',cursor:'pointer',transition:'opacity .15s',opacity:isCurrent?1:isPast?.85:.6,
+};
+return(
+<div key={fase.id} style={arrowStyle}>
+<div style={{fontSize:'11px',fontWeight:'600',color:'white',whiteSpace:'nowrap'}}>{fase.label}{isCurrent?' · Nu':''}</div>
+<div style={{fontSize:'10px',color:'rgba(255,255,255,.75)',marginTop:'1px'}}>{formatMaand(fase.datum)}</div>
+<div style={{fontSize:'10px',color:'rgba(255,255,255,.85)',marginTop:'3px'}}>{pct}%</div>
+</div>
+);
+})}
+</div>
+
+<div style={{display:'flex',gap:'8px',minWidth:'max-content'}}>
+{data.map((fase,fi)=>{
+const isCurrent=fase.datum===nowKey||(fi===activeFase&&activeFase>=0);
+const isPast=fase.datum<nowKey;
+const carriedTaken=carried[fase.id]||[];
+const borderStyle=isCurrent?'1.5px solid #1d6aaa':'0.5px solid var(--border)';
+return(
+<div key={fase.id} style={{background:'var(--white)',border:borderStyle,borderRadius:'8px',padding:'12px',minWidth:'160px',maxWidth:'180px',display:'flex',flexDirection:'column',gap:'6px'}}>
+{carriedTaken.length>0&&(
+<div style={{background:'#fffbeb',border:'1px solid #fbbf24',borderRadius:'6px',padding:'6px 8px',marginBottom:'4px'}}>
+<div style={{fontSize:'9px',fontWeight:'700',color:'#92400e',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:'4px'}}>↻ Doorgeschoven</div>
+{carriedTaken.map((t,i)=>(
+<div key={i} style={{fontSize:'11px',color:'#b45309',lineHeight:'1.4'}}>· {t.text}</div>
+))}
+</div>
+)}
+{fase.taken.map(taak=>(
+<label key={taak.id} style={{display:'flex',alignItems:'flex-start',gap:'7px',cursor:isAdmin?'pointer':'default'}}>
+<input type="checkbox" checked={taak.done} onChange={e=>{if(isAdmin){updatePlanningTaak(selectedClient,fase.id,taak.id,e.target.checked);setTick(t=>t+1);}}} disabled={!isAdmin} style={{marginTop:'2px',accentColor:'#1d6aaa',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
+<span style={{fontSize:'12px',lineHeight:'1.4',color:taak.done?'var(--text-light)':'var(--text)',textDecoration:taak.done?'line-through':'none'}}>{taak.text}</span>
+{isAdmin&&<button onClick={(e)=>{e.preventDefault();e.stopPropagation();if(confirm('Taak verwijderen?')){deletePlanningTaak(selectedClient,fase.id,taak.id);setTick(t=>t+1);}}} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'var(--text-lighter)',fontSize:'11px',padding:'0 2px',flexShrink:0,opacity:.5}} title="Verwijderen">✕</button>}
+</label>
+))}
+{isAdmin&&(
+<div style={{marginTop:'4px',borderTop:'0.5px solid var(--border)',paddingTop:'6px'}}>
+{newTaakInputs[fase.id]!==undefined?(
+<div style={{display:'flex',gap:'4px'}}>
+<input autoFocus type="text" value={newTaakInputs[fase.id]} onChange={e=>setNewTaakInputs(p=>({...p,[fase.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&newTaakInputs[fase.id].trim()){addPlanningTaak(selectedClient,fase.id,newTaakInputs[fase.id].trim());setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});setTick(t=>t+1);}if(e.key==='Escape')setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});}} placeholder="Taak..." style={{flex:1,padding:'5px 8px',border:'1px solid var(--border)',borderRadius:'5px',fontSize:'11px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',minWidth:0}}/>
+<button onClick={()=>{if((newTaakInputs[fase.id]||'').trim()){addPlanningTaak(selectedClient,fase.id,newTaakInputs[fase.id].trim());setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});setTick(t=>t+1);}}} style={{padding:'5px 8px',background:'var(--blue)',color:'white',border:'none',borderRadius:'5px',fontSize:'11px',cursor:'pointer'}}>+</button>
+</div>
+):(
+<button onClick={()=>setNewTaakInputs(p=>({...p,[fase.id]:''}))} style={{width:'100%',padding:'5px',background:'transparent',border:'0.5px dashed var(--border)',borderRadius:'5px',fontSize:'11px',color:'var(--text-light)',cursor:'pointer'}}>+ taak</button>
+)}
+</div>
+)}
+</div>
+);
+})}
+</div>
+</div>
+</div>
+);
+}
+
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -986,6 +1128,7 @@ const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
 const [showStatusmeetingModal,setShowStatusmeetingModal]=useState(false);
+const [showPlanningSetup,setShowPlanningSetup]=useState(false);
 const [locatieChecklist,setLocatieChecklist]=useState({});
 const [statusmeetingDraft,setStatusmeetingDraft]=useState({tevredenheid:3,besproken:'',actiepunten:[{text:'',planningMonth:'current'}]});
 
@@ -2161,6 +2304,76 @@ saveLocatieData(clientId,data);
 const deleteLocatie=(clientId,stadId,locId)=>{
 const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.filter(l=>l.id!==locId)}:s);
 saveLocatieData(clientId,data);
+};
+const PLANNING_TEMPLATES={
+hotel:[
+{label:'Website live',taken:['Analyse website','SEO plan opstellen','Concurrentieanalyse','0-meting uitvoeren','SEO-migratie']},
+{label:'Maand 1',taken:['URL structuur optimaliseren','Meta titels aanpassen','Meta omschrijvingen aanpassen']},
+{label:'Maand 2',taken:['H1/H2/H3 structuur optimaliseren','SEO content klaar zetten']},
+{label:'Maand 3',taken:['Evaluatie werkzaamheden','Verdere optimalisatie','Linkbuilding starten']},
+{label:'Maand 4',taken:['Interne linkstructuur verbeteren','Extra content toevoegen']},
+{label:'Maand 5',taken:['Linkbuilding uitbreiden','Gastblogs & directories']},
+{label:'Maand 6',taken:['Nieuwe content publiceren','Zoekwoordenonderzoek vervolg']},
+],
+restaurant:[
+{label:'Website live',taken:['Analyse website','SEO plan opstellen','0-meting uitvoeren','GMB profiel claimen']},
+{label:'Maand 1',taken:['Menu paginas optimaliseren','Meta titels & omschrijvingen','Lokale zoekwoorden verwerken']},
+{label:'Maand 2',taken:['Reviews strategie opzetten','GMB posts plannen','Schema markup restaurant']},
+{label:'Maand 3',taken:['Linkbuilding starten','TripAdvisor profiel optimaliseren']},
+{label:'Maand 4',taken:['Seizoensgebonden content','Reserveringsflow optimaliseren']},
+],
+strandtent:[
+{label:'Website live',taken:['Analyse website','0-meting','GMB profiel optimaliseren','Seizoensplanning']},
+{label:'Maand 1',taken:['Lokale SEO basis','Meta titels & omschrijvingen','Fotos Google Business']},
+{label:'Maand 2',taken:['Reviews strategie','Seizoensgebonden content','Linkbuilding directories']},
+{label:'Maand 3',taken:['Evaluatie seizoen','Voorbereiding volgend jaar']},
+],
+evenement:[
+{label:'Website live',taken:['Analyse website','SEO plan','0-meting','Evenementenpaginas optimaliseren']},
+{label:'Maand 1',taken:['Meta titels & omschrijvingen','Evenement schema markup','Lokale SEO']},
+{label:'Maand 2',taken:['Content kalender','Linkbuilding','GMB evenementen']},
+{label:'Maand 3',taken:['Evaluatie','Vervolgstrategie']},
+],
+hotel_restaurant:[
+{label:'Website live',taken:['Analyse website','SEO plan opstellen','0-meting','GMB profiel']},
+{label:'Maand 1',taken:['URL structuur','Meta titels hotel & restaurant','Lokale zoekwoorden']},
+{label:'Maand 2',taken:['Menu & kamerpaginas','Reviews strategie','Schema markup']},
+{label:'Maand 3',taken:['Linkbuilding','Content uitbreiden','GMB optimaliseren']},
+{label:'Maand 4',taken:['Seizoensgebonden content','Evaluatie & bijsturen']},
+],
+};
+const getProjectPlanning=(clientId)=>JSON.parse(localStorage.getItem('projectplanning_'+clientId)||'null');
+const saveProjectPlanning=(clientId,data)=>localStorage.setItem('projectplanning_'+clientId,JSON.stringify(data));
+const initProjectPlanning=(clientId,clientType,startDate)=>{
+const template=PLANNING_TEMPLATES[clientType]||PLANNING_TEMPLATES.hotel;
+const start=new Date(startDate);
+const data=template.map((fase,i)=>{
+const d=new Date(start);
+d.setMonth(d.getMonth()+i);
+return{id:'fase_'+i,label:i===0?fase.label:'Maand '+(i),datum:d.toISOString().slice(0,7),taken:fase.taken.map((t,j)=>({id:'t_'+i+'_'+j,text:t,done:false,carriedFrom:null}))};
+});
+saveProjectPlanning(clientId,data);
+};
+const updatePlanningTaak=(clientId,faseId,taakId,done)=>{
+const data=getProjectPlanning(clientId);
+if(!data)return;
+const updated=data.map(f=>f.id===faseId?{...f,taken:f.taken.map(t=>t.id===taakId?{...t,done}:t)}:f);
+saveProjectPlanning(clientId,updated);
+};
+const addPlanningTaak=(clientId,faseId,text)=>{
+const data=getProjectPlanning(clientId);
+if(!data)return;
+const updated=data.map(f=>f.id===faseId?{...f,taken:[...f.taken,{id:'t_'+Date.now(),text,done:false,carriedFrom:null}]}:f);
+saveProjectPlanning(clientId,updated);
+};
+const deletePlanningTaak=(clientId,faseId,taakId)=>{
+const data=getProjectPlanning(clientId);
+if(!data)return;
+saveProjectPlanning(clientId,data.map(f=>f.id===faseId?{...f,taken:f.taken.filter(t=>t.id!==taakId)}:f));
+};
+const addPlanningFase=(clientId,label,datum)=>{
+const data=getProjectPlanning(clientId)||[];
+saveProjectPlanning(clientId,[...data,{id:'fase_'+Date.now(),label,datum,taken:[]}]);
 };
 const saveStatusmeeting=(clientId,meeting)=>{
 const key='statusmeeting_'+clientId;
@@ -5649,6 +5862,10 @@ return(
 <span className="nav-text">Locaties</span>
 </div>
 )}
+<div className={`nav-item ${activeStep==='projectplanning'?'active':''}`} onClick={()=>setActiveStep('projectplanning')}>
+<span className="nav-icon">🗓️</span>
+<span className="nav-text">Projectplanning</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -5697,6 +5914,11 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">📍 Locaties</h1>
 <p className="subtitle">Checklist per locatie van {currentClient.name}</p>
 </>
+):activeStep==='projectplanning'?(
+<>
+<h1 className="title">🗓️ Projectplanning</h1>
+<p className="subtitle">Faseplanning voor {currentClient.name}</p>
+</>
 ):(
 <>
 <h1 className="title">{currentStep?.icon} {currentStep?.name}</h1>
@@ -5704,6 +5926,19 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 )}
 </header>
+
+{activeStep==='projectplanning'&&currentClient&&<ProjectplanningView
+selectedClient={selectedClient}
+isAdmin={isAdmin}
+currentClient={currentClient}
+getProjectPlanning={getProjectPlanning}
+saveProjectPlanning={saveProjectPlanning}
+initProjectPlanning={initProjectPlanning}
+updatePlanningTaak={updatePlanningTaak}
+addPlanningTaak={addPlanningTaak}
+deletePlanningTaak={deletePlanningTaak}
+addPlanningFase={addPlanningFase}
+/>}
 
 {activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&<LocatiesView selectedClient={selectedClient} isAdmin={isAdmin} getLocatieData={getLocatieData} addStad={addStad} deleteStad={deleteStad} addLocatie={addLocatie} updateLocatieCheck={updateLocatieCheck} updateLocatieOpmerking={updateLocatieOpmerking} deleteLocatie={deleteLocatie}/>}
 
