@@ -3065,10 +3065,10 @@ return(
 {!showArchive&&(
 <>
 {/* DASHBOARD STATISTICS WIDGET - VISIBLE FOR ALL */}
-{(()=>{
+{activeView==='dashboard'&&(()=>{
 const stats=getDashboardStats();
 return(
-{activeView==='dashboard'&&<div className="dashboard-stats">
+<div className="dashboard-stats">
 <div className="stats-grid">
 <div className="stat-card">
 <div className="stat-label">Gewerkte uren</div>
@@ -3086,7 +3086,7 @@ return(
 <div className="stat-subtitle">komende 7 dagen</div>
 </div>
 </div>
-</div>}
+</div>
 );
 })()}
 
