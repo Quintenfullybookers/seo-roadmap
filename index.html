@@ -28,11 +28,11 @@ body.dark-mode .notes-section div[style*="background: white"]{background:#1C1C1E
 *{margin:0;padding:0;box-sizing:border-box}
 body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text','Helvetica Neue','Segoe UI',sans-serif;background:var(--bg);color:var(--text);line-height:1.47059;-webkit-font-smoothing:antialiased;-moz-osx-font-smoothing:grayscale;transition:background-color 0.3s,color 0.3s}
 .app{min-height:100vh;position:relative}
-.sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px);scrollbar-width:thin}
-.logo{padding:0 16px 14px;border-bottom:0.5px solid var(--border);margin-bottom:10px}
-.logo-text{font-family:'DM Sans',sans-serif;font-size:12px;font-weight:700;color:var(--blue);letter-spacing:.5px;margin-bottom:2px}
-.logo-subtitle{font-size:20px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
-.sync-status{padding:0 16px 10px;font-size:11px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:10px}
+.sidebar{width:280px;background:var(--white);border-right:1px solid var(--border);padding:20px 0;position:fixed;top:0;left:0;height:100vh;overflow-y:auto;z-index:100;backdrop-filter:blur(20px);-webkit-backdrop-filter:blur(20px)}
+.logo{padding:0 20px 20px;border-bottom:0.5px solid var(--border);margin-bottom:16px}
+.logo-text{font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;color:var(--blue);letter-spacing:.5px;margin-bottom:4px}
+.logo-subtitle{font-size:24px;font-weight:700;color:var(--text);font-family:'DM Sans',sans-serif}
+.sync-status{padding:0 24px 16px;font-size:12px;display:flex;align-items:center;gap:8px;border-bottom:1px solid var(--border);margin-bottom:16px}
 .sync-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
 .sync-connected{background:var(--green)}
 .sync-connecting{background:var(--orange);animation:pulse 1.5s infinite}
@@ -41,8 +41,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .sync-text{flex:1;font-size:11px;color:var(--text-light)}
 .reload-btn{padding:4px 8px;font-size:10px;background:var(--blue);color:white;border:none;border-radius:4px;cursor:pointer}
 .reload-btn:hover{background:var(--blue-dark)}
-.mode-indicator{padding:0 14px 6px;font-size:11px;display:flex;align-items:center;gap:6px}
-.mode-badge{padding:3px 7px;border-radius:4px;font-weight:600;font-size:10px}
+.mode-indicator{padding:0 24px 8px;font-size:11px;display:flex;align-items:center;gap:6px}
+.mode-badge{padding:4px 8px;border-radius:4px;font-weight:600;font-size:10px}
 .mode-badge.viewer{background:var(--blue-light);color:var(--blue)}
 .mode-badge.admin{background:var(--green-bg);color:var(--green)}
 .dark-toggle{margin-left:auto;padding:4px 8px;background:var(--gray-bg);border:1px solid var(--border);borderRadius:6px;cursor:pointer;fontSize:16px;transition:all 0.2s}
@@ -52,11 +52,11 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .save-status-dot.saving{background:var(--orange);animation:pulse 1s infinite}
 .save-status-dot.success{background:var(--green)}
 .save-status-dot.error{background:var(--red)}
-.nav-item{padding:6px 10px;margin:0 6px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:7px;border-radius:8px;border-left:none}
+.nav-item{padding:10px 16px;margin:0 12px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:10px;border-radius:10px;border-left:none}
 .nav-item:hover{background:var(--ios-gray-6)}
 .nav-item.active{background:var(--ios-blue-light);color:var(--ios-blue);border-left:none;font-weight:600}
-.nav-icon{font-size:15px}
-.nav-text{flex:1;font-size:12px;font-weight:500}
+.nav-icon{font-size:18px}
+.nav-text{flex:1;font-size:14px;font-weight:500}
 .nav-count{font-size:12px;color:var(--text-light);background:var(--gray-bg);padding:2px 8px;border-radius:12px}
 .main{flex:1;padding:48px 64px;max-width:1800px;margin-left:280px}
 .header{margin-bottom:32px}
@@ -654,465 +654,6 @@ return null;
 );
 }
 
-// LOCATIES VIEW COMPONENT
-function LocatiesView({selectedClient,isAdmin,getLocatieData,addStad,deleteStad,addLocatie,updateLocatieCheck,updateLocatieOpmerking,deleteLocatie}){
-const [newStadNaam,setNewStadNaam]=useState('');
-const [newLocInputs,setNewLocInputs]=useState({});
-const [tick,setTick]=useState(0);
-const [openSteden,setOpenSteden]=useState({});
-const toggleStad=(id)=>setOpenSteden(p=>({...p,[id]:!p[id]}));
-const stadData=getLocatieData(selectedClient);
-const seoVelden=[{key:'metaTitel',label:'Meta Titel'},{key:'metaOmschrijving',label:'Meta omschrijving'},{key:'hKoppen',label:'H-koppen'},{key:'tekst',label:'Tekst'}];
-const gmbVelden=[{key:'aangemaakt',label:'Aangemaakt'},{key:'infoAangeleverd',label:'Info aangeleverd klant'},{key:'geoptimaliseerd',label:'Google My Business profiel geoptimaliseerd'},{key:'reviewsAuto',label:'Automatische review beantwoorden'},{key:'menu',label:'Menu'}];
-const totaalLocaties=stadData.reduce((a,s)=>a+s.locaties.length,0);
-const totaalKlaar=stadData.reduce((a,s)=>a+s.locaties.reduce((b,l)=>{
-const s2=seoVelden.filter(v=>l.seo[v.key]).length;
-const g=gmbVelden.filter(v=>l.gmb[v.key]).length;
-return b+(s2+g===(seoVelden.length+gmbVelden.length)?1:0);
-},0),0);
-const doAddStad=()=>{if(newStadNaam.trim()){addStad(selectedClient,newStadNaam);setNewStadNaam('');setTick(t=>t+1);}};
-const doAddLoc=(stadId)=>{const n=(newLocInputs[stadId]||'').trim();if(n){addLocatie(selectedClient,stadId,n);setNewLocInputs(p=>({...p,[stadId]:''}));setTick(t=>t+1);}};
-const doCheck=(stadId,locId,sectie,veld,val)=>{updateLocatieCheck(selectedClient,stadId,locId,sectie,veld,val);setTick(t=>t+1);};
-return(
-<div style={{maxWidth:'900px'}}>
-{totaalLocaties>0&&(
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',padding:'14px 18px',marginBottom:'20px',display:'flex',alignItems:'center',gap:'16px'}}>
-<div style={{fontSize:'13px',color:'var(--text-light)'}}>Totaal</div>
-<div style={{fontSize:'15px',fontWeight:'600',color:'var(--text)'}}>{totaalLocaties} locaties · {totaalKlaar} volledig klaar</div>
-<div style={{flex:1,height:'6px',background:'var(--border)',borderRadius:'3px',maxWidth:'200px'}}>
-<div style={{width:(totaalLocaties>0?Math.round((totaalKlaar/totaalLocaties)*100):0)+'%',height:'6px',background:'var(--ios-green)',borderRadius:'3px',transition:'width .3s'}}/>
-</div>
-</div>
-)}
-{isAdmin&&(
-<div style={{display:'flex',gap:'8px',marginBottom:'24px'}}>
-<input type="text" placeholder="Stad toevoegen (bijv. Amsterdam)..." value={newStadNaam} onChange={e=>setNewStadNaam(e.target.value)} onKeyDown={e=>{if(e.key==='Enter')doAddStad();}} style={{flex:1,padding:'10px 14px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'14px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
-<button onClick={doAddStad} style={{padding:'10px 20px',background:'var(--blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>+ Stad</button>
-</div>
-)}
-{stadData.length===0&&(
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'40px',textAlign:'center',color:'var(--text-light)'}}>
-<div style={{fontSize:'32px',marginBottom:'12px'}}>🏙️</div>
-<div style={{fontSize:'15px',fontWeight:'600',marginBottom:'4px'}}>Nog geen steden toegevoegd</div>
-{isAdmin&&<div style={{fontSize:'13px'}}>Voeg hierboven een stad toe om te beginnen</div>}
-</div>
-)}
-{stadData.map(stad=>{
-const stadKlaar=stad.locaties.reduce((a,l)=>{
-const s2=seoVelden.filter(v=>l.seo[v.key]).length;
-const g=gmbVelden.filter(v=>l.gmb[v.key]).length;
-return a+(s2+g===(seoVelden.length+gmbVelden.length)?1:0);
-},0);
-return(
-<div key={stad.id} style={{marginBottom:'28px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'10px',paddingBottom:'8px',borderBottom:'2px solid var(--border)',cursor:'pointer'}} onClick={()=>toggleStad(stad.id)}>
-<span style={{fontSize:'13px',color:'var(--text-light)',transition:'transform .2s',display:'inline-block',transform:openSteden[stad.id]?'rotate(90deg)':'rotate(0deg)'}}>▶</span>
-<div style={{fontSize:'16px',fontWeight:'700',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px',flex:1}}>
-🏙️ {stad.stad}
-<span style={{fontSize:'12px',fontWeight:'400',color:'var(--text-light)'}}>{stad.locaties.length} locaties · {stadKlaar} klaar</span>
-</div>
-{isAdmin&&<button onClick={(e)=>{e.stopPropagation();if(confirm('Stad "'+stad.stad+'" en alle locaties verwijderen?')){deleteStad(selectedClient,stad.id);setTick(t=>t+1);}}} style={{padding:'3px 8px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'6px',cursor:'pointer',fontSize:'11px'}}>🗑️ Verwijder stad</button>}
-</div>
-{openSteden[stad.id]&&(
-<div>
-{isAdmin&&(
-<div style={{display:'flex',gap:'8px',marginBottom:'10px'}}>
-<input type="text" placeholder={'Locatie toevoegen in '+stad.stad+'...'} value={newLocInputs[stad.id]||''} onChange={e=>setNewLocInputs(p=>({...p,[stad.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter')doAddLoc(stad.id);}} style={{flex:1,padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)',outline:'none'}}/>
-<button onClick={()=>doAddLoc(stad.id)} style={{padding:'8px 14px',background:'var(--ios-blue)',color:'white',border:'none',borderRadius:'8px',fontSize:'13px',fontWeight:'600',cursor:'pointer'}}>+ Locatie</button>
-</div>
-)}
-{stad.locaties.length===0&&(
-<div style={{padding:'14px',background:'var(--ios-gray-6)',borderRadius:'8px',fontSize:'13px',color:'var(--text-light)',textAlign:'center',marginBottom:'8px'}}>Nog geen locaties in {stad.stad}</div>
-)}
-{stad.locaties.map(loc=>{
-const seoKlaar=seoVelden.filter(v=>loc.seo[v.key]).length;
-const gmbKlaar=gmbVelden.filter(v=>loc.gmb[v.key]).length;
-const totK=seoKlaar+gmbKlaar;
-const tot=seoVelden.length+gmbVelden.length;
-const pct=Math.round((totK/tot)*100);
-return(
-<div key={loc.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'10px',marginBottom:'8px',overflow:'hidden'}}>
-<div style={{padding:'10px 14px',background:'var(--ios-gray-6)',display:'flex',alignItems:'center',gap:'10px',borderBottom:'1px solid var(--border)'}}>
-<span style={{fontSize:'15px'}}>📍</span>
-<div style={{flex:1}}>
-<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{loc.naam}</div>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'1px'}}>{totK} / {tot} voltooid</div>
-</div>
-<div style={{display:'flex',alignItems:'center',gap:'8px'}}>
-<div style={{width:'70px',height:'5px',background:'var(--border)',borderRadius:'3px'}}>
-<div style={{width:pct+'%',height:'5px',background:pct===100?'var(--ios-green)':pct>=50?'var(--blue)':'var(--ios-orange)',borderRadius:'3px',transition:'width .3s'}}/>
-</div>
-<span style={{fontSize:'12px',fontWeight:'600',color:pct===100?'var(--ios-green)':'var(--text)',minWidth:'32px'}}>{pct}%</span>
-{isAdmin&&<button onClick={()=>{if(confirm('Locatie "'+loc.naam+'" verwijderen?')){deleteLocatie(selectedClient,stad.id,loc.id);setTick(t=>t+1);}}} style={{padding:'3px 7px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'5px',cursor:'pointer',fontSize:'11px'}}>🗑️</button>}
-</div>
-</div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'0'}}>
-<div style={{padding:'12px 14px',borderRight:'1px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--ios-blue)',marginBottom:'8px'}}>SEO geoptimaliseerd</div>
-{seoVelden.map(v=>(
-<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
-<input type="checkbox" checked={loc.seo[v.key]||false} onChange={e=>isAdmin&&doCheck(stad.id,loc.id,'seo',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'var(--blue)',cursor:isAdmin?'pointer':'default'}}/>
-<span style={{fontSize:'12px',color:loc.seo[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.seo[v.key]?'line-through':''}}>{v.label}</span>
-</label>
-))}
-</div>
-<div style={{padding:'12px 14px'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'#16a34a',marginBottom:'8px'}}>GMB</div>
-{gmbVelden.map(v=>(
-<label key={v.key} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--ios-gray-6)',cursor:isAdmin?'pointer':'default'}}>
-<input type="checkbox" checked={loc.gmb[v.key]||false} onChange={e=>isAdmin&&doCheck(stad.id,loc.id,'gmb',v.key,e.target.checked)} disabled={!isAdmin} style={{width:'15px',height:'15px',accentColor:'#16a34a',cursor:isAdmin?'pointer':'default'}}/>
-<span style={{fontSize:'12px',color:loc.gmb[v.key]?'var(--text-light)':'var(--text)',textDecoration:loc.gmb[v.key]?'line-through':''}}>{v.label}</span>
-</label>
-))}
-</div>
-</div>
-{isAdmin?(
-<div style={{padding:'10px 14px',borderTop:'1px solid var(--border)'}}>
-<textarea value={loc.opmerking||''} onChange={e=>{updateLocatieOpmerking(selectedClient,stad.id,loc.id,e.target.value);setTick(t=>t+1);}} placeholder="Opmerking toevoegen..." style={{width:'100%',padding:'8px 10px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',fontFamily:'inherit',resize:'vertical',minHeight:'52px',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-):(loc.opmerking&&(
-<div style={{padding:'10px 14px',borderTop:'1px solid var(--border)',fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>{loc.opmerking}</div>
-))}
-</div>
-);
-})}
-</div>
-)}
-</div>
-);
-})}
-</div>
-);
-}
-
-const TASK_INFO={"Doelstellingen bepalen": "Stel concrete SEO-doelen op voor de klant, zoals meer organisch verkeer of hogere rankings. Bespreek dit samen met de klant en leg vast in het SEO Plan. Gebruik SMART-doelstellingen.", "KPIs vaststellen": "Bepaal meetbare indicatoren zoals organisch verkeer, rankingposities en conversies. Stel deze in als benchmarks in SE Ranking of Google Analytics 4.", "Doelgroep analyse": "Breng in kaart wie de ideale bezoekers zijn: leeftijd, locatie, zoekgedrag. Gebruik Google Analytics en zoekwoordonderzoek om de doelgroep te begrijpen.", "Concurrentie analyse": "Analyseer de top 3-5 concurrenten op zoekwoorden, backlinks en contentstrategie. Gebruik SE Ranking of SEMrush voor een overzicht van hun sterktes.", "Seizoensplanning": "Plan content en campagnes rondom drukke periodes zoals feestdagen of zomerseizoenen. Bekijk Google Trends voor seizoenspatronen in de branche.", "Zoekwoorden website": "Onderzoek welke zoekwoorden de huidige website al rankt. Bekijk dit in Google Search Console onder 'Prestaties'.", "Zoekwoorden concurrentie": "Analyseer op welke zoekwoorden concurrenten gevonden worden maar de klant nog niet. Gebruik SE Ranking of SEMrush voor de zoekwoordenkloof.", "Search Console data": "Exporteer en analyseer data uit Google Search Console: impressies, klikken en gemiddelde posities per pagina. Log in via search.google.com/search-console.", "SE Ranking data": "Verzamel rankingdata uit SE Ranking voor de bijgehouden zoekwoorden. Bekijk posities, trends en wijzigingen in het SE Ranking dashboard.", "Voorstel gestuurd": "Stuur het SEO-voorstel naar de klant na het afronden van de analyse. Verwerk de bevindingen uit de 0-meting en doelstellingen in een overzichtelijk document.", "Feedback ontvangen": "Wacht op en verwerk de feedback van de klant op het voorstel. Noteer opmerkingen en pas het plan aan waar nodig.", "Verwerkt": "Verwerk alle feedback in het definitieve SEO-plan. Zorg dat alle aanpassingen zijn doorgevoerd voor je start met de uitvoering.", "Voltooid": "Het SEO-plan is goedgekeurd en klaar voor uitvoering. Alle partijen hebben akkoord gegeven en de planning is vastgesteld.", "Google Analytics 4 instellen": "Installeer GA4 op de website via Google Tag Manager of direct in de broncode. Maak een account aan op analytics.google.com en voeg de meetcode toe.", "Search Console koppelen": "Verbind de website met Google Search Console via search.google.com. Voeg een eigendomsverificatie toe via DNS, HTML-bestand of Google Analytics.", "Ranking tracking opzetten": "Voeg de belangrijkste zoekwoorden toe aan SE Ranking voor positiebewaking. Stel wekelijkse rapportages in zodat je rankingwijzigingen automatisch ontvangt.", "Doelen instellen GA4": "Configureer conversiedoelen in GA4 zoals reserveringen, contactformulieren of telefoontjes. Ga naar 'Admin' > 'Events' > 'Markeer als conversie'.", "Google Search Console audit": "Controleer alle meldingen in Search Console: crawlfouten, indexeringsproblemen en beveiligingswaarschuwingen. Ga naar search.google.com/search-console.", "Sitemap indienen": "Dien de XML-sitemap in via Google Search Console onder 'Sitemaps'. De sitemap vind je meestal op domein.nl/sitemap.xml.", "Huidige rankings meten": "Meet de huidige posities van de doelzoekwoorden als nulmeting. Gebruik SE Ranking om een screenshot te maken van alle startposities.", "SE Ranking baseline": "Sla de huidige rankingdata op als referentiepunt in SE Ranking. Dit vormt de basis voor het meten van voortgang in de komende maanden.", "SEMRush analyse": "Voer een uitgebreide domeinanalyse uit in SEMrush. Bekijk organisch verkeer, backlinks, zoekwoordposities en concurrentievergelijking.", "Technische SEO audit": "Scan de volledige website op technische problemen zoals gebroken links, laadsnelheid en indexeringsproblemen. Gebruik SE Ranking Site Audit of Screaming Frog.", "Backlink profiel analyse": "Analyseer alle inkomende links op domein-autoriteit en relevantie. Gebruik SE Ranking of Ahrefs om toxische links te markeren voor disavow.", "Content audit": "Inventariseer alle bestaande pagina's en beoordeel hun SEO-waarde. Identificeer pagina's die verbeterd, samengevoegd of verwijderd moeten worden.", "Lokale SEO Audit - Local Falcon": "Analyseer de lokale zoekzichtbaarheid op meerdere locaties via Local Falcon. Bekijk hoe de GMB-vermelding scoort in de omgeving van de vestiging.", "PageSpeed meting": "Meet de laadsnelheid van de website via Google PageSpeed Insights (pagespeed.web.dev). Streef naar een score van 80+ voor zowel mobiel als desktop.", "Profiel claimen/verifiëren": "Claim of verifieer het Google Business profiel via business.google.com. Volg de verificatiestappen via ansichtkaart, telefoon of e-mail.", "NAW gegevens optimaliseren": "Zorg dat naam, adres en telefoonnummer exact overeenkomen op alle platforms. Consistentie is cruciaal voor lokale SEO — controleer ook de website.", "Categorieën instellen": "Kies de juiste primaire en aanvullende categorieën in Google Business. De primaire categorie heeft de grootste invloed op zichtbaarheid in zoekresultaten.", "Openingstijden bijwerken": "Voeg correcte openingstijden toe inclusief feestdagen en speciale uren. Ga naar Google Business Profiel > 'Openingstijden bewerken'.", "Fotos optimaliseren": "Upload kwalitatieve foto's van het exterieur, interieur en producten. Gebruik beschrijvende bestandsnamen en upload minimaal 10 foto's voor een compleet profiel.", "Posts/updates plannen": "Plan regelmatige berichten in Google Business over aanbiedingen, evenementen of nieuws. Ga naar 'Berichten' in Google Business Profiel en plan wekelijks een update.", "Reviews strategie opzetten": "Stel een strategie op voor het vergaren van Google-reviews. Maak een directe reviewlink via business.google.com en deel deze actief met tevreden gasten.", "Q&A sectie optimaliseren": "Beantwoord bestaande vragen in de Q&A sectie van het GMB-profiel. Voeg zelf veelgestelde vragen toe en beantwoord ze om informatiewaarde te verhogen.", "PageSpeed optimaliseren": "Verbeter de laadsnelheid door afbeeldingen te comprimeren, CSS/JS te minificeren en browser-caching in te stellen. Gebruik GTmetrix of PageSpeed Insights voor concrete adviezen.", "Afbeeldingen comprimeren": "Verklein afbeeldingsbestanden zonder zichtbaar kwaliteitsverlies via TinyPNG of ShortPixel. Gebruik WebP-formaat voor maximale compressie op moderne browsers.", "Core Web Vitals optimaliseren": "Verbeter LCP, FID en CLS scores — de drie Core Web Vitals van Google. Bekijk de scores in Google Search Console onder 'Kernwebvitals'.", "Mobile friendly check": "Test of de website correct werkt op smartphones via Google's Mobile-Friendly Test (search.google.com/test/mobile-friendly). Los eventuele problemen op in het CMS.", "SSL/HTTPS check": "Controleer of de website volledig beveiligd is met een geldig SSL-certificaat. Bezoek de website en controleer het slotje in de adresbalk — alle pagina's moeten https:// gebruiken.", "XML sitemap optimaliseren": "Controleer of de sitemap actueel is, alle belangrijke pagina's bevat en correct is ingediend bij Search Console. De sitemap staat meestal op domein.nl/sitemap.xml.", "Robots.txt controleren": "Controleer het robots.txt bestand op incorrecte blokkeringen van belangrijke pagina's. Bereikbaar via domein.nl/robots.txt — zorg dat SEO-relevante pagina's niet geblokkeerd zijn.", "Canonical tags": "Voeg canonical tags toe aan pagina's met vergelijkbare inhoud om duplicate content te voorkomen. Gebruik <link rel='canonical'> in de head van de HTML.", "301 redirects opruimen": "Controleer en stroomlijn alle 301-omleidingen om redirect-chains te voorkomen. Gebruik Screaming Frog om alle redirects in kaart te brengen.", "404 paginas fixen": "Herstel of redirect alle 404-foutpagina's naar relevante bestaande pagina's. Gebruik Google Search Console > 'Pagina's' voor een overzicht van niet-gevonden pagina's.", "Broken links fixen": "Verwijder of herstel alle kapotte interne en externe links op de website. Gebruik SE Ranking Site Audit of Screaming Frog om broken links te vinden.", "Schema - LocalBusiness": "Voeg LocalBusiness schema markup toe aan de homepage voor betere lokale zichtbaarheid. Genereer de code via schema.org of gebruik een WordPress plugin zoals Yoast.", "Schema - Breadcrumbs": "Implementeer breadcrumb schema markup voor een duidelijke sitestructuur in zoekresultaten. Dit verbetert de weergave in Google met broodkruimelnavigatie.", "Schema - FAQ": "Voeg FAQ schema toe aan pagina's met veelgestelde vragen voor een FAQ-rich result in Google. Gebruik het FAQ Page schema van schema.org.", "Title tags optimaliseren": "Schrijf unieke, beschrijvende titels van 50-60 tekens voor elke pagina. Verwerk het primaire zoekwoord aan het begin van de title tag.", "Meta descriptions": "Schrijf aantrekkelijke meta descriptions van 120-160 tekens met een call-to-action. Hoewel niet direct een rankingfactor, verhogen ze de doorklikratio.", "H1/H2 structuur": "Zorg voor een logische kopenstructuur met één H1 per pagina en meerdere H2's voor subsecties. Verwerk relevante zoekwoorden op een natuurlijke manier.", "URL-structuur": "Maak korte, beschrijvende URLs die het zoekwoord bevatten zonder stop-woorden. Gebruik koppeltekens als scheidingsteken: domein.nl/categorie/zoekwoord.", "Alt-teksten": "Voeg beschrijvende alt-teksten toe aan alle afbeeldingen voor toegankelijkheid en SEO. Beschrijf wat er op de afbeelding staat en verwerk eventueel een relevant zoekwoord.", "Interne linkstructuur": "Verbeter de interne linkstructuur door relevante pagina's aan elkaar te koppelen. Gebruik beschrijvende ankerteksten en zorg dat belangrijke pagina's voldoende interne links ontvangen.", "Concurrent backlinks analyseren": "Bekijk welke websites linken naar concurrenten maar nog niet naar de klant. Dit zijn potentiële linkbouwkansen — gebruik SE Ranking of Ahrefs voor deze analyse.", "Broken links opsporen": "Vind websites die linken naar niet-bestaande pagina's van de klant. Herstel deze via 301-redirects of neem contact op met de linkende website.", "Lokale directories": "Registreer de vestiging in relevante lokale directories zoals Yelp, Foursquare en 2dehands. Zorg voor consistente NAW-gegevens op alle platforms.", "Branche directories": "Voeg het bedrijf toe aan branchespecifieke directories zoals TripAdvisor, Booking.com of TheFork voor restaurants. Dit levert zowel links als direct verkeer op.", "TripAdvisor profiel": "Maak of optimaliseer het TripAdvisor-bedrijfsprofiel met complete informatie, foto's en actieve reviewrespons. Log in via tripadvisor.com/owners.", "Lokale samenwerkingen": "Werk samen met lokale bedrijven, VVV's of bloggers voor wederzijdse vermeldingen en links. Benader complementaire bedrijven in de omgeving voor co-marketing.", "Gastbloggen": "Schrijf gastartikelen voor relevante blogs en websites in de branche. Zorg voor een contextueele link terug naar de website in de auteursbio of content.", "Digital PR / Persberichten": "Stuur persberichten naar lokale media en reisbloggers bij bijzondere gebeurtenissen. Gebruik diensten als PRWire of benader journalisten direct via LinkedIn.", "Foutmeldingen checken": "Controleer maandelijks Google Search Console en Google Analytics op nieuwe foutmeldingen, crawlproblemen of dalende prestaties.", "Rankings monitoren": "Bekijk de rankingwijzigingen van alle bijgehouden zoekwoorden in SE Ranking. Analyseer trends en identificeer zoekwoorden die aandacht nodig hebben.", "Data review": "Analyseer de maandelijkse SEO-data uit GA4, Search Console en SE Ranking. Vergelijk met de vorige periode en pas de strategie aan op basis van de resultaten.", "🔄 Reset Maandelijks": "Reset de maandelijkse taken aan het begin van een nieuwe periode. Dit zorgt voor een schone start van de maandelijkse SEO-werkzaamheden."};
-// TASK INFO BUTTON COMPONENT
-function TaskInfoButton({taskTitle}){
-const [show,setShow]=useState(false);
-const info=TASK_INFO[taskTitle]||null;
-if(!info)return null;
-return(
-<div style={{position:'relative',display:'inline-flex',marginLeft:'6px',verticalAlign:'middle'}} onMouseEnter={()=>setShow(true)} onMouseLeave={()=>setShow(false)}>
-<span style={{display:'inline-flex',alignItems:'center',justifyContent:'center',width:'15px',height:'15px',borderRadius:'50%',background:'var(--ios-gray-5)',color:'var(--text-light)',fontSize:'9px',fontWeight:'700',cursor:'help',flexShrink:0,userSelect:'none',lineHeight:'1'}}>i</span>
-{show&&(
-<div style={{position:'absolute',bottom:'calc(100% + 8px)',left:'50%',transform:'translateX(-50%)',width:'280px',background:'#1E2939',color:'white',borderRadius:'10px',padding:'11px 13px',fontSize:'12px',lineHeight:'1.6',zIndex:9999,pointerEvents:'none',boxShadow:'0 4px 20px rgba(0,0,0,0.35)',whiteSpace:'normal'}}>
-{info}
-<div style={{position:'absolute',top:'100%',left:'50%',transform:'translateX(-50%)',width:0,height:0,borderLeft:'5px solid transparent',borderRight:'5px solid transparent',borderTop:'5px solid #1E2939'}}/>
-</div>
-)}
-</div>
-);
-}
-
-// PROJECTPLANNING VIEW COMPONENT
-function ProjectplanningView({selectedClient,isAdmin,currentClient,getProjectPlanning,saveProjectPlanning,initProjectPlanning,updatePlanningTaak,addPlanningTaak,deletePlanningTaak,addPlanningFase}){
-const [tick,setTick]=useState(0);
-const [setupMode,setSetupMode]=useState(false);
-const [setupDate,setSetupDate]=useState(new Date().toISOString().slice(0,7));
-const [newTaakInputs,setNewTaakInputs]=useState({});
-const [addingFase,setAddingFase]=useState(false);
-const [newFaseLabel,setNewFaseLabel]=useState('');
-const [newFaseDatum,setNewFaseDatum]=useState('');
-const data=getProjectPlanning(selectedClient);
-const now=new Date();
-const nowKey=now.toISOString().slice(0,7);
-const clientType=currentClient?.clientType||'hotel';
-
-if(!data){
-return(
-<div style={{maxWidth:'700px'}}>
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'32px',textAlign:'center'}}>
-<div style={{fontSize:'32px',marginBottom:'12px'}}>🗓️</div>
-<div style={{fontSize:'16px',fontWeight:'600',marginBottom:'6px'}}>Nog geen projectplanning aangemaakt</div>
-<div style={{fontSize:'13px',color:'var(--text-light)',marginBottom:'20px'}}>Selecteer een startmaand en kies een template op basis van het klanttype</div>
-{isAdmin&&(
-<div>
-<div style={{display:'flex',gap:'10px',justifyContent:'center',alignItems:'center',marginBottom:'16px'}}>
-<label style={{fontSize:'13px',color:'var(--text-light)'}}>Startmaand:</label>
-<input type="month" value={setupDate} onChange={e=>setSetupDate(e.target.value)} style={{padding:'8px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)'}}/>
-</div>
-<button onClick={()=>{initProjectPlanning(selectedClient,clientType,setupDate+'-01');setTick(t=>t+1);}} style={{padding:'12px 28px',background:'var(--blue)',color:'white',border:'none',borderRadius:'10px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>
-Aanmaken met {clientType==='hotel'?'Hotel':clientType==='restaurant'?'Restaurant':clientType==='strandtent'?'Strandtent':clientType==='evenement'?'Evenementenlocatie':'Hotel & Restaurant'} template
-</button>
-</div>
-)}
-</div>
-</div>
-);
-}
-
-const currentFaseIdx=data.findIndex(f=>f.datum===nowKey);
-const activeFase=currentFaseIdx>=0?currentFaseIdx:data.findIndex(f=>f.datum>nowKey);
-
-const monthNames={1:'Jan',2:'Feb',3:'Mrt',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
-const formatMaand=(d)=>{if(!d)return'';const[y,m]=d.split('-');return monthNames[parseInt(m)]+' '+y;};
-
-// Check doorgeschoven taken
-const allData=data;
-const carried={};
-allData.forEach((f,fi)=>{
-if(fi===0)return;
-const prev=allData[fi-1];
-prev.taken.filter(t=>!t.done).forEach(t=>{
-if(!carried[f.id])carried[f.id]=[];
-carried[f.id].push({...t,carriedFrom:prev.label});
-});
-});
-
-return(
-<div style={{maxWidth:'960px'}}>
-{isAdmin&&(
-<div style={{display:'flex',gap:'8px',marginBottom:'16px',justifyContent:'flex-end'}}>
-{addingFase?(
-<div style={{display:'flex',gap:'8px',alignItems:'center',background:'var(--white)',padding:'8px 12px',borderRadius:'8px',border:'1px solid var(--border)'}}>
-<input placeholder="Label (bijv. Maand 8)" value={newFaseLabel} onChange={e=>setNewFaseLabel(e.target.value)} style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:'6px',fontSize:'12px',fontFamily:'inherit',width:'140px',background:'var(--white)',color:'var(--text)'}}/>
-<input type="month" value={newFaseDatum} onChange={e=>setNewFaseDatum(e.target.value)} style={{padding:'6px 10px',border:'1px solid var(--border)',borderRadius:'6px',fontSize:'12px',fontFamily:'inherit',background:'var(--white)',color:'var(--text)'}}/>
-<button onClick={()=>{if(newFaseLabel&&newFaseDatum){addPlanningFase(selectedClient,newFaseLabel,newFaseDatum);setAddingFase(false);setNewFaseLabel('');setNewFaseDatum('');setTick(t=>t+1);}}} style={{padding:'6px 12px',background:'var(--blue)',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',cursor:'pointer'}}>Toevoegen</button>
-<button onClick={()=>setAddingFase(false)} style={{padding:'6px 10px',background:'var(--ios-gray-6)',border:'none',borderRadius:'6px',fontSize:'12px',cursor:'pointer',color:'var(--text)'}}>✕</button>
-</div>
-):(
-<button onClick={()=>setAddingFase(true)} style={{padding:'7px 14px',background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',cursor:'pointer',color:'var(--text-light)'}}>+ Maand toevoegen</button>
-)}
-<button onClick={()=>{if(confirm('Planning resetten? Alle data gaat verloren.')){saveProjectPlanning(selectedClient,null);localStorage.removeItem('projectplanning_'+selectedClient);setTick(t=>t+1);}}} style={{padding:'7px 14px',background:'var(--ios-red-bg)',border:'none',borderRadius:'8px',fontSize:'12px',cursor:'pointer',color:'var(--ios-red)'}}>↺ Reset</button>
-</div>
-)}
-
-<div style={{overflowX:'auto',paddingBottom:'8px'}}>
-<div style={{display:'flex',minWidth:'max-content',gap:'0',marginBottom:'12px'}}>
-{data.map((fase,fi)=>{
-const isCurrent=fase.datum===nowKey||(fi===activeFase&&activeFase>=0);
-const isPast=fase.datum<nowKey&&fase.datum!==nowKey;
-const totalDone=fase.taken.filter(t=>t.done).length;
-const totalAll=fase.taken.length;
-const pct=totalAll>0?Math.round((totalDone/totalAll)*100):0;
-const bg=isPast?'#10b981':isCurrent?'#1d6aaa':'#94a3b8';
-const arrowStyle={
-background:bg,
-padding:'10px '+(fi===data.length-1?'14px':'22px')+' 10px '+(fi===0?'14px':'22px'),
-clipPath:fi===0?'polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%)':fi===data.length-1?'polygon(0 0,100% 0,100% 100%,0 100%,14px 50%)':'polygon(0 0,calc(100% - 14px) 0,100% 50%,calc(100% - 14px) 100%,0 100%,14px 50%)',
-minWidth:'130px',cursor:'pointer',transition:'opacity .15s',opacity:isCurrent?1:isPast?.85:.6,
-};
-return(
-<div key={fase.id} style={arrowStyle}>
-<div style={{fontSize:'11px',fontWeight:'600',color:'white',whiteSpace:'nowrap'}}>{fase.label}{isCurrent?' · Nu':''}</div>
-<div style={{fontSize:'10px',color:'rgba(255,255,255,.75)',marginTop:'1px'}}>{formatMaand(fase.datum)}</div>
-<div style={{fontSize:'10px',color:'rgba(255,255,255,.85)',marginTop:'3px'}}>{pct}%</div>
-</div>
-);
-})}
-</div>
-
-<div style={{display:'flex',gap:'8px',minWidth:'max-content'}}>
-{data.map((fase,fi)=>{
-const isCurrent=fase.datum===nowKey||(fi===activeFase&&activeFase>=0);
-const isPast=fase.datum<nowKey;
-const carriedTaken=carried[fase.id]||[];
-const borderStyle=isCurrent?'1.5px solid #1d6aaa':'0.5px solid var(--border)';
-return(
-<div key={fase.id} style={{background:'var(--white)',border:borderStyle,borderRadius:'8px',padding:'12px',minWidth:'160px',maxWidth:'180px',display:'flex',flexDirection:'column',gap:'6px'}}>
-{carriedTaken.length>0&&(
-<div style={{background:'#fffbeb',border:'1px solid #fbbf24',borderRadius:'6px',padding:'6px 8px',marginBottom:'4px'}}>
-<div style={{fontSize:'9px',fontWeight:'700',color:'#92400e',textTransform:'uppercase',letterSpacing:'.4px',marginBottom:'4px'}}>↻ Doorgeschoven</div>
-{carriedTaken.map((t,i)=>(
-<div key={i} style={{fontSize:'11px',color:'#b45309',lineHeight:'1.4'}}>· {t.text}</div>
-))}
-</div>
-)}
-{fase.taken.map(taak=>(
-<label key={taak.id} style={{display:'flex',alignItems:'flex-start',gap:'7px',cursor:isAdmin?'pointer':'default'}}>
-<input type="checkbox" checked={taak.done} onChange={e=>{if(isAdmin){updatePlanningTaak(selectedClient,fase.id,taak.id,e.target.checked);setTick(t=>t+1);}}} disabled={!isAdmin} style={{marginTop:'2px',accentColor:'#1d6aaa',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
-<span style={{fontSize:'12px',lineHeight:'1.4',color:taak.done?'var(--text-light)':'var(--text)',textDecoration:taak.done?'line-through':'none'}}>{taak.text}</span>
-{isAdmin&&<button onClick={(e)=>{e.preventDefault();e.stopPropagation();if(confirm('Taak verwijderen?')){deletePlanningTaak(selectedClient,fase.id,taak.id);setTick(t=>t+1);}}} style={{marginLeft:'auto',background:'none',border:'none',cursor:'pointer',color:'var(--text-lighter)',fontSize:'11px',padding:'0 2px',flexShrink:0,opacity:.5}} title="Verwijderen">✕</button>}
-</label>
-))}
-{isAdmin&&(
-<div style={{marginTop:'4px',borderTop:'0.5px solid var(--border)',paddingTop:'6px'}}>
-{newTaakInputs[fase.id]!==undefined?(
-<div style={{display:'flex',gap:'4px'}}>
-<input autoFocus type="text" value={newTaakInputs[fase.id]} onChange={e=>setNewTaakInputs(p=>({...p,[fase.id]:e.target.value}))} onKeyDown={e=>{if(e.key==='Enter'&&newTaakInputs[fase.id].trim()){addPlanningTaak(selectedClient,fase.id,newTaakInputs[fase.id].trim());setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});setTick(t=>t+1);}if(e.key==='Escape')setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});}} placeholder="Taak..." style={{flex:1,padding:'5px 8px',border:'1px solid var(--border)',borderRadius:'5px',fontSize:'11px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none',minWidth:0}}/>
-<button onClick={()=>{if((newTaakInputs[fase.id]||'').trim()){addPlanningTaak(selectedClient,fase.id,newTaakInputs[fase.id].trim());setNewTaakInputs(p=>{const n={...p};delete n[fase.id];return n;});setTick(t=>t+1);}}} style={{padding:'5px 8px',background:'var(--blue)',color:'white',border:'none',borderRadius:'5px',fontSize:'11px',cursor:'pointer'}}>+</button>
-</div>
-):(
-<button onClick={()=>setNewTaakInputs(p=>({...p,[fase.id]:''}))} style={{width:'100%',padding:'5px',background:'transparent',border:'0.5px dashed var(--border)',borderRadius:'5px',fontSize:'11px',color:'var(--text-light)',cursor:'pointer'}}>+ taak</button>
-)}
-</div>
-)}
-</div>
-);
-})}
-</div>
-</div>
-</div>
-);
-}
-
-// ACTIEOVERZICHT COMPONENT
-function ActieoverzichtView({clients,tasks,customItems,planningItems,getClientHours,timeTracking,isAdmin,setSelectedClient,setActiveView,setActiveStep}){
-const now=new Date();
-const nowKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const monthNames={1:'Jan',2:'Feb',3:'Mrt',4:'Apr',5:'Mei',6:'Jun',7:'Jul',8:'Aug',9:'Sep',10:'Okt',11:'Nov',12:'Dec'};
-const monthLabel=monthNames[now.getMonth()+1]+' '+now.getFullYear();
-
-const CATS={
-seo:{label:'On-page SEO',bg:'#eff6ff',color:'#1d4ed8'},
-technisch:{label:'Technisch',bg:'#eff6ff',color:'#1d4ed8'},
-gmb:{label:'GMB',bg:'#fdf4ff',color:'#7e22ce'},
-content:{label:'Content',bg:'#f0fdf4',color:'#15803d'},
-linkbuilding:{label:'Linkbuilding',bg:'#fff7ed',color:'#c2410c'},
-rapportage:{label:'Rapportage',bg:'#f8fafc',color:'#475569'},
-setup:{label:'Setup',bg:'#f0f9ff',color:'#0369a1'},
-};
-
-const getCat=(stepId,title)=>{
-const t=title.toLowerCase();
-if(stepId===2||t.includes('gmb')||t.includes('google my business')||t.includes('reviews')||t.includes('profiel'))return CATS.gmb;
-if(stepId===5||t.includes('link')||t.includes('backlink')||t.includes('gastblog')||t.includes('directory')||t.includes('tripadvisor'))return CATS.linkbuilding;
-if(stepId===4||t.includes('content')||t.includes('tekst')||t.includes('blog')||t.includes('menu'))return CATS.content;
-if(stepId===6||t.includes('rapport')||t.includes('analytics')||t.includes('meten'))return CATS.rapportage;
-if(stepId===8||t.includes('setup')||t.includes('meting')||t.includes('instellen')||t.includes('koppelen'))return CATS.setup;
-if(stepId===3||t.includes('pagespeed')||t.includes('schema')||t.includes('sitemap')||t.includes('robots')||t.includes('ssl')||t.includes('redirect')||t.includes('canonical'))return CATS.technisch;
-return CATS.seo;
-};
-
-const STEPS_MAP={1:'SEO Plan',2:'GMB',3:'Technisch',4:'Content',5:'Linkbuilding',6:'Meten',8:'Setup'};
-
-const activeClients=clients.filter(c=>!c.archived);
-
-const clientData=activeClients.map(client=>{
-const hours=getClientHours(client.id);
-const budget=client.budget||0;
-const budgetPct=budget>0?Math.round((hours/budget)*100):0;
-const isUrgent=budgetPct>=80||client.status==='kritiek';
-const isAttention=client.status==='aandacht'||budgetPct>=60;
-
-// Gather open tasks from roadmap steps
-const openTaken=[];
-const STEP_IDS=[1,2,3,4,5,6,8];
-STEP_IDS.forEach(stepId=>{
-const stepData=window.STEPS_DATA?.[stepId];
-if(!stepData)return;
-(stepData.sections||[]).forEach(section=>{
-(section.tasks||[]).forEach(task=>{
-const key=client.id+'-'+stepId+'-'+task.id;
-const done=!!(tasks[key]);
-const irrelevant=!!(window.IRRELEVANT_DATA?.[key]);
-if(!done&&!irrelevant){
-openTaken.push({text:task.title,stepId,cat:getCat(stepId,task.title),key});
-}
-});
-});
-});
-
-// Check carried over planning items
-const carriedTaken=[];
-const clientPlanning=planningItems[client.id]||{};
-const prevMonthDate=new Date(now.getFullYear(),now.getMonth()-1,1);
-const prevKey=prevMonthDate.getFullYear()+'-'+String(prevMonthDate.getMonth()+1).padStart(2,'0');
-const prevItems=(clientPlanning[prevKey]||{items:[]}).items||[];
-prevItems.filter(i=>!i.completed).forEach(i=>{
-carriedTaken.push({text:i.text,carried:true,cat:getCat(0,i.text)});
-});
-
-// This month planning items
-const thisMonthItems=(clientPlanning[nowKey]||{items:[]}).items||[];
-const planningTaken=thisMonthItems.filter(i=>!i.completed).map(i=>({text:i.text,cat:getCat(0,i.text),fromPlanning:true}));
-
-const allOpen=[...carriedTaken,...planningTaken,...openTaken.slice(0,5)];
-
-return{client,hours,budget,budgetPct,isUrgent,isAttention,openTaken:allOpen,totalOpen:openTaken.length};
-}).sort((a,b)=>{
-const scoreA=(a.isUrgent?3:a.isAttention?2:1);
-const scoreB=(b.isUrgent?3:b.isAttention?2:1);
-return scoreB-scoreA;
-});
-
-const statusColor={top:'#10b981',schema:'#3b82f6',aandacht:'#f59e0b',kritiek:'#ef4444',opstartfase:'#94a3b8'};
-const statusLabel={top:'Top',schema:'Op schema',aandacht:'Aandacht',kritiek:'Kritiek',opstartfase:'Opstartfase'};
-
-return(
-<div style={{maxWidth:'1000px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'16px'}}>
-<div style={{fontSize:'12px',color:'var(--text-light)'}}>Actieoverzicht — {monthLabel}</div>
-<div style={{marginLeft:'auto',display:'flex',gap:'6px',flexWrap:'wrap'}}>
-<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#ef4444',display:'inline-block'}}></span>Urgent</span>
-<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#f59e0b',display:'inline-block'}}></span>Aandacht</span>
-<span style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',color:'var(--text-light)'}}><span style={{width:'8px',height:'8px',borderRadius:'50%',background:'#10b981',display:'inline-block'}}></span>Op schema</span>
-</div>
-</div>
-
-{clientData.map(({client,hours,budget,budgetPct,isUrgent,isAttention,openTaken,totalOpen})=>{
-const borderColor=isUrgent?'#ef4444':isAttention?'#f59e0b':statusColor[client.status]||'#94a3b8';
-const initials=(client.name||'??').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-const avatarBg=isUrgent?'#fef2f2':isAttention?'#fffbeb':client.status==='top'?'#f0fdf4':'var(--ios-gray-6)';
-const avatarColor=isUrgent?'#ef4444':isAttention?'#b45309':client.status==='top'?'#15803d':'var(--text-light)';
-
-return(
-<div key={client.id} style={{background:'var(--white)',border:`0.5px solid var(--border)`,borderLeft:`3px solid ${borderColor}`,borderRadius:'12px',overflow:'hidden',marginBottom:'10px',cursor:'pointer'}} onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
-<div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px',borderBottom:'0.5px solid var(--border)'}}>
-<div style={{width:'32px',height:'32px',borderRadius:'8px',background:avatarBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'600',color:avatarColor,flexShrink:0}}>{initials}</div>
-<div style={{flex:1,minWidth:0}}>
-<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{client.name}</div>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'1px',display:'flex',gap:'10px',flexWrap:'wrap'}}>
-{client.website&&<span>{client.website.replace(/https?:\/\//,'')}</span>}
-{budget>0&&<span style={{color:budgetPct>=80?'#ef4444':'var(--text-light)',fontWeight:budgetPct>=80?'600':'400'}}>{hours}/{budget}u{budgetPct>=80?' ⚠':''}</span>}
-<span>{totalOpen} taken open</span>
-</div>
-</div>
-<div style={{display:'flex',alignItems:'center',gap:'8px',flexShrink:0}}>
-<span style={{background:statusColor[client.status]||'#94a3b8',color:'white',padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:'600'}}>{statusLabel[client.status]||client.status}</span>
-</div>
-</div>
-
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0'}}>
-<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:isUrgent?'#ef4444':isAttention?'#f59e0b':'var(--text-light)',marginBottom:'8px'}}>Nu doen</div>
-{openTaken.length===0?(
-<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Alle taken afgerond</div>
-):(
-<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-{openTaken.slice(0,4).map((t,i)=>(
-<div key={i} style={{display:'flex',alignItems:'flex-start',gap:'6px',fontSize:'12px'}}>
-<span style={{width:'14px',height:'14px',borderRadius:'3px',background:t.carried?'#fffbeb':'var(--ios-gray-6)',border:`1px solid ${t.carried?'#fcd34d':'var(--border)'}`,flexShrink:0,marginTop:'1px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',color:t.carried?'#b45309':'transparent'}}>{t.carried?'↻':''}</span>
-<span style={{color:'var(--text)',lineHeight:'1.4',flex:1}}>{t.text}{t.carried&&<span style={{fontSize:'10px',background:'#fffbeb',color:'#b45309',padding:'1px 5px',borderRadius:'3px',marginLeft:'4px'}}>doorgeschoven</span>}</span>
-</div>
-))}
-{openTaken.length>4&&<div style={{fontSize:'11px',color:'var(--text-lighter)'}}>+{openTaken.length-4} meer taken</div>}
-</div>
-)}
-</div>
-<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Categorie</div>
-<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-{openTaken.slice(0,4).map((t,i)=>(
-<span key={i} style={{display:'inline-flex',alignItems:'center',padding:'3px 9px',borderRadius:'5px',fontSize:'11px',fontWeight:'500',background:t.cat.bg,color:t.cat.color,alignSelf:'flex-start'}}>{t.cat.label}</span>
-))}
-</div>
-</div>
-<div style={{padding:'12px 14px'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Budget</div>
-{budget>0?(
-<div>
-<div style={{display:'flex',justifyContent:'space-between',fontSize:'12px',marginBottom:'5px'}}>
-<span style={{color:'var(--text-light)'}}>Verbruikt</span>
-<span style={{fontWeight:'600',color:budgetPct>=80?'#ef4444':'var(--text)'}}>{budgetPct}%</span>
-</div>
-<div style={{height:'5px',background:'var(--ios-gray-5)',borderRadius:'3px',marginBottom:'8px'}}>
-<div style={{width:Math.min(100,budgetPct)+'%',height:'5px',borderRadius:'3px',background:budgetPct>=80?'#ef4444':budgetPct>=60?'#f59e0b':'#10b981',transition:'width .3s'}}/>
-</div>
-<div style={{fontSize:'11px',color:'var(--text-light)'}}>{hours}u gebruikt · {Math.max(0,Math.round((budget-hours)*10)/10)}u resterend</div>
-</div>
-):(
-<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen pakket ingesteld</div>
-)}
-</div>
-</div>
-</div>
-);
-})}
-</div>
-);
-}
-
 // ADMIN LOGIN MODAL
 function AdminLoginModal({onLogin,onCancel}){
 const [password,setPassword]=useState('');
@@ -1228,6 +769,119 @@ autoFocus style={{margin:0}}/>
 }
 
 // MAIN APP
+
+// ACTIEOVERZICHT
+function ActieoverzichtView({clients,tasks,customItems,planningItems,getClientHours,isAdmin,setSelectedClient,setActiveView}){
+const now=new Date();
+const nowKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
+const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
+const prevKey=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
+const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
+
+const getCat=(title)=>{
+const t=(title||'').toLowerCase();
+if(t.includes('gmb')||t.includes('google my business')||t.includes('reviews')||t.includes('profiel')||t.includes('foto'))return{label:'GMB',bg:'#fdf4ff',color:'#7e22ce'};
+if(t.includes('link')||t.includes('backlink')||t.includes('gastblog')||t.includes('directory')||t.includes('tripadvisor'))return{label:'Linkbuilding',bg:'#fff7ed',color:'#c2410c'};
+if(t.includes('content')||t.includes('tekst')||t.includes('blog')||t.includes('menu')||t.includes('pagina'))return{label:'Content',bg:'#f0fdf4',color:'#15803d'};
+if(t.includes('rapport')||t.includes('analytics')||t.includes('meten')||t.includes('ranking'))return{label:'Rapportage',bg:'#f8fafc',color:'#475569'};
+if(t.includes('pagespeed')||t.includes('schema')||t.includes('sitemap')||t.includes('robots')||t.includes('ssl')||t.includes('redirect')||t.includes('core web'))return{label:'Technisch',bg:'#eff6ff',color:'#1d4ed8'};
+return{label:'On-page SEO',bg:'#eff6ff',color:'#1d4ed8'};
+};
+
+const statusColor={top:'#10b981',schema:'#3b82f6',aandacht:'#f59e0b',kritiek:'#ef4444',opstartfase:'#94a3b8'};
+const statusLabel={top:'Top',schema:'Op schema',aandacht:'Aandacht',kritiek:'Kritiek',opstartfase:'Opstartfase'};
+
+const activeClients=[...clients.filter(c=>!c.archived)].sort((a,b)=>{
+const score={kritiek:4,aandacht:3,schema:2,top:1,opstartfase:0};
+const sa=score[a.status]||0,sb=score[b.status]||0;
+const ha=getClientHours(a.id),hb=getClientHours(b.id);
+const pa=a.budget>0?Math.round((ha/a.budget)*100):0;
+const pb=b.budget>0?Math.round((hb/b.budget)*100):0;
+return(sb+Math.floor(pb/20))-(sa+Math.floor(pa/20));
+}).reverse();
+
+return(
+<div style={{maxWidth:'960px',paddingBottom:'40px'}}>
+{activeClients.map(client=>{
+const hours=getClientHours(client.id);
+const budget=client.budget||0;
+const pct=budget>0?Math.round((hours/budget)*100):0;
+const isUrgent=pct>=80||client.status==='kritiek';
+const isAtt=client.status==='aandacht'||pct>=60;
+const borderColor=isUrgent?'#ef4444':isAtt?'#f59e0b':statusColor[client.status]||'#94a3b8';
+
+// Open planning items this month
+const cp=planningItems[client.id]||{};
+const prevItems=((cp[prevKey]||{}).items||[]).filter(i=>!i.completed).map(i=>({text:i.text,carried:true,cat:getCat(i.text)}));
+const thisItems=((cp[nowKey]||{}).items||[]).filter(i=>!i.completed).map(i=>({text:i.text,cat:getCat(i.text)}));
+const allTaken=[...prevItems,...thisItems].slice(0,5);
+
+const initials=(client.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
+const avBg=isUrgent?'#fef2f2':isAtt?'#fffbeb':client.status==='top'?'#f0fdf4':'var(--ios-gray-6)';
+const avCol=isUrgent?'#ef4444':isAtt?'#b45309':client.status==='top'?'#15803d':'var(--text-light)';
+
+return(
+<div key={client.id} style={{background:'var(--white)',border:'0.5px solid var(--border)',borderLeft:'3px solid '+borderColor,borderRadius:'12px',overflow:'hidden',marginBottom:'10px',cursor:'pointer'}} onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
+<div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px',borderBottom:'0.5px solid var(--border)'}}>
+<div style={{width:'32px',height:'32px',borderRadius:'8px',background:avBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'600',color:avCol,flexShrink:0}}>{initials}</div>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{client.name}</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px',display:'flex',gap:'10px',flexWrap:'wrap'}}>
+{client.website&&<span>{client.website.replace(/https?:\/\//,'')}</span>}
+{budget>0&&<span style={{color:pct>=80?'#ef4444':'inherit',fontWeight:pct>=80?'600':'400'}}>{hours}/{budget}u{pct>=80?' ⚠':''}</span>}
+</div>
+</div>
+<span style={{background:statusColor[client.status]||'#94a3b8',color:'white',padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:'600',flexShrink:0}}>{statusLabel[client.status]||client.status}</span>
+</div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0'}}>
+<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:isUrgent?'#ef4444':isAtt?'#f59e0b':'var(--text-light)',marginBottom:'8px'}}>Nu doen</div>
+{allTaken.length===0?(
+<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen taken ingepland</div>
+):(
+<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
+{allTaken.map((t,i)=>(
+<div key={i} style={{display:'flex',alignItems:'flex-start',gap:'6px',fontSize:'12px'}}>
+<span style={{width:'14px',height:'14px',borderRadius:'3px',background:t.carried?'#fffbeb':'var(--ios-gray-6)',border:'1px solid '+(t.carried?'#fcd34d':'var(--border)'),flexShrink:0,marginTop:'1px',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'8px',color:t.carried?'#b45309':'transparent'}}>{t.carried?'↻':''}</span>
+<span style={{lineHeight:'1.4',flex:1}}>{t.text}{t.carried&&<span style={{fontSize:'10px',background:'#fffbeb',color:'#b45309',padding:'1px 5px',borderRadius:'3px',marginLeft:'4px'}}>doorgeschoven</span>}</span>
+</div>
+))}
+</div>
+)}
+</div>
+<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Categorie</div>
+<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
+{allTaken.map((t,i)=>(
+<span key={i} style={{display:'inline-flex',padding:'3px 9px',borderRadius:'5px',fontSize:'11px',fontWeight:'500',background:t.cat.bg,color:t.cat.color,alignSelf:'flex-start'}}>{t.cat.label}</span>
+))}
+</div>
+</div>
+<div style={{padding:'12px 14px'}}>
+<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Budget</div>
+{budget>0?(
+<div>
+<div style={{display:'flex',justifyContent:'space-between',fontSize:'12px',marginBottom:'5px'}}>
+<span style={{color:'var(--text-light)'}}>Verbruikt</span>
+<span style={{fontWeight:'600',color:pct>=80?'#ef4444':'var(--text)'}}>{pct}%</span>
+</div>
+<div style={{height:'5px',background:'var(--ios-gray-5)',borderRadius:'3px',marginBottom:'6px'}}>
+<div style={{width:Math.min(100,pct)+'%',height:'5px',borderRadius:'3px',background:pct>=80?'#ef4444':pct>=60?'#f59e0b':'#10b981'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)'}}>{hours}u gebruikt · {Math.max(0,Math.round((budget-hours)*10)/10)}u resterend</div>
+</div>
+):(
+<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen pakket ingesteld</div>
+)}
+</div>
+</div>
+</div>
+);
+})}
+</div>
+);
+}
+
 function App(){
 const [loading,setLoading]=useState(true);
 const [db,setDb]=useState(null);
@@ -1294,10 +948,6 @@ const [editingCustomItem,setEditingCustomItem]=useState(null);
 const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
-const [showStatusmeetingModal,setShowStatusmeetingModal]=useState(false);
-const [showPlanningSetup,setShowPlanningSetup]=useState(false);
-const [locatieChecklist,setLocatieChecklist]=useState({});
-const [statusmeetingDraft,setStatusmeetingDraft]=useState({tevredenheid:3,besproken:'',actiepunten:[{text:'',planningMonth:'current'}]});
 
 // JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
 const getAllTasksForJourney=(clientId)=>{
@@ -2446,111 +2096,6 @@ setBulkTimeClients([]);
 setToast({type:'success',message:`✓ ${totalHours}u verdeeld over ${bulkTimeClients.length} klanten (${hoursPerClient}u per klant)`});
 };
 
-const getLocatieData=(clientId)=>JSON.parse(localStorage.getItem('locaties2_'+clientId)||'[]');
-const saveLocatieData=(clientId,data)=>{localStorage.setItem('locaties2_'+clientId,JSON.stringify(data));setLocatieChecklist(prev=>({...prev,[clientId]:data}));};
-const addStad=(clientId,stad)=>{
-const data=getLocatieData(clientId);
-if(data.find(s=>s.stad===stad.trim()))return;
-saveLocatieData(clientId,[...data,{id:'stad_'+Date.now(),stad:stad.trim(),locaties:[]}]);
-};
-const deleteStad=(clientId,stadId)=>{
-saveLocatieData(clientId,getLocatieData(clientId).filter(s=>s.id!==stadId));
-};
-const addLocatie=(clientId,stadId,naam)=>{
-const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:[...s.locaties,{id:'loc_'+Date.now(),naam,opmerking:'',seo:{metaTitel:false,metaOmschrijving:false,hKoppen:false,tekst:false},gmb:{aangemaakt:false,infoAangeleverd:false,geoptimaliseerd:false,reviewsAuto:false}}]}:s);
-saveLocatieData(clientId,data);
-};
-const updateLocatieCheck=(clientId,stadId,locId,sectie,veld,val)=>{
-const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.map(l=>l.id===locId?{...l,[sectie]:{...l[sectie],[veld]:val}}:l)}:s);
-saveLocatieData(clientId,data);
-};
-const updateLocatieOpmerking=(clientId,stadId,locId,tekst)=>{
-const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.map(l=>l.id===locId?{...l,opmerking:tekst}:l)}:s);
-saveLocatieData(clientId,data);
-};
-const deleteLocatie=(clientId,stadId,locId)=>{
-const data=getLocatieData(clientId).map(s=>s.id===stadId?{...s,locaties:s.locaties.filter(l=>l.id!==locId)}:s);
-saveLocatieData(clientId,data);
-};
-const PLANNING_TEMPLATES={
-hotel:[
-{label:'Website live',taken:['Analyse website','SEO plan opstellen','Concurrentieanalyse','0-meting uitvoeren','SEO-migratie']},
-{label:'Maand 1',taken:['URL structuur optimaliseren','Meta titels aanpassen','Meta omschrijvingen aanpassen']},
-{label:'Maand 2',taken:['H1/H2/H3 structuur optimaliseren','SEO content klaar zetten']},
-{label:'Maand 3',taken:['Evaluatie werkzaamheden','Verdere optimalisatie','Linkbuilding starten']},
-{label:'Maand 4',taken:['Interne linkstructuur verbeteren','Extra content toevoegen']},
-{label:'Maand 5',taken:['Linkbuilding uitbreiden','Gastblogs & directories']},
-{label:'Maand 6',taken:['Nieuwe content publiceren','Zoekwoordenonderzoek vervolg']},
-],
-restaurant:[
-{label:'Website live',taken:['Analyse website','SEO plan opstellen','0-meting uitvoeren','GMB profiel claimen']},
-{label:'Maand 1',taken:['Menu paginas optimaliseren','Meta titels & omschrijvingen','Lokale zoekwoorden verwerken']},
-{label:'Maand 2',taken:['Reviews strategie opzetten','GMB posts plannen','Schema markup restaurant']},
-{label:'Maand 3',taken:['Linkbuilding starten','TripAdvisor profiel optimaliseren']},
-{label:'Maand 4',taken:['Seizoensgebonden content','Reserveringsflow optimaliseren']},
-],
-strandtent:[
-{label:'Website live',taken:['Analyse website','0-meting','GMB profiel optimaliseren','Seizoensplanning']},
-{label:'Maand 1',taken:['Lokale SEO basis','Meta titels & omschrijvingen','Fotos Google Business']},
-{label:'Maand 2',taken:['Reviews strategie','Seizoensgebonden content','Linkbuilding directories']},
-{label:'Maand 3',taken:['Evaluatie seizoen','Voorbereiding volgend jaar']},
-],
-evenement:[
-{label:'Website live',taken:['Analyse website','SEO plan','0-meting','Evenementenpaginas optimaliseren']},
-{label:'Maand 1',taken:['Meta titels & omschrijvingen','Evenement schema markup','Lokale SEO']},
-{label:'Maand 2',taken:['Content kalender','Linkbuilding','GMB evenementen']},
-{label:'Maand 3',taken:['Evaluatie','Vervolgstrategie']},
-],
-hotel_restaurant:[
-{label:'Website live',taken:['Analyse website','SEO plan opstellen','0-meting','GMB profiel']},
-{label:'Maand 1',taken:['URL structuur','Meta titels hotel & restaurant','Lokale zoekwoorden']},
-{label:'Maand 2',taken:['Menu & kamerpaginas','Reviews strategie','Schema markup']},
-{label:'Maand 3',taken:['Linkbuilding','Content uitbreiden','GMB optimaliseren']},
-{label:'Maand 4',taken:['Seizoensgebonden content','Evaluatie & bijsturen']},
-],
-};
-const getProjectPlanning=(clientId)=>JSON.parse(localStorage.getItem('projectplanning_'+clientId)||'null');
-const saveProjectPlanning=(clientId,data)=>localStorage.setItem('projectplanning_'+clientId,JSON.stringify(data));
-const initProjectPlanning=(clientId,clientType,startDate)=>{
-const template=PLANNING_TEMPLATES[clientType]||PLANNING_TEMPLATES.hotel;
-const start=new Date(startDate);
-const data=template.map((fase,i)=>{
-const d=new Date(start);
-d.setMonth(d.getMonth()+i);
-return{id:'fase_'+i,label:i===0?fase.label:'Maand '+(i),datum:d.toISOString().slice(0,7),taken:fase.taken.map((t,j)=>({id:'t_'+i+'_'+j,text:t,done:false,carriedFrom:null}))};
-});
-saveProjectPlanning(clientId,data);
-};
-const updatePlanningTaak=(clientId,faseId,taakId,done)=>{
-const data=getProjectPlanning(clientId);
-if(!data)return;
-const updated=data.map(f=>f.id===faseId?{...f,taken:f.taken.map(t=>t.id===taakId?{...t,done}:t)}:f);
-saveProjectPlanning(clientId,updated);
-};
-const addPlanningTaak=(clientId,faseId,text)=>{
-const data=getProjectPlanning(clientId);
-if(!data)return;
-const updated=data.map(f=>f.id===faseId?{...f,taken:[...f.taken,{id:'t_'+Date.now(),text,done:false,carriedFrom:null}]}:f);
-saveProjectPlanning(clientId,updated);
-};
-const deletePlanningTaak=(clientId,faseId,taakId)=>{
-const data=getProjectPlanning(clientId);
-if(!data)return;
-saveProjectPlanning(clientId,data.map(f=>f.id===faseId?{...f,taken:f.taken.filter(t=>t.id!==taakId)}:f));
-};
-const addPlanningFase=(clientId,label,datum)=>{
-const data=getProjectPlanning(clientId)||[];
-saveProjectPlanning(clientId,[...data,{id:'fase_'+Date.now(),label,datum,taken:[]}]);
-};
-const saveStatusmeeting=(clientId,meeting)=>{
-const key='statusmeeting_'+clientId;
-const existing=JSON.parse(localStorage.getItem(key)||'[]');
-const newMeeting={...meeting,id:Date.now(),date:new Date().toISOString()};
-localStorage.setItem(key,JSON.stringify([newMeeting,...existing]));
-};
-const getStatusmeetings=(clientId)=>{
-return JSON.parse(localStorage.getItem('statusmeeting_'+clientId)||'[]');
-};
 const openTimeModal=(client,monthKey=null,entry=null)=>{
 if(!isAdmin)return;
 setTimeModalClient(client);
@@ -3481,35 +3026,13 @@ return count;
 )}
 </aside>
 <main className="main">
-{activeView==='actieoverzicht'&&(
-<>
 <header className="header">
-<h1 className="title">🎯 Actieoverzicht</h1>
-<p className="subtitle">Wat moet er nu gebeuren per klant</p>
+<h1 className="title">{activeView==='actieoverzicht'?'🎯 Actieoverzicht':'Klanten Dashboard'}</h1>
+<p className="subtitle">{activeView==='actieoverzicht'?'Wat moet er nu gebeuren per klant':'Overzicht van alle SEO projecten'}</p>
 </header>
-<ActieoverzichtView
-clients={clients}
-tasks={tasks}
-customItems={customItems}
-planningItems={planningItems}
-getClientHours={getClientHours}
-timeTracking={timeTracking}
-isAdmin={isAdmin}
-setSelectedClient={setSelectedClient}
-setActiveView={setActiveView}
-setActiveStep={setActiveStep}
-/>
-</>
-)}
+{activeView==='actieoverzicht'&&<ActieoverzichtView clients={clients} tasks={tasks} customItems={customItems} planningItems={planningItems} getClientHours={getClientHours} isAdmin={isAdmin} setSelectedClient={setSelectedClient} setActiveView={setActiveView}/>}
 
-{activeView==='dashboard'&&(
-<header className="header">
-<h1 className="title">Klanten Dashboard</h1>
-<p className="subtitle">Overzicht van alle SEO projecten</p>
-</header>
-)}
-
-{activeView==='dashboard'&&(()=>{
+{(()=>{
 const upcoming=getAllUpcomingDeadlines();
 if(upcoming.length===0)return null;
 return(
@@ -3545,7 +3068,7 @@ return(
 {(()=>{
 const stats=getDashboardStats();
 return(
-<div className="dashboard-stats">
+{activeView==='dashboard'&&<div className="dashboard-stats">
 <div className="stats-grid">
 <div className="stat-card">
 <div className="stat-label">Gewerkte uren</div>
@@ -3563,11 +3086,11 @@ return(
 <div className="stat-subtitle">komende 7 dagen</div>
 </div>
 </div>
-</div>
+</div>}
 );
 })()}
 
-<div className="status-overview">
+{activeView==='dashboard'&&<div className="status-overview">
 {STATUS_OPTIONS.map(status=>(
 <div key={status.key} className={`status-card ${status.key} ${statusFilter===status.key?'active':''}`} onClick={()=>setStatusFilter(statusFilter===status.key?'all':status.key)}>
 <div className="status-icon">{status.icon}</div>
@@ -3575,8 +3098,9 @@ return(
 <div className="status-label">{status.label}</div>
 </div>
 ))}
-</div>
+</div>}
 
+{activeView==='dashboard'&&<>
 <div style={{display:'flex',gap:'24px',alignItems:'center',marginBottom:'24px'}}>
 <div className="pm-overview" style={{flex:1}}>
 <div className="pm-label">Projectmanagers:</div>
@@ -3623,7 +3147,7 @@ Alle PMs
 </>
 )}
 
-{activeView==='dashboard'&&<div className="dashboard-grid">
+<div className="dashboard-grid">
 {filteredClients.map(client=>{
 const stats=getClientStats(client.id);
 const progress=getClientProgress(client.id);
@@ -3900,7 +3424,7 @@ return(
 </div>
 )}
 
-</div>}
+</>}
 <div className="joke-footer">
 <div className="joke-text">{SEO_JOKES[Math.floor(Math.random()*SEO_JOKES.length)]}</div>
 </div>
@@ -3941,35 +3465,31 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel'||!newClient.clientType?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'||!newClient.clientType?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'||!newClient.clientType?'600':'400'}}>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
-</button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
-🎪 Evenementenlocatie
-</button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
-🏨🍽️ Hotel & Restaurant
 </button>
 </div>
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
+<div style={{display:'flex',gap:'8px'}}>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele locatie
+📍 Enkele
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Multi-locatie
+📍📍 Meerdere
 </button>
+</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
@@ -4055,35 +3575,31 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={editingClient.name} onChange={(e)=>setEditingClient({...editingClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${(editingClient.clientType||'hotel')==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:(editingClient.clientType||'hotel')==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:(editingClient.clientType||'hotel')==='hotel'?'600':'400'}}>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${(editingClient.clientType||'hotel')==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:(editingClient.clientType||'hotel')==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:(editingClient.clientType||'hotel')==='hotel'?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
-</button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='evenement'?'600':'400'}}>
-🎪 Evenementenlocatie
-</button>
-<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${editingClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='hotel_restaurant'?'600':'400'}}>
-🏨🍽️ Hotel & Restaurant
 </button>
 </div>
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
+<div style={{display:'flex',gap:'8px'}}>
 <button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele locatie
+📍 Enkele
 </button>
 <button type="button" onClick={()=>setEditingClient({...editingClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Multi-locatie
+📍📍 Meerdere
 </button>
+</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
@@ -4268,97 +3784,6 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 </div>
 )}
 
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </div>
 );
@@ -4582,97 +4007,6 @@ return count;
 </div>
 )}
 
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -4909,97 +4243,6 @@ return(
 })()}
 
 </div>
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -5236,97 +4479,6 @@ return(
 </div>
 
 </div>
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -5513,97 +4665,6 @@ return(
 </div>
 
 </div>
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -5909,97 +4970,6 @@ setActiveView('roadmap');
 )}
 </div>
 
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 </main>
 </div>
@@ -6059,16 +5029,6 @@ return(
 <span className="nav-text">{step.name}</span>
 </div>
 ))}
-{currentClient&&currentClient.multiLocation&&(
-<div className={`nav-item ${activeStep==='locaties'?'active':''}`} onClick={()=>setActiveStep('locaties')}>
-<span className="nav-icon">📍</span>
-<span className="nav-text">Locaties</span>
-</div>
-)}
-<div className={`nav-item ${activeStep==='projectplanning'?'active':''}`} onClick={()=>setActiveStep('projectplanning')}>
-<span className="nav-icon">🗓️</span>
-<span className="nav-text">Projectplanning</span>
-</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -6091,7 +5051,6 @@ Project: <span className="banner-client">{currentClient.name}</span>
 {isAdmin&&(
 <div className="banner-buttons">
 <button className="banner-btn" onClick={()=>setShowNoteModal(true)}>💬 Notitie</button>
-{isAdmin&&<button className="banner-btn" style={{background:'#7C3AED',color:'white'}} onClick={()=>{setStatusmeetingDraft({tevredenheid:3,besproken:'',actiepunten:[{text:'',planningMonth:'current'}]});setShowStatusmeetingModal(true);}}>📋 Statusmeeting</button>}
 <button className="banner-btn" onClick={()=>setShowJourney(true)} style={{background:'linear-gradient(135deg, #1e3a5f, #2d5a87)',color:'white'}}>🏔️ Journey</button>
 <button className="banner-btn" onClick={()=>setShowStatusModal(true)}>Status Wijzigen</button>
 <button className="banner-btn" onClick={(e)=>{e.stopPropagation();copyClientLink(selectedClient);}}>🔗 Copy Link</button>
@@ -6112,16 +5071,6 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">📋 Overzicht</h1>
 <p className="subtitle">Complete status van {currentClient.name}</p>
 </>
-):activeStep==='locaties'?(
-<>
-<h1 className="title">📍 Locaties</h1>
-<p className="subtitle">Checklist per locatie van {currentClient.name}</p>
-</>
-):activeStep==='projectplanning'?(
-<>
-<h1 className="title">🗓️ Projectplanning</h1>
-<p className="subtitle">Faseplanning voor {currentClient.name}</p>
-</>
 ):(
 <>
 <h1 className="title">{currentStep?.icon} {currentStep?.name}</h1>
@@ -6129,21 +5078,6 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 )}
 </header>
-
-{activeStep==='projectplanning'&&currentClient&&<ProjectplanningView
-selectedClient={selectedClient}
-isAdmin={isAdmin}
-currentClient={currentClient}
-getProjectPlanning={getProjectPlanning}
-saveProjectPlanning={saveProjectPlanning}
-initProjectPlanning={initProjectPlanning}
-updatePlanningTaak={updatePlanningTaak}
-addPlanningTaak={addPlanningTaak}
-deletePlanningTaak={deletePlanningTaak}
-addPlanningFase={addPlanningFase}
-/>}
-
-{activeStep==='locaties'&&currentClient&&currentClient.multiLocation&&<LocatiesView selectedClient={selectedClient} isAdmin={isAdmin} getLocatieData={getLocatieData} addStad={addStad} deleteStad={deleteStad} addLocatie={addLocatie} updateLocatieCheck={updateLocatieCheck} updateLocatieOpmerking={updateLocatieOpmerking} deleteLocatie={deleteLocatie}/>}
 
 {activeStep==='overview'&&(
 <div className="overview-content" style={{maxWidth:'900px'}}>
@@ -6430,39 +5364,6 @@ return(
 })}
 </div>
 </div>
-
-{(()=>{
-const meetings=getStatusmeetings(selectedClient);
-if(meetings.length===0)return null;
-const emojis=['😞','😕','😐','🙂','😄'];
-return(
-<div style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'8px',padding:'20px',marginBottom:'16px'}}>
-<h3 style={{margin:'0 0 16px 0',fontSize:'16px',fontWeight:'600',color:'var(--text)',display:'flex',alignItems:'center',gap:'8px'}}>
-<span>📋</span> Statusmeetings ({meetings.length})
-</h3>
-{meetings.slice(0,5).map(m=>(
-<div key={m.id} style={{background:'var(--ios-gray-6)',borderRadius:'10px',padding:'14px',marginBottom:'10px'}}>
-<div style={{display:'flex',alignItems:'center',gap:'10px',marginBottom:'8px'}}>
-<span style={{fontSize:'26px'}}>{emojis[m.tevredenheid-1]}</span>
-<div>
-<div style={{fontSize:'11px',color:'var(--text-light)'}}>{new Date(m.date).toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-<div style={{fontSize:'13px',fontWeight:'600',color:'#7C3AED'}}>{['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'][m.tevredenheid-1]}</div>
-</div>
-</div>
-{m.besproken&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5'}}>{m.besproken}</div>}
-{m.actiepunten&&m.actiepunten.filter(a=>a.text).length>0&&(
-<div>{m.actiepunten.filter(a=>a.text).map((a,i)=>(
-<div key={i} style={{fontSize:'12px',color:'var(--text)',display:'flex',alignItems:'center',gap:'6px',marginBottom:'3px'}}>
-<span style={{color:'#7C3AED',fontWeight:'700'}}>·</span>{a.text}
-<span style={{fontSize:'10px',background:'#F3E8FF',color:'#7C3AED',padding:'1px 6px',borderRadius:'4px'}}>{a.planningMonth==='next'?'Volgende maand':'Deze maand'}</span>
-</div>
-))}</div>
-)}
-</div>
-))}
-</div>
-);
-})()}
 
 {(()=>{
 const clientNotes=getClientNotes(selectedClient);
@@ -6758,10 +5659,7 @@ return(
 <div key={task.id} className={`task-card ${isChecked?'completed':''} ${isIrrelevant?'irrelevant':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{opacity:0.5}:{}} onClick={()=>{if(isAdmin&&!isIrrelevant)toggleTask(currentStep.id,task.id);}}>
 <div className={`checkbox ${isChecked?'checked':''} ${isAdmin?'clickable':''}`} style={isIrrelevant?{background:'var(--ios-gray-4)',borderColor:'var(--ios-gray-4)'}:{}}>{isChecked&&!isIrrelevant&&<span style={{color:'white',fontSize:'14px',fontWeight:'bold'}}>✓</span>}{isIrrelevant&&<span style={{color:'var(--text-light)',fontSize:'12px'}}>—</span>}</div>
 <div className="task-content" style={{flex:1,textDecoration:isIrrelevant?'line-through':'none'}}>
-<div className="task-title" style={{display:'flex',alignItems:'center',flexWrap:'wrap',gap:'2px'}}>
-{task.title}
-<TaskInfoButton taskTitle={task.title} stepName={currentStep?.name||'SEO'}/>
-</div>
+<div className="task-title">{task.title}</div>
 {task.desc&&<div className="task-desc">{task.desc}</div>}
 </div>
 {isAdmin&&<button onClick={(e)=>toggleIrrelevant(currentStep.id,task.id,e)} style={{padding:'4px 8px',fontSize:'11px',background:isIrrelevant?'var(--blue)':'transparent',color:isIrrelevant?'white':'var(--text-light)',border:`1px solid ${isIrrelevant?'var(--blue)':'var(--border)'}`,borderRadius:'4px',cursor:'pointer',whiteSpace:'nowrap',marginLeft:'8px'}}>{isIrrelevant?'Relevant':'Niet relevant'}</button>}
@@ -6996,35 +5894,31 @@ return(
 <label className="input-label">Bedrijfsnaam *</label>
 <input type="text" className="modal-input" value={newClient.name} onChange={(e)=>setNewClient({...newClient,name:e.target.value})} autoFocus/>
 </div>
+<div style={{display:'grid',gridTemplateColumns:'1fr 1fr',gap:'12px'}}>
 <div className="input-group">
 <label className="input-label">Type klant *</label>
-<div style={{display:'grid',gridTemplateColumns:'repeat(3,1fr)',gap:'8px'}}>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel'||!newClient.clientType?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'||!newClient.clientType?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'||!newClient.clientType?'600':'400'}}>
+<div style={{display:'flex',gap:'8px'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='hotel'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel'?'600':'400'}}>
 🏨 Hotel
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'restaurant'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='restaurant'?'600':'400'}}>
 🍽️ Restaurant
 </button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
-</button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400'}}>
-🎪 Evenementenlocatie
-</button>
-<button type="button" onClick={()=>setNewClient({...newClient,clientType:'hotel_restaurant'})} style={{padding:'10px',border:`2px solid ${newClient.clientType==='hotel_restaurant'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='hotel_restaurant'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='hotel_restaurant'?'600':'400'}}>
-🏨🍽️ Hotel & Restaurant
 </button>
 </div>
 </div>
 <div className="input-group">
 <label className="input-label">Locaties</label>
-<div style={{display:'flex',gap:'8px',maxWidth:'300px'}}>
+<div style={{display:'flex',gap:'8px'}}>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:false})} style={{flex:1,padding:'10px',border:`2px solid ${!newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:!newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:!newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍 Enkele locatie
+📍 Enkele
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,multiLocation:true})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.multiLocation?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.multiLocation?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.multiLocation?'600':'400',fontSize:'13px'}}>
-📍📍 Multi-locatie
+📍📍 Meerdere
 </button>
+</div>
 </div>
 </div>
 <div className="input-group" style={{marginTop:'8px'}}>
@@ -7393,97 +6287,6 @@ return <circle key={i} cx={cp.x} cy={cp.y} r={12} fill={isCompleted?'#4ade80':'w
 </div>
 )}
 
-{showStatusmeetingModal&&isAdmin&&(()=>{
-const currentClient=clients.find(c=>c.id===selectedClient);
-if(!currentClient)return null;
-const now=new Date();
-const monthNames={1:'Januari',2:'Februari',3:'Maart',4:'April',5:'Mei',6:'Juni',7:'Juli',8:'Augustus',9:'September',10:'Oktober',11:'November',12:'December'};
-const currentMonthName=monthNames[now.getMonth()+1];
-const nextMonthNum=now.getMonth()===11?1:now.getMonth()+2;
-const nextMonthName=monthNames[nextMonthNum];
-const emojis=['😞','😕','😐','🙂','😄'];
-const emojiLabels=['Zeer ontevreden','Ontevreden','Neutraal','Tevreden','Zeer tevreden'];
-const addActiepunt=()=>setStatusmeetingDraft(d=>({...d,actiepunten:[...d.actiepunten,{text:'',planningMonth:'current'}]}));
-const removeActiepunt=(i)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.filter((_,ix)=>ix!==i)}));
-const updateActiepunt=(i,field,val)=>setStatusmeetingDraft(d=>({...d,actiepunten:d.actiepunten.map((a,ix)=>ix===i?{...a,[field]:val}:a)}));
-const handleSave=()=>{
-if(!statusmeetingDraft.besproken.trim()&&statusmeetingDraft.actiepunten.every(a=>!a.text.trim())){
-setToast({type:'error',message:'Vul minimaal iets in bij Wat besproken'});return;
-}
-saveStatusmeeting(selectedClient,statusmeetingDraft);
-const validActies=statusmeetingDraft.actiepunten.filter(a=>a.text.trim());
-if(validActies.length>0){
-const curKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const nxtKey=(now.getMonth()===11?now.getFullYear()+1:now.getFullYear())+'-'+String(nextMonthNum).padStart(2,'0');
-validActies.forEach(actie=>{
-const monthKey=actie.planningMonth==='next'?nxtKey:curKey;
-const newItem={id:'sm-'+Date.now()+'-'+Math.random(),text:actie.text,completed:false};
-setPlanningItems(prev=>{
-const cp=prev[selectedClient]||{};
-const mp=cp[monthKey]||{items:[]};
-return{...prev,[selectedClient]:{...cp,[monthKey]:{...mp,items:[...(mp.items||[]),newItem]}}};
-});
-});
-}
-setShowStatusmeetingModal(false);
-setToast({type:'success',message:'Statusmeeting opgeslagen'});
-};
-return(
-<div style={{position:'fixed',top:0,left:0,right:0,bottom:0,background:'rgba(0,0,0,0.5)',zIndex:10000,display:'flex',alignItems:'center',justifyContent:'center',padding:'20px'}} onClick={()=>setShowStatusmeetingModal(false)}>
-<div style={{background:'var(--white)',borderRadius:'16px',width:'100%',maxWidth:'580px',maxHeight:'85vh',overflowY:'auto'}} onClick={e=>e.stopPropagation()}>
-<div style={{padding:'20px 24px',borderBottom:'1px solid var(--border)',display:'flex',alignItems:'center',justifyContent:'space-between',background:'#7C3AED',borderRadius:'16px 16px 0 0'}}>
-<div>
-<div style={{fontSize:'16px',fontWeight:'700',color:'white'}}>📋 Statusmeeting</div>
-<div style={{fontSize:'13px',color:'rgba(255,255,255,0.8)',marginTop:'2px'}}>{currentClient.name} · {now.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</div>
-</div>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{background:'rgba(255,255,255,0.2)',border:'none',borderRadius:'8px',padding:'6px 12px',color:'white',cursor:'pointer',fontSize:'16px'}}>✕</button>
-</div>
-<div style={{padding:'24px'}}>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'12px'}}>Tevredenheid klant</div>
-<div style={{display:'flex',gap:'8px'}}>
-{emojis.map((emoji,i)=>(
-<button key={i} onClick={()=>setStatusmeetingDraft(d=>({...d,tevredenheid:i+1}))} style={{flex:1,display:'flex',flexDirection:'column',alignItems:'center',gap:'4px',padding:'10px 6px',borderRadius:'12px',border:'2px solid '+(statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--border)'),background:statusmeetingDraft.tevredenheid===i+1?'#F3E8FF':'var(--white)',cursor:'pointer'}}>
-<span style={{fontSize:'26px'}}>{emoji}</span>
-<span style={{fontSize:'10px',color:statusmeetingDraft.tevredenheid===i+1?'#7C3AED':'var(--text-light)',fontWeight:'600',textAlign:'center'}}>{emojiLabels[i]}</span>
-</button>
-))}
-</div>
-</div>
-<div style={{marginBottom:'24px'}}>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px'}}>Wat is er besproken?</div>
-<textarea value={statusmeetingDraft.besproken} onChange={e=>setStatusmeetingDraft(d=>({...d,besproken:e.target.value}))} placeholder="Beschrijf kort wat er besproken is..." style={{width:'100%',minHeight:'100px',padding:'12px',border:'1px solid var(--border)',borderRadius:'10px',fontSize:'13px',fontFamily:'inherit',resize:'vertical',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-</div>
-<div>
-<div style={{fontSize:'11px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'0.5px',color:'var(--text-light)',marginBottom:'8px',display:'flex',justifyContent:'space-between',alignItems:'center'}}>
-<span>Actiepunten</span>
-<button onClick={addActiepunt} style={{padding:'4px 10px',background:'#7C3AED',color:'white',border:'none',borderRadius:'6px',fontSize:'12px',fontWeight:'600',cursor:'pointer'}}>+ Toevoegen</button>
-</div>
-{statusmeetingDraft.actiepunten.map((actie,i)=>(
-<div key={i} style={{display:'flex',gap:'8px',alignItems:'center',marginBottom:'8px'}}>
-<input type="text" value={actie.text} onChange={e=>updateActiepunt(i,'text',e.target.value)} placeholder={'Actiepunt '+(i+1)+'...'} style={{flex:1,padding:'10px 12px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'13px',fontFamily:'inherit',background:'var(--ios-gray-6)',color:'var(--text)',outline:'none'}}/>
-<select value={actie.planningMonth} onChange={e=>updateActiepunt(i,'planningMonth',e.target.value)} style={{padding:'10px 8px',border:'1px solid var(--border)',borderRadius:'8px',fontSize:'12px',background:'var(--ios-gray-6)',color:'var(--text)',cursor:'pointer',outline:'none'}}>
-<option value="current">{currentMonthName}</option>
-<option value="next">{nextMonthName}</option>
-</select>
-{statusmeetingDraft.actiepunten.length>1&&(
-<button onClick={()=>removeActiepunt(i)} style={{padding:'8px 10px',background:'var(--ios-red-bg)',color:'var(--ios-red)',border:'none',borderRadius:'8px',cursor:'pointer'}}>✕</button>
-)}
-</div>
-))}
-<div style={{marginTop:'8px',padding:'8px 10px',background:'var(--ios-blue-light)',borderRadius:'8px',fontSize:'11px',color:'var(--ios-blue)'}}>
-Actiepunten worden direct toegevoegd aan de planning van {currentClient.name}
-</div>
-</div>
-</div>
-<div style={{padding:'16px 24px',borderTop:'1px solid var(--border)',display:'flex',gap:'8px',justifyContent:'flex-end'}}>
-<button onClick={()=>setShowStatusmeetingModal(false)} style={{padding:'10px 20px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Annuleren</button>
-<button onClick={handleSave} style={{padding:'10px 24px',background:'#7C3AED',color:'white',border:'none',borderRadius:'8px',fontSize:'14px',fontWeight:'600',cursor:'pointer'}}>Opslaan</button>
-</div>
-</div>
-</div>
-);
-})()}
 {toast&&<Toast message={toast.message} type={toast.type} onClose={()=>setToast(null)}/>}
 {showCelebration&&<Celebration/>}
 </div>
