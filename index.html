@@ -2905,6 +2905,11 @@ count+=items.length;
 return count;
 })()}</span>
 </div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
