@@ -3481,20 +3481,12 @@ return count;
 )}
 </aside>
 <main className="main">
-{activeView==='dashboard'&&(
-<header className="header">
-<h1 className="title">Klanten Dashboard</h1>
-<p className="subtitle">Overzicht van alle SEO projecten</p>
-</header>
-)}
-
 {activeView==='actieoverzicht'&&(
+<>
 <header className="header">
 <h1 className="title">🎯 Actieoverzicht</h1>
 <p className="subtitle">Wat moet er nu gebeuren per klant</p>
 </header>
-)}
-
 <ActieoverzichtView
 clients={clients}
 tasks={tasks}
@@ -3506,8 +3498,16 @@ isAdmin={isAdmin}
 setSelectedClient={setSelectedClient}
 setActiveView={setActiveView}
 setActiveStep={setActiveStep}
-style={{display:activeView==='actieoverzicht'?'block':'none'}}
 />
+</>
+)}
+
+{activeView==='dashboard'&&(
+<header className="header">
+<h1 className="title">Klanten Dashboard</h1>
+<p className="subtitle">Overzicht van alle SEO projecten</p>
+</header>
+)}
 
 {activeView==='dashboard'&&(()=>{
 const upcoming=getAllUpcomingDeadlines();
