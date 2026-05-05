@@ -2872,7 +2872,7 @@ return(<div className="loading-screen"><div className="spinner"></div><div class
 }
 
 // DASHBOARD
-if(activeView==='dashboard'){
+if(activeView==='dashboard'||activeView==='actieoverzicht'){
 const statusCounts=getStatusCounts();
 const filteredClients=getFilteredClients();
 console.log('🔍 Dashboard - Current sortOrder:',sortOrder);
