@@ -130,10 +130,10 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .client-link:hover{text-decoration:underline;opacity:0.8}
 .delete-btn{background:var(--red-bg);color:var(--red);border:none;width:32px;height:32px;border-radius:6px;cursor:pointer;font-size:16px;transition:all .2s;display:flex;align-items:center;justify-content:center}
 .delete-btn:hover{background:var(--red);color:var(--white)}
-.client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;margin:16px 0;padding:0}
-.stat-box{text-align:center;padding:16px 12px;background:var(--ios-gray-6);border-radius:12px;transition:all .2s}
+.client-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin:10px 0;padding:0}
+.stat-box{text-align:center;padding:8px 6px;background:var(--ios-gray-6);border-radius:8px;transition:all .2s}
 .stat-box:hover{background:var(--ios-gray-5);transform:scale(1.02)}
-.stat-number{font-size:32px;font-weight:700;color:var(--ios-blue);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;line-height:1;margin-bottom:4px;letter-spacing:-0.02em}
+.stat-number{font-size:18px;font-weight:700;color:var(--ios-blue);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;line-height:1;margin-bottom:2px;letter-spacing:-0.02em}
 .stat-label{font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--text-light);font-weight:600}
 .progress-section{margin-top:16px;padding-top:0}
 .progress-label{display:flex;justify-content:space-between;font-size:13px;color:var(--text-light);margin-bottom:8px;font-weight:500}
@@ -3673,6 +3673,115 @@ return <p style={{fontSize:'13px',color:'#3b82f6',fontWeight:'600',marginBottom:
 );
 }
 
+// ARCHIEF VIEW
+if(activeView==='archief'){
+const archivedClients=clients.filter(c=>c.archived).sort((a,b)=>{
+const da=a.archivedDate?new Date(a.archivedDate):new Date(0);
+const db=b.archivedDate?new Date(b.archivedDate):new Date(0);
+return db-da;
+});
+
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
+</div>
+<nav>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🎯</span>
+<span className="nav-text">Actieoverzicht</span>
+</div>
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+</div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{archivedClients.length}</span>
+</div>
+</nav>
+</aside>
+
+<main className="main">
+<header className="header">
+<h1 className="title">📦 Archief</h1>
+<p className="subtitle">{archivedClients.length} gearchiveerde klant{archivedClients.length===1?'':'en'} — data blijft bewaard</p>
+</header>
+
+{archivedClients.length===0?(
+<div style={{textAlign:'center',padding:'64px 24px',color:'var(--text-light)'}}>
+<div style={{fontSize:'48px',marginBottom:'16px'}}>📦</div>
+<div style={{fontSize:'18px',fontWeight:'600',marginBottom:'8px'}}>Geen gearchiveerde klanten</div>
+<div style={{fontSize:'14px'}}>Archiveer een klant via de roadmap om hier terug te zien</div>
+</div>
+):(
+<div style={{maxWidth:'960px',paddingBottom:'40px'}}>
+{archivedClients.map(client=>{
+const hours=getClientHours(client.id);
+const budget=client.budget||0;
+const archivedOn=client.archivedDate?new Date(client.archivedDate):null;
+return(
+<div key={client.id} style={{background:'var(--white)',border:'0.5px solid var(--border)',borderRadius:'12px',padding:'14px 18px',marginBottom:'10px',display:'flex',alignItems:'center',gap:'14px',opacity:.85}}>
+<div style={{width:'36px',height:'36px',borderRadius:'8px',background:'var(--ios-gray-6)',display:'flex',alignItems:'center',justifyContent:'center',fontSize:'12px',fontWeight:'600',color:'var(--text-light)',flexShrink:0}}>
+{(client.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase()}
+</div>
+<div style={{flex:1,minWidth:0}}>
+<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{client.name}</div>
+<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px',display:'flex',gap:'12px',flexWrap:'wrap'}}>
+{client.website&&<span>🌐 {client.website.replace(/https?:\/\//,'').replace(/\/$/,'')}</span>}
+{client.city&&<span>📍 {client.city}</span>}
+{budget>0&&<span>📦 {hours}/{budget}u</span>}
+{archivedOn&&<span>🗓️ Gearchiveerd op {archivedOn.toLocaleDateString('nl-NL',{day:'numeric',month:'long',year:'numeric'})}</span>}
+</div>
+</div>
+<button onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}} style={{padding:'7px 14px',background:'var(--ios-gray-6)',color:'var(--text)',border:'none',borderRadius:'8px',fontSize:'12px',fontWeight:'600',cursor:'pointer',flexShrink:0}}>Bekijken</button>
+{isAdmin&&<button onClick={()=>{if(confirm('Klant '+client.name+' uit archief halen?'))unarchiveClient(client.id);}} style={{padding:'7px 14px',background:'var(--ios-blue-light)',color:'var(--ios-blue)',border:'none',borderRadius:'8px',fontSize:'12px',fontWeight:'600',cursor:'pointer',flexShrink:0}}>↩ Herstellen</button>}
+</div>
+);
+})}
+</div>
+)}
+</main>
+</div>
+);
+}
+
 // ACTIEOVERZICHT VIEW
 if(activeView==='actieoverzicht'){
 const now=new Date();
@@ -3747,6 +3856,11 @@ return(
 <div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
 </div>
 </nav>
 </aside>
@@ -3909,6 +4023,11 @@ return count;
 <div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
 </div>
 </nav>
 {isAdmin&&(
@@ -4105,6 +4224,11 @@ return(
 <div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
 </div>
 </nav>
 </aside>
@@ -4397,6 +4521,11 @@ return(
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
 </div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
+</div>
 </nav>
 </aside>
 <main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
@@ -4615,6 +4744,11 @@ return(
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
 </div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
+</div>
 </nav>
 </aside>
 <main style={{overflow:'auto',marginLeft:'280px',boxSizing:'border-box'}}>
@@ -4793,6 +4927,11 @@ return count;
 <div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
 <span className="nav-icon">🔗</span>
 <span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
 </div>
 </nav>
 {isAdmin&&(
