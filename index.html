@@ -5428,6 +5428,21 @@ return target&&cname&&(target===cname||cname.includes(target)||target.includes(c
 return count>0?<span className="nav-count">{count}</span>:null;
 })()}
 </div>
+<div className={`nav-item ${activeStep==='klant-inbox'?'active':''}`} onClick={()=>setActiveStep('klant-inbox')}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{(()=>{
+const cur=clients.find(c=>c.id===selectedClient);
+if(!cur)return null;
+const cname=cur.name&&cur.name.toLowerCase().trim();
+const count=inboxItems.filter(t=>{
+if(getEffectiveStatus(t.id)!=='inbox')return false;
+const target=t.klant&&t.klant.toLowerCase().trim();
+return target&&cname&&(target===cname||cname.includes(target)||target.includes(cname));
+}).length;
+return count>0?<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{count}</span>:null;
+})()}
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -5475,6 +5490,11 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">🔍 SEO Audits</h1>
 <p className="subtitle">Geschiedenis van audits en samenvattingen voor {currentClient.name}</p>
 </>
+):activeStep==='klant-inbox'?(
+<>
+<h1 className="title">📥 Inbox</h1>
+<p className="subtitle">Open audit-taken voor {currentClient.name}</p>
+</>
 ):(
 <>
 <h1 className="title">{currentStep?.icon} {currentStep?.name}</h1>
@@ -5482,6 +5502,48 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 )}
 </header>
+
+{activeStep==='klant-inbox'&&(()=>{
+const cname=currentClient.name&&currentClient.name.toLowerCase().trim();
+const items=inboxItems.filter(t=>{
+if(getEffectiveStatus(t.id)!=='inbox')return false;
+const target=t.klant&&t.klant.toLowerCase().trim();
+return target&&cname&&(target===cname||cname.includes(target)||target.includes(cname));
+});
+return(
+<div style={{maxWidth:'900px'}}>
+<div style={{display:'flex',gap:'12px',marginBottom:'20px',alignItems:'center'}}>
+<button onClick={fetchPipelineData} disabled={inboxLoading} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-blue)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>
+{inboxLoading?'⏳ Ophalen...':'🔄 Vernieuwen'}
+</button>
+<span style={{color:'var(--text-light)',fontSize:'13px'}}>{items.length} open {items.length===1?'taak':'taken'} voor {currentClient.name}</span>
+</div>
+{items.length===0?(
+<div style={{padding:'40px',textAlign:'center',color:'var(--text-light)',background:'var(--white)',borderRadius:'12px',border:'1px solid var(--border)'}}>
+Geen openstaande audit-taken voor {currentClient.name}. Plaats label <code style={{background:'var(--ios-gray-6)',padding:'2px 6px',borderRadius:'4px'}}>goedgekeurd</code> op een audit-issue om hier taken te krijgen.
+</div>
+):items.map(t=>(
+<div key={t.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'16px',marginBottom:'12px',boxShadow:'var(--shadow-sm)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'12px',marginBottom:'10px'}}>
+<h3 style={{fontSize:'15px',fontWeight:'600',flex:1,lineHeight:'1.4'}}>{t.titel}</h3>
+<div style={{display:'flex',gap:'6px',flexShrink:0}}>
+<span style={{padding:'3px 10px',borderRadius:'4px',fontSize:'11px',fontWeight:'600',background:t.prioriteit==='Hoog'?'#fee2e2':t.prioriteit==='Middel'?'#fef3c7':'#dbeafe',color:t.prioriteit==='Hoog'?'#dc2626':t.prioriteit==='Middel'?'#92400e':'#1e40af'}}>{t.prioriteit}</span>
+<span style={{padding:'3px 10px',borderRadius:'4px',fontSize:'11px',background:'var(--ios-gray-6)',color:'var(--text-light)'}}>{t.categorie}</span>
+</div>
+</div>
+{t.probleem&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5'}}><strong style={{color:'var(--text-light)'}}>Probleem:</strong> {t.probleem}</div>}
+{t.actie&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5',whiteSpace:'pre-wrap'}}><strong style={{color:'var(--text-light)'}}>Actie:</strong> {t.actie}</div>}
+{t.verwachte_impact&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'14px',lineHeight:'1.5',whiteSpace:'pre-wrap'}}><strong style={{color:'var(--text-light)'}}>Verwachte impact:</strong> {t.verwachte_impact}</div>}
+<div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<button onClick={()=>openPlanningModal(t)} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-blue)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>📅 Naar planning</button>
+<button onClick={()=>updateInboxStatus(t.id,'verworpen')} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-gray-6)',color:'var(--text)',border:'1px solid var(--border)',cursor:'pointer',fontSize:'13px'}}>✕ Verwerpen</button>
+{t.issue_url&&<a href={t.issue_url} target="_blank" rel="noopener noreferrer" style={{fontSize:'12px',color:'var(--text-light)',marginLeft:'auto',textDecoration:'none'}}>↗ Audit issue #{t.issue_number}</a>}
+</div>
+</div>
+))}
+</div>
+);
+})()}
 
 {activeStep==='audits'&&(()=>{
 const cname=currentClient.name&&currentClient.name.toLowerCase().trim();
