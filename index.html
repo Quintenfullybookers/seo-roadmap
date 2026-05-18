@@ -837,7 +837,8 @@ const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
 
 // === SEO Audit Pipeline integratie ===
-const PIPELINE_BASE='https://raw.githubusercontent.com/Quintenfullybookers/seo-roadmap-pipeline/main';
+// JSON files worden door sync-to-roadmap.yml in pipeline repo gepusht naar deze repo /data/
+const PIPELINE_BASE='data';
 const [inboxItems,setInboxItems]=useState([]);
 const [auditSummaries,setAuditSummaries]=useState([]);
 const [inboxStatus,setInboxStatus]=useState(()=>{

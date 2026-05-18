@@ -1,0 +1,13 @@
+[
+  {
+    "id": "audit-rootz-2026-05-18",
+    "klant": "Rootz",
+    "klant_type": "restaurant",
+    "url": "https://rootz.nl/",
+    "datum": "2026-05-18",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/10",
+    "issue_number": 10,
+    "samenvatting": "Quinten, je impressies groeien met 18% naar 22.704, maar je clicks dalen 24% van 916 naar 698 terwijl je positie stabiel blijft op 9.5 - dat betekent dat je zichtbaarheid groeit maar niet converteert naar bezoek. De grootste verspilling zit in je branded search waar 1.494 impressies op \"rootz\" slechts 68 clicks opleveren door een te zwakke meta description die je sterke USPs zoals 100+ bieren, bierproeverij en kaasfondue compleet negeert. Daarnaast lopen vier belangrijke conversiepagina's zoals bedrijfsfeesten en groepen helemaal geen traffic omdat ze incomplete of ontbrekende meta data hebben, terwijl \"bedrijfsfeest den haag bier\" een open longtail kans is met lage competitie. Door je homepage meta description deze week aan te scherpen met concrete USPs en de bedrijfsfeest-pagina compleet te maken met title, description en H1-fix, haal je direct 65 extra clicks per maand binnen - dat zijn de twee quick wins die Niels en Fleur in twee uur kunnen oplossen.",
+    "aantal_taken": 5
+  }
+]
