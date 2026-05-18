@@ -836,6 +836,85 @@ const [itemModalStep,setItemModalStep]=useState(null);
 const [saveStatus,setSaveStatus]=useState('idle');
 const [toast,setToast]=useState(null);
 
+// === SEO Audit Pipeline integratie ===
+const PIPELINE_BASE='https://raw.githubusercontent.com/Quintenfullybookers/seo-roadmap-pipeline/main';
+const [inboxItems,setInboxItems]=useState([]);
+const [auditSummaries,setAuditSummaries]=useState([]);
+const [inboxStatus,setInboxStatus]=useState(()=>{
+  try{return JSON.parse(localStorage.getItem('seo-inbox-status')||'{}');}catch(e){return {};}
+});
+const [inboxLoading,setInboxLoading]=useState(false);
+const [showPlanningModal,setShowPlanningModal]=useState(false);
+const [planningModalTask,setPlanningModalTask]=useState(null);
+const [planningModalClient,setPlanningModalClient]=useState('');
+const [planningModalMonth,setPlanningModalMonth]=useState('');
+
+const fetchPipelineData=async()=>{
+  setInboxLoading(true);
+  try{
+    const [taskRes,sumRes]=await Promise.all([
+      fetch(`${PIPELINE_BASE}/taken-inbox.json?t=${Date.now()}`),
+      fetch(`${PIPELINE_BASE}/audits-summary.json?t=${Date.now()}`)
+    ]);
+    if(taskRes.ok)setInboxItems(await taskRes.json());
+    if(sumRes.ok)setAuditSummaries(await sumRes.json());
+  }catch(e){
+    console.error('Pipeline fetch fout:',e);
+    setToast({type:'error',message:'Kon audit-data niet ophalen'});
+  }
+  setInboxLoading(false);
+};
+
+useEffect(()=>{fetchPipelineData();},[]);
+
+const getEffectiveStatus=(taakId)=>inboxStatus[taakId]||'inbox';
+const updateInboxStatus=(taakId,status)=>{
+  const next={...inboxStatus,[taakId]:status};
+  setInboxStatus(next);
+  localStorage.setItem('seo-inbox-status',JSON.stringify(next));
+};
+
+const matchKlantToClient=(klantName)=>{
+  if(!klantName||!clients.length)return null;
+  const target=klantName.toLowerCase().trim();
+  let m=clients.find(c=>c.name&&c.name.toLowerCase().trim()===target);
+  if(m)return m;
+  return clients.find(c=>c.name&&(c.name.toLowerCase().includes(target)||target.includes(c.name.toLowerCase())))||null;
+};
+
+const inboxCount=inboxItems.filter(t=>getEffectiveStatus(t.id)==='inbox').length;
+
+const openPlanningModal=(task)=>{
+  const matched=matchKlantToClient(task.klant);
+  setPlanningModalTask(task);
+  setPlanningModalClient(matched?matched.id:'');
+  // Default: huidige maand
+  const now=new Date();
+  const currentKey=`${now.getFullYear()}-${(now.getMonth()+1).toString().padStart(2,'0')}`;
+  const planningStep=STEPS.find(s=>s.type==='planning');
+  const months=planningStep?planningStep.months:[];
+  const defaultMonth=months.find(m=>m.key===currentKey)||months[0];
+  setPlanningModalMonth(defaultMonth?defaultMonth.key:'');
+  setShowPlanningModal(true);
+};
+
+const confirmAddToPlanning=()=>{
+  if(!planningModalTask||!planningModalClient||!planningModalMonth)return;
+  const t=planningModalTask;
+  const text=`[${t.categorie||'Audit'}] ${t.titel} — ${t.actie?t.actie.split('\n')[0].substring(0,200):''}`;
+  const key=`${planningModalClient}-${planningModalMonth}`;
+  const items=planningItems[key]||[];
+  const newItem={id:Date.now(),text:text.trim(),completed:false,sourceIssueUrl:t.issue_url};
+  const newPlanningItems={...planningItems,[key]:[...items,newItem]};
+  setPlanningItems(newPlanningItems);
+  if(typeof saveData==='function'){saveData({planningItems:newPlanningItems});}
+  updateInboxStatus(t.id,'gepland');
+  setShowPlanningModal(false);
+  setPlanningModalTask(null);
+  setToast({type:'success',message:`Taak naar planning gezet voor ${planningModalMonth}`});
+};
+// === einde Audit Pipeline integratie ===
+
 // JOURNEY VIEW - Verzamel alle taken voor visuele roadmap
 const getAllTasksForJourney=(clientId)=>{
 if(!clients||clients.length===0)return[];
@@ -2758,6 +2837,93 @@ if(loading){
 return(<div className="loading-screen"><div className="spinner"></div><div className="loading-text">Laden...</div></div>);
 }
 
+// INBOX (SEO Audit Pipeline)
+if(activeView==='inbox'){
+const open=inboxItems.filter(t=>getEffectiveStatus(t.id)==='inbox');
+const groups={};
+open.forEach(t=>{if(!groups[t.klant])groups[t.klant]=[];groups[t.klant].push(t);});
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<nav>
+<div className={`nav-item active`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span><span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
+<div className="nav-item" onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span><span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+<div className="nav-item" onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🎯</span><span className="nav-text">Actieoverzicht</span>
+</div>
+<div className="nav-item" onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span><span className="nav-text">Agenda</span>
+</div>
+<div className="nav-item" onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span><span className="nav-text">Rapportages</span>
+</div>
+<div className="nav-item" onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span><span className="nav-text">Archief</span>
+</div>
+</nav>
+</aside>
+<main className="main">
+<header className="header">
+<h1 className="title">📥 Audit Inbox</h1>
+<p className="subtitle">Taken uit recente SEO audits — kies per item: naar planning of verwerpen</p>
+</header>
+<div style={{display:'flex',gap:'12px',marginBottom:'24px',alignItems:'center'}}>
+<button onClick={fetchPipelineData} disabled={inboxLoading} style={{padding:'8px 14px',borderRadius:'8px',background:'var(--ios-blue)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>
+{inboxLoading?'⏳ Ophalen...':'🔄 Vernieuwen'}
+</button>
+<span style={{color:'var(--text-light)',fontSize:'13px'}}>
+{inboxCount} open · {inboxItems.length} totaal in pipeline
+</span>
+</div>
+{open.length===0?(
+<div style={{padding:'40px',textAlign:'center',color:'var(--text-light)',background:'var(--white)',borderRadius:'12px',border:'1px solid var(--border)'}}>
+Geen openstaande taken in je Inbox. Plaats het label <code style={{background:'var(--ios-gray-6)',padding:'2px 6px',borderRadius:'4px'}}>goedgekeurd</code> op een SEO-audit issue om hier taken te krijgen.
+</div>
+):(
+Object.entries(groups).map(([klant,items])=>{
+const matched=matchKlantToClient(klant);
+return(
+<div key={klant} style={{marginBottom:'32px'}}>
+<h2 style={{fontSize:'18px',fontWeight:'700',marginBottom:'12px',display:'flex',alignItems:'center',gap:'10px',flexWrap:'wrap'}}>
+<span>{klant}</span>
+<span style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'400'}}>({items.length} {items.length===1?'taak':'taken'})</span>
+{!matched&&<span style={{fontSize:'11px',color:'#92400e',background:'#fef3c7',padding:'2px 8px',borderRadius:'4px',fontWeight:'500'}}>⚠ niet gekoppeld aan klant in dashboard</span>}
+</h2>
+{items.map(t=>(
+<div key={t.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'16px',marginBottom:'12px',boxShadow:'var(--shadow-sm)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',gap:'12px',marginBottom:'10px'}}>
+<h3 style={{fontSize:'15px',fontWeight:'600',flex:1,lineHeight:'1.4'}}>{t.titel}</h3>
+<div style={{display:'flex',gap:'6px',flexShrink:0}}>
+<span style={{padding:'3px 10px',borderRadius:'4px',fontSize:'11px',fontWeight:'600',background:t.prioriteit==='Hoog'?'#fee2e2':t.prioriteit==='Middel'?'#fef3c7':'#dbeafe',color:t.prioriteit==='Hoog'?'#dc2626':t.prioriteit==='Middel'?'#92400e':'#1e40af'}}>{t.prioriteit}</span>
+<span style={{padding:'3px 10px',borderRadius:'4px',fontSize:'11px',background:'var(--ios-gray-6)',color:'var(--text-light)'}}>{t.categorie}</span>
+</div>
+</div>
+{t.probleem&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5'}}><strong style={{color:'var(--text-light)'}}>Probleem:</strong> {t.probleem}</div>}
+{t.actie&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'8px',lineHeight:'1.5',whiteSpace:'pre-wrap'}}><strong style={{color:'var(--text-light)'}}>Actie:</strong> {t.actie}</div>}
+{t.verwachte_impact&&<div style={{fontSize:'13px',color:'var(--text)',marginBottom:'14px',lineHeight:'1.5',whiteSpace:'pre-wrap'}}><strong style={{color:'var(--text-light)'}}>Verwachte impact:</strong> {t.verwachte_impact}</div>}
+<div style={{display:'flex',gap:'8px',alignItems:'center'}}>
+<button onClick={()=>openPlanningModal(t)} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-blue)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>📅 Naar planning</button>
+<button onClick={()=>updateInboxStatus(t.id,'verworpen')} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-gray-6)',color:'var(--text)',border:'1px solid var(--border)',cursor:'pointer',fontSize:'13px'}}>✕ Verwerpen</button>
+{t.issue_url&&<a href={t.issue_url} target="_blank" rel="noopener noreferrer" style={{fontSize:'12px',color:'var(--text-light)',marginLeft:'auto',textDecoration:'none'}}>↗ Audit issue #{t.issue_number}</a>}
+</div>
+</div>
+))}
+</div>
+);
+})
+)}
+</main>
+</div>
+);
+}
+
 // DASHBOARD
 if(activeView==='dashboard'){
 const statusCounts=getStatusCounts();
@@ -2842,6 +3008,11 @@ Bekijken
 );
 })()}
 <nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
@@ -3706,6 +3877,11 @@ return(
 <button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 <nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
@@ -3833,6 +4009,11 @@ return(
 <button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
 </div>
 <nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
@@ -3991,6 +4172,11 @@ return(
 </div>
 )}
 <nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
@@ -4892,6 +5078,11 @@ return(
 </div>
 )}
 <nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
 <div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
@@ -5222,6 +5413,20 @@ return(
 <span className="nav-text">{step.name}</span>
 </div>
 ))}
+<div className={`nav-item ${activeStep==='audits'?'active':''}`} onClick={()=>setActiveStep('audits')}>
+<span className="nav-icon">🔍</span>
+<span className="nav-text">Audits</span>
+{(()=>{
+const cur=clients.find(c=>c.id===selectedClient);
+if(!cur)return null;
+const count=auditSummaries.filter(a=>{
+const target=a.klant&&a.klant.toLowerCase().trim();
+const cname=cur.name&&cur.name.toLowerCase().trim();
+return target&&cname&&(target===cname||cname.includes(target)||target.includes(cname));
+}).length;
+return count>0?<span className="nav-count">{count}</span>:null;
+})()}
+</div>
 </nav>
 {isAdmin&&(
 <button className="export-btn" onClick={exportData}>
@@ -5264,6 +5469,11 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">📋 Overzicht</h1>
 <p className="subtitle">Complete status van {currentClient.name}</p>
 </>
+):activeStep==='audits'?(
+<>
+<h1 className="title">🔍 SEO Audits</h1>
+<p className="subtitle">Geschiedenis van audits en samenvattingen voor {currentClient.name}</p>
+</>
 ):(
 <>
 <h1 className="title">{currentStep?.icon} {currentStep?.name}</h1>
@@ -5271,6 +5481,40 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 )}
 </header>
+
+{activeStep==='audits'&&(()=>{
+const cname=currentClient.name&&currentClient.name.toLowerCase().trim();
+const items=auditSummaries.filter(a=>{
+const target=a.klant&&a.klant.toLowerCase().trim();
+return target&&cname&&(target===cname||cname.includes(target)||target.includes(cname));
+}).sort((a,b)=>(b.datum||'').localeCompare(a.datum||''));
+return(
+<div style={{maxWidth:'900px'}}>
+<div style={{display:'flex',gap:'12px',marginBottom:'20px',alignItems:'center'}}>
+<button onClick={fetchPipelineData} disabled={inboxLoading} style={{padding:'7px 14px',borderRadius:'8px',background:'var(--ios-blue)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>
+{inboxLoading?'⏳ Ophalen...':'🔄 Vernieuwen'}
+</button>
+<span style={{color:'var(--text-light)',fontSize:'13px'}}>{items.length} {items.length===1?'audit':'audits'} gevonden</span>
+</div>
+{items.length===0?(
+<div style={{padding:'40px',textAlign:'center',color:'var(--text-light)',background:'var(--white)',borderRadius:'12px',border:'1px solid var(--border)'}}>
+Nog geen audits voor {currentClient.name}. Audits verschijnen hier nadat een audit-issue is gemarkeerd met label <code style={{background:'var(--ios-gray-6)',padding:'2px 6px',borderRadius:'4px'}}>goedgekeurd</code>.
+</div>
+):items.map(a=>(
+<div key={a.id} style={{background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',padding:'20px',marginBottom:'16px',boxShadow:'var(--shadow-sm)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'flex-start',marginBottom:'12px',gap:'12px',flexWrap:'wrap'}}>
+<div>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'600',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:'4px'}}>{a.datum}</div>
+<div style={{fontSize:'16px',fontWeight:'600'}}>SEO Audit — {a.aantal_taken} {a.aantal_taken===1?'taak':'taken'}</div>
+</div>
+{a.issue_url&&<a href={a.issue_url} target="_blank" rel="noopener noreferrer" style={{fontSize:'12px',color:'var(--ios-blue)',textDecoration:'none',padding:'4px 10px',borderRadius:'6px',background:'var(--ios-blue-light)'}}>↗ Issue #{a.issue_number}</a>}
+</div>
+<div style={{fontSize:'14px',lineHeight:'1.6',color:'var(--text)',whiteSpace:'pre-wrap'}}>{a.samenvatting}</div>
+</div>
+))}
+</div>
+);
+})()}
 
 {activeStep==='overview'&&(
 <div className="overview-content" style={{maxWidth:'900px'}}>
@@ -6310,6 +6554,42 @@ addNote(selectedClient,itemModalData.noteText||'');
 setItemModalData({});
 }}>Opslaan</button>
 <button className="btn btn-secondary" onClick={()=>{setShowNoteModal(false);setEditingNote(null);setItemModalData({});}}>Annuleren</button>
+</div>
+</div>
+</div>
+)}
+
+{showPlanningModal&&planningModalTask&&(
+<div className="modal-overlay" onClick={()=>setShowPlanningModal(false)}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'520px'}}>
+<h2 className="modal-title">📅 Taak naar planning</h2>
+<div style={{padding:'12px',background:'var(--ios-gray-6)',borderRadius:'8px',marginBottom:'16px'}}>
+<div style={{fontSize:'12px',color:'var(--text-light)',fontWeight:'600',textTransform:'uppercase',letterSpacing:'.5px',marginBottom:'4px'}}>Uit audit: {planningModalTask.klant}</div>
+<div style={{fontSize:'14px',fontWeight:'600',marginBottom:'4px'}}>{planningModalTask.titel}</div>
+<div style={{fontSize:'12px',color:'var(--text-light)'}}>{planningModalTask.categorie} · prioriteit {planningModalTask.prioriteit}</div>
+</div>
+<div className="input-group">
+<label className="input-label">Klant</label>
+<select className="modal-input" value={planningModalClient} onChange={(e)=>setPlanningModalClient(e.target.value)}>
+<option value="">— Kies klant —</option>
+{clients.filter(c=>!c.archived).sort((a,b)=>(a.name||'').localeCompare(b.name||'')).map(c=>(
+<option key={c.id} value={c.id}>{c.name}</option>
+))}
+</select>
+{!matchKlantToClient(planningModalTask.klant)&&<div style={{fontSize:'12px',color:'#92400e',marginTop:'6px'}}>⚠ Pipeline klant "{planningModalTask.klant}" niet automatisch gekoppeld — kies handmatig</div>}
+</div>
+<div className="input-group">
+<label className="input-label">Maand</label>
+<select className="modal-input" value={planningModalMonth} onChange={(e)=>setPlanningModalMonth(e.target.value)}>
+<option value="">— Kies maand —</option>
+{(STEPS.find(s=>s.type==='planning')?.months||[]).map(m=>(
+<option key={m.key} value={m.key}>{m.label}</option>
+))}
+</select>
+</div>
+<div className="modal-buttons">
+<button className="btn btn-primary" disabled={!planningModalClient||!planningModalMonth} onClick={confirmAddToPlanning}>Toevoegen aan planning</button>
+<button className="btn btn-secondary" onClick={()=>setShowPlanningModal(false)}>Annuleren</button>
 </div>
 </div>
 </div>
