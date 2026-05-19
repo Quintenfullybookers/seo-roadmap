@@ -1,5 +1,16 @@
 [
   {
+    "id": "audit-hotel-ten-cate-2026-05-19",
+    "klant": "Hotel ten Cate",
+    "klant_type": "hotel",
+    "url": "https://hoteltencate.nl/",
+    "datum": "2026-05-19",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/12",
+    "issue_number": 12,
+    "samenvatting": "Quinten, zonder Search Console data zie ik via Ahrefs wel sterke branded traffic (1800 bezoekers), maar jullie laten 30% extra groei liggen op twee gouden kansen: 'restaurant emmen' op positie 5 met 2100 zoekvolume en 'hotels emmen' op positie 4 kunnen samen 450+ bezoekers per maand toevoegen. Jullie missen nu dedicated restaurant- en kamerpagina's met concrete USPs zoals prijzen, menu-highlights en beschikbaarheid, terwijl je DR 42 met 737 refdomains technisch solide staat. Daarnaast blijft de homepage meta description te vaag met \"kunstzinnige ambiance\" waar meetbare triggers zoals aantal kamers en vanaf-prijzen veel harder converteren. Ik raad aan om direct prioriteit 1 en 2 op te pakken: laat Fleur restaurant- en kamerpagina's schrijven zodra jij doorgeeft wat Ten Cate uniek maakt, dan vertaal je jullie sterke backlink-profiel eindelijk naar non-branded rankings.",
+    "aantal_taken": 5
+  },
+  {
     "id": "audit-rootz-2026-05-18",
     "klant": "Rootz",
     "klant_type": "restaurant",
