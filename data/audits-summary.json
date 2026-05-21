@@ -1,5 +1,16 @@
 [
   {
+    "id": "audit-ijver-amsterdam-2026-05-21",
+    "klant": "Ijver Amsterdam",
+    "klant_type": "restaurant",
+    "url": "https://ijveramsterdam.nl/",
+    "datum": "2026-05-21",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/13",
+    "issue_number": 13,
+    "samenvatting": "Quinten, de afgelopen 30 dagen zien we een zorgwekkende daling met clicks -2.7% naar 4333, impressions -4.5% naar 90.074 en posities die zakken van 20.2 naar 22.3. Het meest alarmerende is jullie positie 4.9 voor \"restaurants amsterdam noord\" met 602 impressions maar slechts 2.49% CTR - dat is 4-5x lager dan normaal voor top 5 posities, wat betekent dat jullie snippet niet triggert ondanks goede ranking. Daarnaast staan vier belangrijke pagina's (menu, evenementen, verjaardag, zaalhuur) op 0 clicks omdat Google ze simpelweg niet kent door zwakke interne linkstructuur. De directe prioriteit is jullie title en description herschrijven met lokale authenticiteit zoals \"Restaurant aan het IJ met 34 biertapkranen\" om de CTR te normaliseren naar 8-10%, wat alleen al op deze query 33-45 extra clicks oplevert. Start deze week met de snippet-optimalisatie en voeg tegelijk interne links toe vanuit homepage en navigatie naar die onzichtbare pagina's.",
+    "aantal_taken": 5
+  },
+  {
     "id": "audit-hotel-ten-cate-2026-05-19",
     "klant": "Hotel ten Cate",
     "klant_type": "hotel",
