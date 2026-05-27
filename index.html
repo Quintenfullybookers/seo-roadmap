@@ -341,6 +341,14 @@ const STATUS_OPTIONS=[
 {key:'top',label:'Loopt als een ☀️',icon:'🟢',color:'green'}
 ];
 
+// PROJECT FASE OPTIES
+const PHASE_OPTIONS=[
+{key:'opstart',label:'Opstartfase',icon:'🚀',color:'#3b82f6',bg:'#dbeafe'},
+{key:'technisch',label:'Technische optimalisatie',icon:'🔧',color:'#7c3aed',bg:'#ede9fe'},
+{key:'content',label:'Content creatie',icon:'✍️',color:'#059669',bg:'#d1fae5'},
+{key:'linkbuilding',label:'Linkbuilding',icon:'🔗',color:'#d97706',bg:'#fef3c7'}
+];
+
 // PROJECT MANAGERS
 const PROJECT_MANAGERS=[
 {key:'hugo',label:'Hugo',icon:'👨',color:'#6B7D8A'},
@@ -814,7 +822,7 @@ const [expandedMonth,setExpandedMonth]=useState(null);
 const [showAdminLogin,setShowAdminLogin]=useState(false);
 const [isAdmin,setIsAdmin]=useState(false);
 const [darkMode,setDarkMode]=useState(localStorage.getItem('darkMode')==='true');
-const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});
+const [newClient,setNewClient]=useState({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',phase:'opstart',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});
 const [editingClient,setEditingClient]=useState(null);
 const [statusFilter,setStatusFilter]=useState('all');
 const [pmFilter,setPmFilter]=useState('all');
@@ -1252,7 +1260,7 @@ const updatedClients=[...clients,client];
 setClients(updatedClients);
 saveData({tasks,customItems,planningItems,clients:updatedClients});
 setShowModal(false);
-setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0});
+setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',phase:'opstart',projectManager:'none',budget:0});
 setToast({type:'success',message:'✓ Klant toegevoegd'});
 };
 
@@ -2813,6 +2821,10 @@ const getStatusInfo=(statusKey)=>{
 return STATUS_OPTIONS.find(s=>s.key===statusKey)||STATUS_OPTIONS[3];
 };
 
+const getPhaseInfo=(phaseKey)=>{
+return PHASE_OPTIONS.find(p=>p.key===phaseKey)||PHASE_OPTIONS[0];
+};
+
 const getPMInfo=(pmKey)=>{
 return PROJECT_MANAGERS.find(p=>p.key===pmKey)||PROJECT_MANAGERS[2];
 };
@@ -3218,6 +3230,7 @@ const stats=getClientStats(client.id);
 const progress=getClientProgress(client.id);
 const statusInfo=getStatusInfo(client.status||'schema');
 const pmInfo=getPMInfo(client.projectManager||'none');
+const phaseInfo=getPhaseInfo(client.phase||'opstart');
 return(
 <div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
@@ -3231,6 +3244,7 @@ return(
 </span>
 {client.multiLocation&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#f3e8ff',color:'#7c3aed',fontWeight:'600'}}>📍 Multi-locatie</span>}
 {client.isMultilingual&&<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:'#ecfdf5',color:'#047857',fontWeight:'600'}}>🌍 Meertalig</span>}
+<span style={{fontSize:'11px',padding:'3px 8px',borderRadius:'6px',background:phaseInfo.bg,color:phaseInfo.color,fontWeight:'600'}}>{phaseInfo.icon} {phaseInfo.label}</span>
 </div>
 {pmInfo.key!=='none'&&(<div className="pm-badge" style={{background:pmInfo.color,marginTop:'6px'}}>{pmInfo.icon} {pmInfo.label}</div>)}
 </div>
@@ -3616,6 +3630,17 @@ return(
 </div>
 </div>
 <div className="input-group">
+<label className="input-label">Project fase</label>
+<div className="status-select">
+{PHASE_OPTIONS.map(phase=>(
+<div key={phase.key} className={`status-option ${(newClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setNewClient({...newClient,phase:phase.key})}>
+<span className="status-option-icon">{phase.icon}</span>
+<span className="status-option-text">{phase.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="input-group">
 <label className="input-label">Projectmanager</label>
 <div className="status-select">
 {PROJECT_MANAGERS.map(pm=>(
@@ -3628,7 +3653,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',phase:'opstart',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
@@ -3724,6 +3749,17 @@ return(
 <div key={status.key} className={`status-option ${editingClient.status===status.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,status:status.key})}>
 <span className="status-option-icon">{status.icon}</span>
 <span className="status-option-text">{status.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="input-group">
+<label className="input-label">Project fase</label>
+<div className="status-select">
+{PHASE_OPTIONS.map(phase=>(
+<div key={phase.key} className={`status-option ${(editingClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,phase:phase.key})}>
+<span className="status-option-icon">{phase.icon}</span>
+<span className="status-option-text">{phase.label}</span>
 </div>
 ))}
 </div>
@@ -5607,6 +5643,33 @@ Nog geen audits voor {currentClient.name}. Audits verschijnen hier nadat een aud
 {currentClient.hasReservation&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Reserveringsmodule</span>}
 {currentClient.hasMenu&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Menukaart online</span>}
 </div>
+{(()=>{
+const activePhase=currentClient.phase||'opstart';
+const activeIdx=PHASE_OPTIONS.findIndex(p=>p.key===activePhase);
+return(
+<div style={{marginTop:'4px'}}>
+<div style={{fontSize:'12px',fontWeight:'600',color:'var(--text-light)',marginBottom:'8px',textTransform:'uppercase',letterSpacing:'0.5px'}}>Project fase</div>
+<div style={{display:'flex',alignItems:'center',gap:'4px'}}>
+{PHASE_OPTIONS.map((phase,idx)=>{
+const isActive=idx===activeIdx;
+const isPast=idx<activeIdx;
+const bg=isActive?phase.color:isPast?phase.bg:'var(--bg)';
+const color=isActive?'#fff':isPast?phase.color:'var(--text-light)';
+const border=isActive?phase.color:isPast?phase.color:'var(--border)';
+return(
+<React.Fragment key={phase.key}>
+<div style={{flex:1,padding:'8px 6px',borderRadius:'6px',background:bg,color:color,border:`2px solid ${border}`,textAlign:'center',fontSize:'11px',fontWeight:isActive?'700':'500',transition:'all 0.2s'}}>
+<div style={{fontSize:'16px',marginBottom:'2px'}}>{phase.icon}</div>
+<div style={{lineHeight:'1.2'}}>{phase.label}</div>
+</div>
+{idx<PHASE_OPTIONS.length-1&&<div style={{width:'8px',height:'2px',background:isPast?phase.color:'var(--border)',flexShrink:0}}/>}
+</React.Fragment>
+);
+})}
+</div>
+</div>
+);
+})()}
 {currentClient.city&&(
 <div style={{display:'flex',alignItems:'center',gap:'8px',fontSize:'14px'}}>
 <span style={{color:'var(--text-light)'}}>📍</span>
@@ -6490,6 +6553,17 @@ return(
 </div>
 </div>
 <div className="input-group">
+<label className="input-label">Project fase</label>
+<div className="status-select">
+{PHASE_OPTIONS.map(phase=>(
+<div key={phase.key} className={`status-option ${(newClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setNewClient({...newClient,phase:phase.key})}>
+<span className="status-option-icon">{phase.icon}</span>
+<span className="status-option-text">{phase.label}</span>
+</div>
+))}
+</div>
+</div>
+<div className="input-group">
 <label className="input-label">Projectmanager</label>
 <div className="status-select">
 {PROJECT_MANAGERS.map(pm=>(
@@ -6502,7 +6576,7 @@ return(
 </div>
 <div className="modal-buttons">
 <button className="btn btn-primary" onClick={addClient}>Opslaan</button>
-<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
+<button className="btn btn-secondary" onClick={()=>{setShowModal(false);setNewClient({name:'',website:'',seRanking:'',lookerStudio:'',city:'',status:'schema',phase:'opstart',projectManager:'none',budget:0,clientType:'hotel',multiLocation:false,hasBooking:false,hasReservation:false,hasMenu:false,isMultilingual:false});}}>Annuleren</button>
 </div>
 </div>
 </div>
