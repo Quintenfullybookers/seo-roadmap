@@ -2341,8 +2341,11 @@ y+=5;
 }
 doc.text('Type:',20,y);
 doc.setFont(undefined,'bold');
-doc.text((client.clientType||'hotel')==='hotel'?'Hotel':'Restaurant',45,y);
-if(client.multiLocation)doc.text(' (Multi-locatie)',doc.getTextWidth((client.clientType||'hotel')==='hotel'?'Hotel':'Restaurant')+47,y);
+doc.text((client.clientType||'hotel')==='hotel'?'Hotel':client.clientType==='restaurant'?'Restaurant':client.clientType==='strandtent'?'Strandtent':client.clientType==='evenement'?'Evenementenlocatie':'Restaurant',45,y);
+if(client.multiLocation){
+const typeLabel=(client.clientType||'hotel')==='hotel'?'Hotel':client.clientType==='restaurant'?'Restaurant':client.clientType==='strandtent'?'Strandtent':client.clientType==='evenement'?'Evenementenlocatie':'Restaurant';
+doc.text(' (Multi-locatie)',doc.getTextWidth(typeLabel)+47,y);
+}
 doc.setFont(undefined,'normal');
 y+=5;
 const statusInfo=getStatusInfo(client.status||'schema');
@@ -3539,6 +3542,9 @@ return(
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
 </button>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400',fontSize:'12px'}}>
+🎪 Evenement
+</button>
 </div>
 </div>
 <div className="input-group">
@@ -3648,6 +3654,9 @@ return(
 </button>
 <button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
+</button>
+<button type="button" onClick={()=>setEditingClient({...editingClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${editingClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:editingClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:editingClient.clientType==='evenement'?'600':'400',fontSize:'12px'}}>
+🎪 Evenement
 </button>
 </div>
 </div>
@@ -6406,6 +6415,9 @@ return(
 </button>
 <button type="button" onClick={()=>setNewClient({...newClient,clientType:'strandtent'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='strandtent'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='strandtent'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='strandtent'?'600':'400'}}>
 🏖️ Strandtent
+</button>
+<button type="button" onClick={()=>setNewClient({...newClient,clientType:'evenement'})} style={{flex:1,padding:'10px',border:`2px solid ${newClient.clientType==='evenement'?'#3b82f6':'var(--border)'}`,borderRadius:'8px',background:newClient.clientType==='evenement'?'#eff6ff':'var(--white)',cursor:'pointer',fontWeight:newClient.clientType==='evenement'?'600':'400',fontSize:'12px'}}>
+🎪 Evenement
 </button>
 </div>
 </div>
