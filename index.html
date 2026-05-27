@@ -2871,9 +2871,6 @@ return(
 <span className="nav-icon">📊</span><span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-<div className="nav-item" onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span><span className="nav-text">Actieoverzicht</span>
-</div>
 <div className="nav-item" onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span><span className="nav-text">Agenda</span>
 </div>
@@ -3033,10 +3030,6 @@ Bekijken
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
-</div>
-<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span>
-<span className="nav-text">Actieoverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
@@ -3933,10 +3926,6 @@ return(
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
 </div>
-<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span>
-<span className="nav-text">Actieoverzicht</span>
-</div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
 <span className="nav-text">Agenda</span>
@@ -4009,181 +3998,6 @@ return(
 );
 }
 
-// ACTIEOVERZICHT VIEW
-if(activeView==='actieoverzicht'){
-const now=new Date();
-const nowKey=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0');
-const prevDate=new Date(now.getFullYear(),now.getMonth()-1,1);
-const prevKey=prevDate.getFullYear()+'-'+String(prevDate.getMonth()+1).padStart(2,'0');
-
-const getCat=(title)=>{
-const t=(title||'').toLowerCase();
-if(t.includes('gmb')||t.includes('google my business')||t.includes('reviews')||t.includes('profiel')||t.includes('foto'))return{label:'GMB',bg:'#fdf4ff',color:'#7e22ce'};
-if(t.includes('link')||t.includes('backlink')||t.includes('gastblog')||t.includes('directory')||t.includes('tripadvisor'))return{label:'Linkbuilding',bg:'#fff7ed',color:'#c2410c'};
-if(t.includes('content')||t.includes('tekst')||t.includes('blog')||t.includes('menu')||t.includes('pagina'))return{label:'Content',bg:'#f0fdf4',color:'#15803d'};
-if(t.includes('rapport')||t.includes('analytics')||t.includes('meten')||t.includes('ranking'))return{label:'Rapportage',bg:'#f8fafc',color:'#475569'};
-if(t.includes('pagespeed')||t.includes('schema')||t.includes('sitemap')||t.includes('robots')||t.includes('ssl')||t.includes('redirect')||t.includes('core web'))return{label:'Technisch',bg:'#eff6ff',color:'#1d4ed8'};
-return{label:'On-page SEO',bg:'#eff6ff',color:'#1d4ed8'};
-};
-
-const statusColor={top:'#10b981',schema:'#3b82f6',aandacht:'#f59e0b',kritiek:'#ef4444',opstartfase:'#94a3b8'};
-const statusLabel={top:'Top',schema:'Op schema',aandacht:'Aandacht',kritiek:'Kritiek',opstartfase:'Opstartfase'};
-
-const sortedClients=[...clients.filter(c=>!c.archived)].sort((a,b)=>{
-const score={kritiek:5,aandacht:4,schema:3,top:2,opstartfase:1};
-const sa=score[a.status]||0,sb=score[b.status]||0;
-return sb-sa;
-});
-
-return(
-<div className={`app ${!isAdmin?'viewer-mode':''}`}>
-<aside className="sidebar">
-<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
-<div className="sync-status">
-<div className={`sync-dot sync-${syncStatus}`}/>
-<span className="sync-text">
-{syncStatus==='connected'&&'✓ Verbonden'}
-{syncStatus==='connecting'&&'⚠️ Verbinden...'}
-{syncStatus==='error'&&'❌ Fout'}
-</span>
-{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
-</div>
-<div className="mode-indicator">
-<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
-{isAdmin?'🔓 Admin':'👁️ Viewer'}
-</div>
-<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
-</div>
-<nav>
-<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📥</span>
-<span className="nav-text">Inbox</span>
-{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
-</div>
-<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📊</span>
-<span className="nav-text">Dashboard</span>
-<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
-</div>
-<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span>
-<span className="nav-text">Actieoverzicht</span>
-</div>
-<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📅</span>
-<span className="nav-text">Agenda</span>
-</div>
-<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📝</span>
-<span className="nav-text">Content Creatie</span>
-</div>
-<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📋</span>
-<span className="nav-text">Rapportages</span>
-</div>
-<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📈</span>
-<span className="nav-text">Analytics</span>
-</div>
-<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🔗</span>
-<span className="nav-text">Linkbuilding</span>
-</div>
-<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
-<span className="nav-icon">📦</span>
-<span className="nav-text">Archief</span>
-<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
-</div>
-</nav>
-</aside>
-
-<main className="main">
-<header className="header">
-<h1 className="title">🎯 Actieoverzicht</h1>
-<p className="subtitle">Wat moet er nu gebeuren per klant</p>
-</header>
-
-<div style={{maxWidth:'960px',paddingBottom:'40px'}}>
-{sortedClients.map(client=>{
-const hours=getClientHours(client.id);
-const budget=client.budget||0;
-const pct=budget>0?Math.round((hours/budget)*100):0;
-const isUrgent=pct>=80||client.status==='kritiek';
-const isAtt=client.status==='aandacht'||pct>=60;
-const borderColor=isUrgent?'#ef4444':isAtt?'#f59e0b':statusColor[client.status]||'#94a3b8';
-
-const cp=planningItems[client.id]||{};
-const prevItems=((cp[prevKey]||{}).items||[]).filter(i=>!i.completed).map(i=>({text:i.text,carried:true,cat:getCat(i.text)}));
-const thisItems=((cp[nowKey]||{}).items||[]).filter(i=>!i.completed).map(i=>({text:i.text,cat:getCat(i.text)}));
-const allTaken=[...prevItems,...thisItems].slice(0,5);
-
-const initials=(client.name||'?').split(' ').map(w=>w[0]).join('').slice(0,2).toUpperCase();
-const avBg=isUrgent?'#fef2f2':isAtt?'#fffbeb':client.status==='top'?'#f0fdf4':'var(--ios-gray-6)';
-const avCol=isUrgent?'#ef4444':isAtt?'#b45309':client.status==='top'?'#15803d':'var(--text-light)';
-
-return(
-<div key={client.id} style={{background:'var(--white)',border:'0.5px solid var(--border)',borderLeft:'3px solid '+borderColor,borderRadius:'12px',overflow:'hidden',marginBottom:'10px',cursor:'pointer'}} onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
-<div style={{padding:'12px 16px',display:'flex',alignItems:'center',gap:'10px',borderBottom:'0.5px solid var(--border)'}}>
-<div style={{width:'32px',height:'32px',borderRadius:'8px',background:avBg,display:'flex',alignItems:'center',justifyContent:'center',fontSize:'11px',fontWeight:'600',color:avCol,flexShrink:0}}>{initials}</div>
-<div style={{flex:1,minWidth:0}}>
-<div style={{fontSize:'14px',fontWeight:'600',color:'var(--text)'}}>{client.name}</div>
-<div style={{fontSize:'11px',color:'var(--text-light)',marginTop:'2px',display:'flex',gap:'10px',flexWrap:'wrap'}}>
-{budget>0&&<span style={{color:pct>=80?'#ef4444':'inherit',fontWeight:pct>=80?'600':'400'}}>{hours}/{budget}u{pct>=80?' ⚠':''}</span>}
-</div>
-</div>
-<span style={{background:statusColor[client.status]||'#94a3b8',color:'white',padding:'3px 10px',borderRadius:'20px',fontSize:'10px',fontWeight:'600',flexShrink:0}}>{statusLabel[client.status]||client.status}</span>
-</div>
-<div style={{display:'grid',gridTemplateColumns:'1fr 1fr 1fr',gap:'0'}}>
-<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:isUrgent?'#ef4444':isAtt?'#f59e0b':'var(--text-light)',marginBottom:'8px'}}>Nu doen</div>
-{allTaken.length===0?(
-<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen taken ingepland</div>
-):(
-<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-{allTaken.map((t,i)=>(
-<div key={i} style={{display:'flex',alignItems:'flex-start',gap:'6px',fontSize:'12px'}}>
-<span style={{width:'14px',height:'14px',borderRadius:'3px',background:t.carried?'#fffbeb':'var(--ios-gray-6)',border:'1px solid '+(t.carried?'#fcd34d':'var(--border)'),flexShrink:0,marginTop:'1px'}}/>
-<span style={{lineHeight:'1.4',flex:1}}>{t.text}{t.carried&&<span style={{fontSize:'10px',background:'#fffbeb',color:'#b45309',padding:'1px 5px',borderRadius:'3px',marginLeft:'4px'}}>doorgeschoven</span>}</span>
-</div>
-))}
-</div>
-)}
-</div>
-<div style={{padding:'12px 14px',borderRight:'0.5px solid var(--border)'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Categorie</div>
-<div style={{display:'flex',flexDirection:'column',gap:'5px'}}>
-{allTaken.map((t,i)=>(
-<span key={i} style={{display:'inline-flex',padding:'3px 9px',borderRadius:'5px',fontSize:'11px',fontWeight:'500',background:t.cat.bg,color:t.cat.color,alignSelf:'flex-start'}}>{t.cat.label}</span>
-))}
-</div>
-</div>
-<div style={{padding:'12px 14px'}}>
-<div style={{fontSize:'10px',fontWeight:'700',textTransform:'uppercase',letterSpacing:'.5px',color:'var(--text-light)',marginBottom:'8px'}}>Budget</div>
-{budget>0?(
-<div>
-<div style={{display:'flex',justifyContent:'space-between',fontSize:'12px',marginBottom:'5px'}}>
-<span style={{color:'var(--text-light)'}}>Verbruikt</span>
-<span style={{fontWeight:'600',color:pct>=80?'#ef4444':'var(--text)'}}>{pct}%</span>
-</div>
-<div style={{height:'5px',background:'var(--ios-gray-5)',borderRadius:'3px',marginBottom:'6px'}}>
-<div style={{width:Math.min(100,pct)+'%',height:'5px',borderRadius:'3px',background:pct>=80?'#ef4444':pct>=60?'#f59e0b':'#10b981'}}/>
-</div>
-<div style={{fontSize:'11px',color:'var(--text-light)'}}>{hours}u gebruikt</div>
-</div>
-):(
-<div style={{fontSize:'12px',color:'var(--text-lighter)',fontStyle:'italic'}}>Geen pakket</div>
-)}
-</div>
-</div>
-</div>
-);
-})}
-</div>
-</main>
-</div>
-);
-}
-
 // AGENDA VIEW
 if(activeView==='agenda'){
 const agendaItems=getAllAgendaItems();
@@ -4227,10 +4041,6 @@ return(
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
-</div>
-<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span>
-<span className="nav-text">Actieoverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
@@ -5133,10 +4943,6 @@ return(
 <span className="nav-icon">📊</span>
 <span className="nav-text">Dashboard</span>
 <span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
-</div>
-<div className={`nav-item ${activeView==='actieoverzicht'?'active':''}`} onClick={()=>setActiveView('actieoverzicht')} style={{cursor:'pointer'}}>
-<span className="nav-icon">🎯</span>
-<span className="nav-text">Actieoverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span>
