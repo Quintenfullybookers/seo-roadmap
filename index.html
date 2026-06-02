@@ -369,6 +369,15 @@ return qp[getCurrentQuarterKey()]||client.phase||'opstart';
 };
 const DEFAULT_PHASE_TEMPLATES={opstart:[],technisch:[],content:[],linkbuilding:[]};
 
+// UITVOERDERS (wie doet de taak)
+const ASSIGNEES=[
+{key:'quinten',label:'Quinten',color:'#2563eb',bg:'#dbeafe'},
+{key:'extern',label:'Externe partij',color:'#9333ea',bg:'#f3e8ff'},
+{key:'klant',label:'Klant',color:'#ea580c',bg:'#ffedd5'},
+{key:'sayfur_tan',label:'Sayfur / Tan',color:'#0d9488',bg:'#ccfbf1'}
+];
+const getAssigneeInfo=(key)=>ASSIGNEES.find(a=>a.key===key)||null;
+
 // PROJECT MANAGERS
 const PROJECT_MANAGERS=[
 {key:'hugo',label:'Hugo',icon:'👨',color:'#6B7D8A'},
@@ -800,11 +809,12 @@ autoFocus style={{margin:0}}/>
 function PhaseTemplateModal({templates,onSave,onClose}){
 const [working,setWorking]=useState(()=>JSON.parse(JSON.stringify(templates||DEFAULT_PHASE_TEMPLATES)));
 const [inputs,setInputs]=useState({opstart:'',technisch:'',content:'',linkbuilding:''});
+const [assigneeInputs,setAssigneeInputs]=useState({opstart:'quinten',technisch:'quinten',content:'quinten',linkbuilding:'quinten'});
 const addTask=(pk)=>{
 const val=(inputs[pk]||'').trim();
 if(!val)return;
 const w={...working};
-w[pk]=[...(w[pk]||[]),{id:'pt'+Date.now()+Math.floor(Math.random()*1000),label:val}];
+w[pk]=[...(w[pk]||[]),{id:'pt'+Date.now()+Math.floor(Math.random()*1000),label:val,assignee:assigneeInputs[pk]||'quinten'}];
 setWorking(w);
 setInputs({...inputs,[pk]:''});
 };
@@ -835,16 +845,25 @@ return(
 <div style={{padding:'10px 14px',background:p.bg,color:p.color,fontWeight:'700',fontSize:'14px'}}>{p.icon} {p.label}</div>
 <div style={{padding:'12px 14px'}}>
 {(working[p.key]||[]).length===0&&<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginBottom:'10px'}}>Nog geen acties.</div>}
-{(working[p.key]||[]).map((t,idx)=>(
+{(working[p.key]||[]).map((t,idx)=>{
+const asg=getAssigneeInfo(t.assignee);
+return(
 <div key={t.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--bg,#f1f5f9)'}}>
 <span style={{flex:1,fontSize:'13px',color:'var(--text)'}}>{t.label}</span>
+<select value={t.assignee||'quinten'} onChange={(e)=>{const w={...working};w[p.key]=w[p.key].map((x,i)=>i===idx?{...x,assignee:e.target.value}:x);setWorking(w);}} style={{fontSize:'11px',padding:'3px 6px',borderRadius:'6px',border:`1px solid ${asg?asg.color:'var(--border)'}`,background:asg?asg.bg:'var(--white)',color:asg?asg.color:'var(--text)',fontWeight:'600',cursor:'pointer'}}>
+{ASSIGNEES.map(a=>(<option key={a.key} value={a.key}>{a.label}</option>))}
+</select>
 <button onClick={()=>moveTask(p.key,idx,-1)} disabled={idx===0} style={{border:'none',background:'none',cursor:idx===0?'default':'pointer',opacity:idx===0?0.3:1,fontSize:'14px'}}>↑</button>
 <button onClick={()=>moveTask(p.key,idx,1)} disabled={idx===((working[p.key]||[]).length-1)} style={{border:'none',background:'none',cursor:'pointer',opacity:idx===((working[p.key]||[]).length-1)?0.3:1,fontSize:'14px'}}>↓</button>
 <button onClick={()=>removeTask(p.key,t.id)} style={{border:'none',background:'none',cursor:'pointer',color:'#dc2626',fontSize:'16px'}}>×</button>
 </div>
-))}
+);
+})}
 <div style={{display:'flex',gap:'8px',marginTop:'10px'}}>
 <input type="text" value={inputs[p.key]||''} onChange={(e)=>setInputs({...inputs,[p.key]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter')addTask(p.key);}} placeholder="Nieuwe actie..." style={{flex:1,padding:'8px 10px',borderRadius:'8px',border:'1px solid var(--border)',fontSize:'13px'}}/>
+<select value={assigneeInputs[p.key]||'quinten'} onChange={(e)=>setAssigneeInputs({...assigneeInputs,[p.key]:e.target.value})} style={{padding:'8px',borderRadius:'8px',border:'1px solid var(--border)',fontSize:'12px',fontWeight:'600',cursor:'pointer',background:'var(--white)',color:'var(--text)'}}>
+{ASSIGNEES.map(a=>(<option key={a.key} value={a.key}>{a.label}</option>))}
+</select>
 <button onClick={()=>addTask(p.key)} style={{padding:'8px 14px',borderRadius:'8px',background:p.color,color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>+ Toevoegen</button>
 </div>
 </div>
@@ -3002,6 +3021,9 @@ return(
 <div className="nav-item" onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📅</span><span className="nav-text">Agenda</span>
 </div>
+<div className="nav-item" onClick={()=>setActiveView('kwartaaloverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🗓️</span><span className="nav-text">Kwartaaloverzicht</span>
+</div>
 <div className="nav-item" onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📋</span><span className="nav-text">Rapportages</span>
 </div>
@@ -3166,6 +3188,10 @@ Bekijken
 const ag=getAllAgendaItems();
 return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length;
 })()}</span>
+</div>
+<div className={`nav-item ${activeView==='kwartaaloverzicht'?'active':''}`} onClick={()=>setActiveView('kwartaaloverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🗓️</span>
+<span className="nav-text">Kwartaaloverzicht</span>
 </div>
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
@@ -3751,17 +3777,6 @@ return(
 </div>
 </div>
 <div className="input-group">
-<label className="input-label">Project fase</label>
-<div className="status-select">
-{PHASE_OPTIONS.map(phase=>(
-<div key={phase.key} className={`status-option ${(newClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setNewClient({...newClient,phase:phase.key})}>
-<span className="status-option-icon">{phase.icon}</span>
-<span className="status-option-text">{phase.label}</span>
-</div>
-))}
-</div>
-</div>
-<div className="input-group">
 <label className="input-label">Projectmanager</label>
 <div className="status-select">
 {PROJECT_MANAGERS.map(pm=>(
@@ -3870,17 +3885,6 @@ return(
 <div key={status.key} className={`status-option ${editingClient.status===status.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,status:status.key})}>
 <span className="status-option-icon">{status.icon}</span>
 <span className="status-option-text">{status.label}</span>
-</div>
-))}
-</div>
-</div>
-<div className="input-group">
-<label className="input-label">Project fase</label>
-<div className="status-select">
-{PHASE_OPTIONS.map(phase=>(
-<div key={phase.key} className={`status-option ${(editingClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setEditingClient({...editingClient,phase:phase.key})}>
-<span className="status-option-icon">{phase.icon}</span>
-<span className="status-option-text">{phase.label}</span>
 </div>
 ))}
 </div>
@@ -4119,6 +4123,159 @@ return(
 </div>
 );
 })}
+</div>
+)}
+</main>
+</div>
+);
+}
+
+// KWARTAALOVERZICHT VIEW (alle klanten x kwartalen)
+if(activeView==='kwartaaloverzicht'){
+const agendaItems=getAllAgendaItems();
+const activeClients=clients.filter(c=>!c.archived);
+const currentQ=getCurrentQuarterKey();
+return(
+<div className={`app ${!isAdmin?'viewer-mode':''}`}>
+<aside className="sidebar">
+<div className="logo"><div className="logo-text">THE FULLY BOOKERS</div><div className="logo-subtitle">SEO Roadmap</div></div>
+<div className="sync-status">
+<div className={`sync-dot sync-${syncStatus}`}/>
+<span className="sync-text">
+{syncStatus==='connected'&&'✓ Verbonden'}
+{syncStatus==='connecting'&&'⚠️ Verbinden...'}
+{syncStatus==='error'&&'❌ Fout'}
+</span>
+{syncStatus==='connected'&&<button className="reload-btn" onClick={reloadFromFirebase}>🔄</button>}
+</div>
+<div className="mode-indicator">
+<div className={`mode-badge ${isAdmin?'admin':'viewer'}`}>
+{isAdmin?'🔓 Admin':'👁️ Viewer'}
+</div>
+<button className="dark-toggle" onClick={toggleDarkMode}>{darkMode?'☀️':'🌙'}</button>
+</div>
+{isAdmin&&(
+<div className="save-status">
+<div className={`save-status-dot ${saveStatus}`}/>
+<span>
+{saveStatus==='saving'&&'Opslaan...'}
+{saveStatus==='success'&&'Opgeslagen'}
+{saveStatus==='error'&&'Fout'}
+</span>
+</div>
+)}
+<nav>
+<div className={`nav-item ${activeView==='inbox'?'active':''}`} onClick={()=>setActiveView('inbox')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📥</span>
+<span className="nav-text">Inbox</span>
+{inboxCount>0&&<span className="nav-count" style={{background:'#FF3B30',color:'white'}}>{inboxCount}</span>}
+</div>
+<div className={`nav-item ${activeView==='dashboard'?'active':''}`} onClick={()=>setActiveView('dashboard')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📊</span>
+<span className="nav-text">Dashboard</span>
+<span className="nav-count">{clients.filter(c=>!c.archived).length}</span>
+</div>
+<div className={`nav-item ${activeView==='agenda'?'active':''}`} onClick={()=>setActiveView('agenda')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📅</span>
+<span className="nav-text">Agenda</span>
+<span className="nav-count">{agendaItems.overdue.length+agendaItems.thisWeek.length+agendaItems.thisMonth.length}</span>
+</div>
+<div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📝</span>
+<span className="nav-text">Content Creatie</span>
+<span className="nav-count">{(()=>{
+let count=0;
+clients.filter(c=>!c.archived).forEach(c=>{
+const items=customItems[`${c.id}-4`]||[];
+count+=items.length;
+});
+return count;
+})()}</span>
+</div>
+<div className={`nav-item ${activeView==='rapportages-overzicht'?'active':''}`} onClick={()=>setActiveView('rapportages-overzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📋</span>
+<span className="nav-text">Rapportages</span>
+</div>
+<div className={`nav-item ${activeView==='analytics'?'active':''}`} onClick={()=>setActiveView('analytics')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📈</span>
+<span className="nav-text">Analytics</span>
+</div>
+<div className={`nav-item ${activeView==='linkbuilding'?'active':''}`} onClick={()=>setActiveView('linkbuilding')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🔗</span>
+<span className="nav-text">Linkbuilding</span>
+</div>
+<div className={`nav-item ${activeView==='archief'?'active':''}`} onClick={()=>setActiveView('archief')} style={{cursor:'pointer'}}>
+<span className="nav-icon">📦</span>
+<span className="nav-text">Archief</span>
+<span className="nav-count">{clients.filter(c=>c.archived).length}</span>
+</div>
+</nav>
+{isAdmin&&(
+<button className="export-btn" onClick={exportData}>
+💾 Export Data
+</button>
+)}
+</aside>
+<main className="main">
+<header className="header">
+<h1 className="title">🗓️ Kwartaaloverzicht</h1>
+<p className="subtitle">Fase &amp; voortgang per klant, per kwartaal</p>
+</header>
+{activeClients.length===0?(
+<div style={{textAlign:'center',padding:'64px 24px',color:'var(--text-light)'}}>
+<div style={{fontSize:'48px',marginBottom:'16px'}}>📭</div>
+<div style={{fontSize:'18px',fontWeight:'600'}}>Nog geen actieve klanten</div>
+</div>
+):(
+<div style={{overflowX:'auto',background:'var(--white)',border:'1px solid var(--border)',borderRadius:'12px',boxShadow:'var(--shadow-sm)'}}>
+<table style={{width:'100%',borderCollapse:'collapse',minWidth:'700px'}}>
+<thead>
+<tr style={{borderBottom:'2px solid var(--border)'}}>
+<th style={{textAlign:'left',padding:'14px 16px',fontSize:'13px',fontWeight:'700',color:'var(--text)',position:'sticky',left:0,background:'var(--white)'}}>Klant</th>
+{QUARTERS.map(q=>(
+<th key={q.key} style={{textAlign:'left',padding:'14px 16px',fontSize:'13px',fontWeight:'700',color:'var(--text)',minWidth:'180px',background:q.key===currentQ?'#eff6ff':'var(--white)'}}>
+{q.label}{q.key===currentQ&&<span style={{marginLeft:'6px',fontSize:'10px',background:'#3b82f6',color:'white',padding:'1px 6px',borderRadius:'8px'}}>NU</span>}
+<div style={{fontSize:'11px',fontWeight:'400',color:'var(--text-light)'}}>{q.sub}</div>
+</th>
+))}
+</tr>
+</thead>
+<tbody>
+{activeClients.map(client=>(
+<tr key={client.id} style={{borderBottom:'1px solid var(--border)'}}>
+<td style={{padding:'12px 16px',position:'sticky',left:0,background:'var(--white)'}}>
+<button onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');setActiveStep('kwartaal');}} style={{border:'none',background:'none',cursor:'pointer',fontWeight:'600',fontSize:'14px',color:'#3b82f6',textAlign:'left',padding:0}}>{client.name}</button>
+</td>
+{QUARTERS.map(q=>{
+const phaseKey=(client.quarterPhases||{})[q.key];
+const phase=phaseKey?getPhaseInfo(phaseKey):null;
+const prog=getQuarterProgress(client,q.key);
+return(
+<td key={q.key} style={{padding:'12px 16px',background:q.key===currentQ?'#fafdff':'transparent',verticalAlign:'top'}}>
+{phase?(
+<div>
+<div style={{display:'inline-block',fontSize:'11px',padding:'3px 8px',borderRadius:'8px',background:phase.bg,color:phase.color,fontWeight:'600',marginBottom:'6px'}}>{phase.icon} {phase.label}</div>
+{prog.total>0?(
+<div>
+<div style={{height:'5px',background:'var(--ios-gray-6,#eee)',borderRadius:'3px',overflow:'hidden',marginBottom:'3px'}}>
+<div style={{height:'100%',width:prog.pct+'%',background:phase.color,transition:'width 0.3s'}}/>
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)'}}>{prog.completed}/{prog.total} · {prog.pct}%</div>
+</div>
+):(
+<div style={{fontSize:'11px',color:'var(--text-light)',fontStyle:'italic'}}>geen acties</div>
+)}
+</div>
+):(
+<span style={{fontSize:'12px',color:'var(--text-light)'}}>—</span>
+)}
+</td>
+);
+})}
+</tr>
+))}
+</tbody>
+</table>
 </div>
 )}
 </main>
@@ -5080,6 +5237,10 @@ const ag=getAllAgendaItems();
 return ag.overdue.length+ag.thisWeek.length+ag.thisMonth.length;
 })()}</span>
 </div>
+<div className={`nav-item ${activeView==='kwartaaloverzicht'?'active':''}`} onClick={()=>setActiveView('kwartaaloverzicht')} style={{cursor:'pointer'}}>
+<span className="nav-icon">🗓️</span>
+<span className="nav-text">Kwartaaloverzicht</span>
+</div>
 <div className={`nav-item ${activeView==='content'?'active':''}`} onClick={()=>setActiveView('content')} style={{cursor:'pointer'}}>
 <span className="nav-icon">📝</span>
 <span className="nav-text">Content Creatie</span>
@@ -5547,10 +5708,12 @@ Nog geen acties voor deze fase.{isAdmin&&' Voeg ze toe via ⚙️ Beheer fase-ta
 </div>
 ):tasks.map(t=>{
 const checked=!!st[`${q.key}::${t.id}`];
+const asg=getAssigneeInfo(t.assignee);
 return(
 <label key={t.id} style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'8px',borderRadius:'8px',background:checked?'#f0fdf4':'var(--bg,#f8fafc)',cursor:isAdmin?'pointer':'default',fontSize:'13px',lineHeight:'1.4'}}>
 <input type="checkbox" checked={checked} disabled={!isAdmin} onChange={()=>toggleQuarterTask(client.id,q.key,t.id)} style={{marginTop:'2px',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
-<span style={{color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>{t.label}</span>
+<span style={{flex:1,color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>{t.label}</span>
+{asg&&<span style={{flexShrink:0,fontSize:'10px',padding:'2px 7px',borderRadius:'8px',background:asg.bg,color:asg.color,fontWeight:'600',whiteSpace:'nowrap'}}>{asg.label}</span>}
 </label>
 );
 })}
@@ -6565,17 +6728,6 @@ return(
 <div key={status.key} className={`status-option ${newClient.status===status.key?'selected':''}`} onClick={()=>setNewClient({...newClient,status:status.key})}>
 <span className="status-option-icon">{status.icon}</span>
 <span className="status-option-text">{status.label}</span>
-</div>
-))}
-</div>
-</div>
-<div className="input-group">
-<label className="input-label">Project fase</label>
-<div className="status-select">
-{PHASE_OPTIONS.map(phase=>(
-<div key={phase.key} className={`status-option ${(newClient.phase||'opstart')===phase.key?'selected':''}`} onClick={()=>setNewClient({...newClient,phase:phase.key})}>
-<span className="status-option-icon">{phase.icon}</span>
-<span className="status-option-text">{phase.label}</span>
 </div>
 ))}
 </div>
