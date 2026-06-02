@@ -811,7 +811,7 @@ autoFocus style={{margin:0}}/>
 }
 
 // QUARTER CARD (één kwartaal in de kwartaalplanning)
-function QuarterCard({client,q,isCurrent,isAdmin,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onDeleteTask}){
+function QuarterCard({client,q,isCurrent,isAdmin,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onMovePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onDeleteTask}){
 const [newTask,setNewTask]=useState({});
 const [newAssignee,setNewAssignee]=useState({});
 const [editing,setEditing]=useState(null);
@@ -833,11 +833,11 @@ return(
 {/* Actieve fases als chips */}
 <div style={{display:'flex',flexWrap:'wrap',gap:'6px'}}>
 {activePhases.length===0&&<span style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>Nog geen fase gekozen</span>}
-{activePhases.map(pk=>{
+{activePhases.map((pk,ci)=>{
 const ph=getPhaseInfo(pk);
 return(
-<span key={pk} style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',padding:'3px 8px',borderRadius:'8px',background:ph.bg,color:ph.color,fontWeight:'600'}}>
-{ph.icon} {ph.label}
+<span key={pk} style={{display:'inline-flex',alignItems:'center',gap:'4px',fontSize:'11px',padding:'3px 8px',borderRadius:'8px',background:ph.bg,color:ph.color,fontWeight:'600',border:ci===0?`1.5px solid ${ph.color}`:'1.5px solid transparent'}}>
+{ci===0&&<span style={{fontSize:'9px'}}>★</span>}{ph.icon} {ph.label}
 {isAdmin&&<span onClick={()=>onTogglePhase(client.id,q.key,pk)} style={{cursor:'pointer',marginLeft:'2px',fontWeight:'700'}}>×</span>}
 </span>
 );
@@ -877,12 +877,20 @@ return(
 )}
 
 {/* Per fase: taken */}
-{activePhases.map(pk=>{
+{activePhases.map((pk,phaseIdx)=>{
 const ph=getPhaseInfo(pk);
 const tasks=getQuarterPhaseTasks(client,q.key,pk);
 return(
 <div key={pk} style={{borderTop:'1px solid var(--border)',paddingTop:'10px'}}>
-<div style={{fontSize:'12px',fontWeight:'700',color:ph.color,marginBottom:'8px'}}>{ph.icon} {ph.label}</div>
+<div style={{display:'flex',alignItems:'center',gap:'6px',marginBottom:'8px'}}>
+<span style={{fontSize:'12px',fontWeight:'700',color:ph.color,flex:1}}>{ph.icon} {ph.label}{phaseIdx===0&&<span style={{fontSize:'9px',color:'var(--text-light)',marginLeft:'6px',fontWeight:'600',fontStyle:'italic'}}>← huidige fase</span>}</span>
+{isAdmin&&activePhases.length>1&&(
+<>
+<button onClick={()=>onMovePhase(client.id,q.key,pk,-1)} disabled={phaseIdx===0} title="Omhoog" style={{border:'none',background:'none',cursor:phaseIdx===0?'default':'pointer',opacity:phaseIdx===0?0.25:0.6,fontSize:'13px',padding:'0 2px'}}>▲</button>
+<button onClick={()=>onMovePhase(client.id,q.key,pk,1)} disabled={phaseIdx===activePhases.length-1} title="Omlaag" style={{border:'none',background:'none',cursor:phaseIdx===activePhases.length-1?'default':'pointer',opacity:phaseIdx===activePhases.length-1?0.25:0.6,fontSize:'13px',padding:'0 2px'}}>▼</button>
+</>
+)}
+</div>
 <div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
 {tasks.length===0&&<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic'}}>Nog geen acties.</div>}
 {tasks.map(t=>{
@@ -2990,6 +2998,23 @@ let arr=qp[quarterKey];
 arr=Array.isArray(arr)?[...arr]:(arr?[arr]:[]);
 if(arr.includes(phaseKey))arr=arr.filter(p=>p!==phaseKey);else arr.push(phaseKey);
 if(arr.length>0)qp[quarterKey]=arr;else delete qp[quarterKey];
+return{...c,quarterPhases:qp};
+});
+setClients(updated);
+saveData({clients:updated});
+};
+
+const moveClientQuarterPhase=(clientId,quarterKey,phaseKey,dir)=>{
+const updated=clients.map(c=>{
+if(c.id!==clientId)return c;
+const qp={...(c.quarterPhases||{})};
+let arr=qp[quarterKey];
+arr=Array.isArray(arr)?[...arr]:(arr?[arr]:[]);
+const idx=arr.indexOf(phaseKey);
+const ni=idx+dir;
+if(idx<0||ni<0||ni>=arr.length)return c;
+[arr[idx],arr[ni]]=[arr[ni],arr[idx]];
+qp[quarterKey]=arr;
 return{...c,quarterPhases:qp};
 });
 setClients(updated);
@@ -5520,6 +5545,7 @@ getPhaseInfo={getPhaseInfo}
 PHASE_OPTIONS={PHASE_OPTIONS}
 ASSIGNEES={ASSIGNEES}
 onTogglePhase={toggleClientQuarterPhase}
+onMovePhase={moveClientQuarterPhase}
 onToggleTask={toggleQuarterTask}
 onSetAssignee={setQuarterTaskAssignee}
 onAddTask={addQuarterCustomTask}
