@@ -812,7 +812,7 @@ autoFocus style={{margin:0}}/>
 
 // PHASE TEMPLATE MODAL
 // QUARTER CARD (één kwartaal in de kwartaalplanning)
-function QuarterCard({client,q,isCurrent,isAdmin,phaseTemplates,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onDeleteTask,onHideTemplateTask}){
+function QuarterCard({client,q,isCurrent,isAdmin,phaseTemplates,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onRenameTemplateTask,onDeleteTask,onHideTemplateTask}){
 const [newTask,setNewTask]=useState({});
 const [newAssignee,setNewAssignee]=useState({});
 const [editing,setEditing]=useState(null);
@@ -895,9 +895,9 @@ return(
 <div key={t.id} style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'8px',borderRadius:'8px',background:checked?'#f0fdf4':'var(--bg,#f8fafc)',fontSize:'13px',lineHeight:'1.4'}}>
 <input type="checkbox" checked={checked} disabled={!isAdmin} onChange={()=>onToggleTask(client.id,q.key,t.id)} style={{marginTop:'2px',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
 {isEditing?(
-<input autoFocus value={editVal} onChange={(e)=>setEditVal(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'){onUpdateTask(client.id,q.key,t.id,editVal);setEditing(null);}if(e.key==='Escape')setEditing(null);}} onBlur={()=>{onUpdateTask(client.id,q.key,t.id,editVal);setEditing(null);}} style={{flex:1,fontSize:'13px',padding:'2px 6px',borderRadius:'6px',border:'1px solid var(--border)'}}/>
+<input autoFocus value={editVal} onChange={(e)=>setEditVal(e.target.value)} onKeyDown={(e)=>{if(e.key==='Enter'){if(t._custom){onUpdateTask(client.id,q.key,t.id,editVal);}else{onRenameTemplateTask(pk,t.id,editVal);}setEditing(null);}if(e.key==='Escape')setEditing(null);}} onBlur={()=>{if(t._custom){onUpdateTask(client.id,q.key,t.id,editVal);}else{onRenameTemplateTask(pk,t.id,editVal);}setEditing(null);}} style={{flex:1,fontSize:'13px',padding:'2px 6px',borderRadius:'6px',border:'1px solid var(--border)'}}/>
 ):(
-<span style={{flex:1,color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>{t.label}{t._custom&&<span style={{fontSize:'9px',color:'var(--text-light)',marginLeft:'4px',fontStyle:'italic'}}>eigen</span>}</span>
+<span style={{flex:1,color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>{t.label}{t._custom?<span style={{fontSize:'9px',color:'var(--text-light)',marginLeft:'4px',fontStyle:'italic'}}>eigen</span>:<span style={{fontSize:'9px',color:'var(--text-light)',marginLeft:'4px',fontStyle:'italic'}}>sjabloon</span>}</span>
 )}
 {isAdmin&&(
 <select value={asgKey||''} onChange={(e)=>onSetAssignee(client.id,q.key,t.id,e.target.value)} style={{flexShrink:0,fontSize:'10px',padding:'2px 5px',borderRadius:'8px',border:`1px solid ${asg?asg.color:'var(--border)'}`,background:asg?asg.bg:'var(--white)',color:asg?asg.color:'var(--text-light)',fontWeight:'600',cursor:'pointer',maxWidth:'100px'}}>
@@ -906,8 +906,8 @@ return(
 </select>
 )}
 {!isAdmin&&asg&&<span style={{flexShrink:0,fontSize:'10px',padding:'2px 7px',borderRadius:'8px',background:asg.bg,color:asg.color,fontWeight:'600',whiteSpace:'nowrap'}}>{asg.label}</span>}
-{isAdmin&&!isEditing&&t._custom&&(
-<span onClick={()=>{setEditing(t.id);setEditVal(t.label);}} style={{cursor:'pointer',fontSize:'12px',flexShrink:0,opacity:0.6}}>✏️</span>
+{isAdmin&&!isEditing&&(
+<span onClick={()=>{setEditing(t.id);setEditVal(t.label);}} title={t._custom?'Hernoemen':'Hernoemen (geldt voor alle klanten)'} style={{cursor:'pointer',fontSize:'12px',flexShrink:0,opacity:0.6}}>✏️</span>
 )}
 {isAdmin&&(
 <span onClick={()=>{if(t._custom){if(confirm('Taak verwijderen?'))onDeleteTask(client.id,q.key,t.id);}else{onHideTemplateTask(client.id,q.key,t.id);}}} title={t._custom?'Verwijderen':'Verbergen voor deze klant'} style={{cursor:'pointer',fontSize:'14px',flexShrink:0,color:'#dc2626'}}>×</span>
@@ -977,7 +977,7 @@ return(
 const asg=getAssigneeInfo(t.assignee);
 return(
 <div key={t.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--bg,#f1f5f9)'}}>
-<span style={{flex:1,fontSize:'13px',color:'var(--text)'}}>{t.label}</span>
+<input type="text" value={t.label} onChange={(e)=>{const w={...working};w[p.key]=w[p.key].map((x,i)=>i===idx?{...x,label:e.target.value}:x);setWorking(w);}} style={{flex:1,fontSize:'13px',color:'var(--text)',padding:'5px 8px',borderRadius:'6px',border:'1px solid var(--border)',background:'var(--white)'}}/>
 <select value={t.assignee||'quinten'} onChange={(e)=>{const w={...working};w[p.key]=w[p.key].map((x,i)=>i===idx?{...x,assignee:e.target.value}:x);setWorking(w);}} style={{fontSize:'11px',padding:'3px 6px',borderRadius:'6px',border:`1px solid ${asg?asg.color:'var(--border)'}`,background:asg?asg.bg:'var(--white)',color:asg?asg.color:'var(--text)',fontWeight:'600',cursor:'pointer'}}>
 {ASSIGNEES.map(a=>(<option key={a.key} value={a.key}>{a.label}</option>))}
 </select>
@@ -3064,6 +3064,14 @@ return PHASE_OPTIONS.find(p=>p.key===phaseKey)||PHASE_OPTIONS[0];
 const savePhaseTemplates=(newTemplates)=>{
 setPhaseTemplates(newTemplates);
 saveData({phaseTemplates:newTemplates});
+};
+
+const renameTemplateTask=(phaseKey,taskId,label)=>{
+const val=(label||'').trim();
+if(!val)return;
+const nt={...phaseTemplates};
+nt[phaseKey]=(nt[phaseKey]||[]).map(t=>t.id===taskId?{...t,label:val}:t);
+savePhaseTemplates(nt);
 };
 
 const toggleClientQuarterPhase=(clientId,quarterKey,phaseKey)=>{
@@ -5627,6 +5635,7 @@ onToggleTask={toggleQuarterTask}
 onSetAssignee={setQuarterTaskAssignee}
 onAddTask={addQuarterCustomTask}
 onUpdateTask={updateQuarterCustomTask}
+onRenameTemplateTask={renameTemplateTask}
 onDeleteTask={deleteQuarterCustomTask}
 onHideTemplateTask={toggleHideQuarterTemplateTask}
 />
