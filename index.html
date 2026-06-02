@@ -349,6 +349,26 @@ const PHASE_OPTIONS=[
 {key:'linkbuilding',label:'Linkbuilding',icon:'🔗',color:'#d97706',bg:'#fef3c7'}
 ];
 
+// KWARTALEN (Q2 t/m Q4 2026)
+const QUARTERS=[
+{key:'2026-Q2',label:'Q2 2026',sub:'apr — jun'},
+{key:'2026-Q3',label:'Q3 2026',sub:'jul — sep'},
+{key:'2026-Q4',label:'Q4 2026',sub:'okt — dec'}
+];
+const getCurrentQuarterKey=()=>{
+const n=new Date();
+const y=n.getFullYear();
+const q=Math.floor(n.getMonth()/3)+1;
+const key=`${y}-Q${q}`;
+return QUARTERS.find(qt=>qt.key===key)?key:QUARTERS[0].key;
+};
+const getClientCurrentPhase=(client)=>{
+if(!client)return 'opstart';
+const qp=client.quarterPhases||{};
+return qp[getCurrentQuarterKey()]||client.phase||'opstart';
+};
+const DEFAULT_PHASE_TEMPLATES={opstart:[],technisch:[],content:[],linkbuilding:[]};
+
 // PROJECT MANAGERS
 const PROJECT_MANAGERS=[
 {key:'hugo',label:'Hugo',icon:'👨',color:'#6B7D8A'},
@@ -776,6 +796,69 @@ autoFocus style={{margin:0}}/>
 );
 }
 
+// PHASE TEMPLATE MODAL
+function PhaseTemplateModal({templates,onSave,onClose}){
+const [working,setWorking]=useState(()=>JSON.parse(JSON.stringify(templates||DEFAULT_PHASE_TEMPLATES)));
+const [inputs,setInputs]=useState({opstart:'',technisch:'',content:'',linkbuilding:''});
+const addTask=(pk)=>{
+const val=(inputs[pk]||'').trim();
+if(!val)return;
+const w={...working};
+w[pk]=[...(w[pk]||[]),{id:'pt'+Date.now()+Math.floor(Math.random()*1000),label:val}];
+setWorking(w);
+setInputs({...inputs,[pk]:''});
+};
+const removeTask=(pk,id)=>{
+const w={...working};
+w[pk]=(w[pk]||[]).filter(t=>t.id!==id);
+setWorking(w);
+};
+const moveTask=(pk,idx,dir)=>{
+const w={...working};
+const arr=[...(w[pk]||[])];
+const ni=idx+dir;
+if(ni<0||ni>=arr.length)return;
+[arr[idx],arr[ni]]=[arr[ni],arr[idx]];
+w[pk]=arr;
+setWorking(w);
+};
+return(
+<div className="modal-overlay" onClick={onClose} style={{position:'fixed',inset:0,background:'rgba(0,0,0,0.5)',display:'flex',alignItems:'center',justifyContent:'center',zIndex:1000,padding:'20px'}}>
+<div onClick={(e)=>e.stopPropagation()} style={{background:'var(--white)',borderRadius:'16px',padding:'24px',maxWidth:'700px',width:'100%',maxHeight:'85vh',overflowY:'auto',boxShadow:'0 20px 60px rgba(0,0,0,0.3)'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'8px'}}>
+<h2 style={{margin:0,fontSize:'20px',fontWeight:'700',color:'var(--text)'}}>⚙️ Fase-taken beheren</h2>
+<button onClick={onClose} style={{background:'none',border:'none',fontSize:'24px',cursor:'pointer',color:'var(--text-light)'}}>×</button>
+</div>
+<p style={{margin:'0 0 20px',fontSize:'13px',color:'var(--text-light)'}}>Deze acties verschijnen automatisch bij elke klant in het kwartaal waaraan de bijbehorende fase is gekoppeld.</p>
+{PHASE_OPTIONS.map(p=>(
+<div key={p.key} style={{marginBottom:'20px',border:`1px solid var(--border)`,borderRadius:'12px',overflow:'hidden'}}>
+<div style={{padding:'10px 14px',background:p.bg,color:p.color,fontWeight:'700',fontSize:'14px'}}>{p.icon} {p.label}</div>
+<div style={{padding:'12px 14px'}}>
+{(working[p.key]||[]).length===0&&<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',marginBottom:'10px'}}>Nog geen acties.</div>}
+{(working[p.key]||[]).map((t,idx)=>(
+<div key={t.id} style={{display:'flex',alignItems:'center',gap:'8px',padding:'6px 0',borderBottom:'1px solid var(--bg,#f1f5f9)'}}>
+<span style={{flex:1,fontSize:'13px',color:'var(--text)'}}>{t.label}</span>
+<button onClick={()=>moveTask(p.key,idx,-1)} disabled={idx===0} style={{border:'none',background:'none',cursor:idx===0?'default':'pointer',opacity:idx===0?0.3:1,fontSize:'14px'}}>↑</button>
+<button onClick={()=>moveTask(p.key,idx,1)} disabled={idx===((working[p.key]||[]).length-1)} style={{border:'none',background:'none',cursor:'pointer',opacity:idx===((working[p.key]||[]).length-1)?0.3:1,fontSize:'14px'}}>↓</button>
+<button onClick={()=>removeTask(p.key,t.id)} style={{border:'none',background:'none',cursor:'pointer',color:'#dc2626',fontSize:'16px'}}>×</button>
+</div>
+))}
+<div style={{display:'flex',gap:'8px',marginTop:'10px'}}>
+<input type="text" value={inputs[p.key]||''} onChange={(e)=>setInputs({...inputs,[p.key]:e.target.value})} onKeyDown={(e)=>{if(e.key==='Enter')addTask(p.key);}} placeholder="Nieuwe actie..." style={{flex:1,padding:'8px 10px',borderRadius:'8px',border:'1px solid var(--border)',fontSize:'13px'}}/>
+<button onClick={()=>addTask(p.key)} style={{padding:'8px 14px',borderRadius:'8px',background:p.color,color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600'}}>+ Toevoegen</button>
+</div>
+</div>
+</div>
+))}
+<div style={{display:'flex',gap:'10px',justifyContent:'flex-end',marginTop:'8px'}}>
+<button onClick={onClose} style={{padding:'10px 18px',borderRadius:'8px',background:'var(--ios-gray-6,#eee)',color:'var(--text)',border:'1px solid var(--border)',cursor:'pointer',fontSize:'14px',fontWeight:'600'}}>Annuleren</button>
+<button onClick={()=>{onSave(working);onClose();}} style={{padding:'10px 18px',borderRadius:'8px',background:'#16a34a',color:'white',border:'none',cursor:'pointer',fontSize:'14px',fontWeight:'600'}}>✓ Opslaan</button>
+</div>
+</div>
+</div>
+);
+}
+
 // MAIN APP
 function App(){
 const [loading,setLoading]=useState(true);
@@ -800,6 +883,7 @@ const [showEditModal,setShowEditModal]=useState(false);
 const [showDeleteModal,setShowDeleteModal]=useState(false);
 const [showItemModal,setShowItemModal]=useState(false);
 const [showStatusModal,setShowStatusModal]=useState(false);
+const [showPhaseTemplateModal,setShowPhaseTemplateModal]=useState(false);
 const [showNoteModal,setShowNoteModal]=useState(false);
 const [editingNote,setEditingNote]=useState(null);
 const [showDeadlineModal,setShowDeadlineModal]=useState(false);
@@ -835,6 +919,7 @@ const [expandedNotes,setExpandedNotes]=useState({});
 const [expandedTodos,setExpandedTodos]=useState({});
 const [todos,setTodos]=useState({});
 const [rapportages,setRapportages]=useState({});
+const [phaseTemplates,setPhaseTemplates]=useState(DEFAULT_PHASE_TEMPLATES);
 const [newTodoInputs,setNewTodoInputs]=useState({});
 const [contentFilter,setContentFilter]=useState('all');
 const [clientToDelete,setClientToDelete]=useState(null);
@@ -1143,6 +1228,7 @@ setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
 setRapportages(data.rapportages||{});
+setPhaseTemplates(data.phaseTemplates||DEFAULT_PHASE_TEMPLATES);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 
@@ -1161,6 +1247,7 @@ setClients(clientsWithIds);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
 setRapportages(data.rapportages||{});
+setPhaseTemplates(data.phaseTemplates||DEFAULT_PHASE_TEMPLATES);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},clientsWithIds);
 }
 });
@@ -1210,6 +1297,7 @@ setClients(data.clients||[]);
 setTimeTracking(data.timeTracking||{});
 setTodos(data.todos||{});
 setRapportages(data.rapportages||{});
+setPhaseTemplates(data.phaseTemplates||DEFAULT_PHASE_TEMPLATES);
 saveLocalData(data.tasks||{},data.customItems||{},data.planningItems||{},data.notes||{},data.deadlines||{},data.clients||[],data.timeTracking||{});
 setToast({type:'success',message:'✓ Herladen voltooid'});
 }
@@ -2825,6 +2913,46 @@ const getPhaseInfo=(phaseKey)=>{
 return PHASE_OPTIONS.find(p=>p.key===phaseKey)||PHASE_OPTIONS[0];
 };
 
+const savePhaseTemplates=(newTemplates)=>{
+setPhaseTemplates(newTemplates);
+saveData({phaseTemplates:newTemplates});
+};
+
+const setClientQuarterPhase=(clientId,quarterKey,phaseKey)=>{
+const updated=clients.map(c=>{
+if(c.id!==clientId)return c;
+const qp={...(c.quarterPhases||{})};
+if(phaseKey)qp[quarterKey]=phaseKey;else delete qp[quarterKey];
+return{...c,quarterPhases:qp};
+});
+setClients(updated);
+saveData({clients:updated});
+};
+
+const toggleQuarterTask=(clientId,quarterKey,taskId)=>{
+const updated=clients.map(c=>{
+if(c.id!==clientId)return c;
+const st={...(c.quarterTaskState||{})};
+const k=`${quarterKey}::${taskId}`;
+st[k]=!st[k];
+return{...c,quarterTaskState:st};
+});
+setClients(updated);
+saveData({clients:updated});
+};
+
+const getQuarterProgress=(client,quarterKey)=>{
+if(!client)return{total:0,completed:0,pct:0,phaseKey:null};
+const phaseKey=(client.quarterPhases||{})[quarterKey];
+if(!phaseKey)return{total:0,completed:0,pct:0,phaseKey:null};
+const tasks=phaseTemplates[phaseKey]||[];
+const st=client.quarterTaskState||{};
+const completed=tasks.filter(t=>st[`${quarterKey}::${t.id}`]).length;
+const total=tasks.length;
+const pct=total>0?Math.round((completed/total)*100):0;
+return{total,completed,pct,phaseKey};
+};
+
 const getPMInfo=(pmKey)=>{
 return PROJECT_MANAGERS.find(p=>p.key===pmKey)||PROJECT_MANAGERS[2];
 };
@@ -3223,7 +3351,7 @@ const stats=getClientStats(client.id);
 const progress=getClientProgress(client.id);
 const statusInfo=getStatusInfo(client.status||'schema');
 const pmInfo=getPMInfo(client.projectManager||'none');
-const phaseInfo=getPhaseInfo(client.phase||'opstart');
+const phaseInfo=getPhaseInfo(getClientCurrentPhase(client));
 return(
 <div key={client.id} className="client-card" onClick={()=>{setSelectedClient(client.id);setActiveView('roadmap');}}>
 <div className={`client-status-badge ${statusInfo.key}`}>{statusInfo.icon}</div>
@@ -5259,6 +5387,10 @@ return(
 <span className="nav-icon">📋</span>
 <span className="nav-text">Overzicht</span>
 </div>
+<div className={`nav-item ${activeStep==='kwartaal'?'active':''}`} onClick={()=>setActiveStep('kwartaal')}>
+<span className="nav-icon">🗓️</span>
+<span className="nav-text">Kwartaalplanning</span>
+</div>
 {STEPS.map(step=>(
 <div key={step.id} className={`nav-item ${activeStep===step.id?'active':''}`} onClick={()=>setActiveStep(step.id)}>
 <span className="nav-icon">{step.icon}</span>
@@ -5336,6 +5468,11 @@ Project: <span className="banner-client">{currentClient.name}</span>
 <h1 className="title">📋 Overzicht</h1>
 <p className="subtitle">Complete status van {currentClient.name}</p>
 </>
+):activeStep==='kwartaal'?(
+<>
+<h1 className="title">🗓️ Kwartaalplanning</h1>
+<p className="subtitle">Fase &amp; acties per kwartaal voor {currentClient.name}</p>
+</>
 ):activeStep==='audits'?(
 <>
 <h1 className="title">🔍 SEO Audits</h1>
@@ -5353,6 +5490,80 @@ Project: <span className="banner-client">{currentClient.name}</span>
 </>
 )}
 </header>
+
+{activeStep==='kwartaal'&&(()=>{
+const client=clients.find(c=>c.id===selectedClient);
+if(!client)return null;
+const currentQ=getCurrentQuarterKey();
+return(
+<div style={{maxWidth:'1100px'}}>
+<div style={{display:'flex',justifyContent:'space-between',alignItems:'center',marginBottom:'20px',flexWrap:'wrap',gap:'12px'}}>
+<p style={{margin:0,color:'var(--text-light)',fontSize:'14px'}}>Kies per kwartaal een fase. De acties komen uit de fase-sjablonen en kun je per kwartaal afvinken.</p>
+{isAdmin&&(
+<button onClick={()=>setShowPhaseTemplateModal(true)} style={{padding:'8px 14px',borderRadius:'8px',background:'var(--ios-blue,#3b82f6)',color:'white',border:'none',cursor:'pointer',fontSize:'13px',fontWeight:'600',whiteSpace:'nowrap'}}>⚙️ Beheer fase-taken</button>
+)}
+</div>
+<div style={{display:'grid',gridTemplateColumns:`repeat(${QUARTERS.length},1fr)`,gap:'16px'}}>
+{QUARTERS.map(q=>{
+const phaseKey=(client.quarterPhases||{})[q.key]||'';
+const phase=phaseKey?getPhaseInfo(phaseKey):null;
+const prog=getQuarterProgress(client,q.key);
+const tasks=phaseKey?(phaseTemplates[phaseKey]||[]):[];
+const st=client.quarterTaskState||{};
+const isCurrent=q.key===currentQ;
+return(
+<div key={q.key} style={{background:'var(--white)',border:isCurrent?'2px solid #3b82f6':'1px solid var(--border)',borderRadius:'12px',padding:'16px',boxShadow:'var(--shadow-sm)',display:'flex',flexDirection:'column',gap:'12px'}}>
+<div>
+<div style={{display:'flex',alignItems:'center',justifyContent:'space-between',gap:'6px'}}>
+<span style={{fontSize:'15px',fontWeight:'700',color:'var(--text)'}}>{q.label}</span>
+{isCurrent&&<span style={{fontSize:'10px',background:'#3b82f6',color:'white',padding:'2px 8px',borderRadius:'10px',fontWeight:'600'}}>NU</span>}
+</div>
+<div style={{fontSize:'11px',color:'var(--text-light)'}}>{q.sub}</div>
+</div>
+{isAdmin?(
+<select value={phaseKey} onChange={(e)=>setClientQuarterPhase(client.id,q.key,e.target.value)} style={{width:'100%',padding:'8px',borderRadius:'8px',border:`2px solid ${phase?phase.color:'var(--border)'}`,background:phase?phase.bg:'var(--white)',color:phase?phase.color:'var(--text-light)',fontWeight:'600',fontSize:'13px',cursor:'pointer'}}>
+<option value="">— Geen fase —</option>
+{PHASE_OPTIONS.map(p=>(<option key={p.key} value={p.key}>{p.icon} {p.label}</option>))}
+</select>
+):(
+<div style={{padding:'8px',borderRadius:'8px',border:`2px solid ${phase?phase.color:'var(--border)'}`,background:phase?phase.bg:'var(--white)',color:phase?phase.color:'var(--text-light)',fontWeight:'600',fontSize:'13px',textAlign:'center'}}>
+{phase?`${phase.icon} ${phase.label}`:'— Geen fase —'}
+</div>
+)}
+{phaseKey&&(
+<>
+<div>
+<div style={{display:'flex',justifyContent:'space-between',fontSize:'11px',color:'var(--text-light)',marginBottom:'4px'}}>
+<span>Voortgang</span><span style={{fontWeight:'700',color:phase.color}}>{prog.completed}/{prog.total} · {prog.pct}%</span>
+</div>
+<div style={{height:'6px',background:'var(--ios-gray-6,#eee)',borderRadius:'3px',overflow:'hidden'}}>
+<div style={{height:'100%',width:`${prog.pct}%`,background:phase.color,transition:'width 0.3s'}}/>
+</div>
+</div>
+<div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+{tasks.length===0?(
+<div style={{fontSize:'12px',color:'var(--text-light)',fontStyle:'italic',padding:'8px',textAlign:'center'}}>
+Nog geen acties voor deze fase.{isAdmin&&' Voeg ze toe via ⚙️ Beheer fase-taken.'}
+</div>
+):tasks.map(t=>{
+const checked=!!st[`${q.key}::${t.id}`];
+return(
+<label key={t.id} style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'8px',borderRadius:'8px',background:checked?'#f0fdf4':'var(--bg,#f8fafc)',cursor:isAdmin?'pointer':'default',fontSize:'13px',lineHeight:'1.4'}}>
+<input type="checkbox" checked={checked} disabled={!isAdmin} onChange={()=>toggleQuarterTask(client.id,q.key,t.id)} style={{marginTop:'2px',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
+<span style={{color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>{t.label}</span>
+</label>
+);
+})}
+</div>
+</>
+)}
+</div>
+);
+})}
+</div>
+</div>
+);
+})()}
 
 {activeStep==='klant-inbox'&&(()=>{
 const cname=currentClient.name&&currentClient.name.toLowerCase().trim();
@@ -5450,7 +5661,7 @@ Nog geen audits voor {currentClient.name}. Audits verschijnen hier nadat een aud
 {currentClient.hasMenu&&<span style={{fontSize:'12px',padding:'4px 10px',borderRadius:'6px',background:'#f0fdf4',color:'#166534',fontWeight:'500'}}>Menukaart online</span>}
 </div>
 {(()=>{
-const activePhase=currentClient.phase||'opstart';
+const activePhase=getClientCurrentPhase(currentClient);
 const activeIdx=PHASE_OPTIONS.findIndex(p=>p.key===activePhase);
 return(
 <div style={{marginTop:'4px'}}>
@@ -6388,6 +6599,9 @@ return(
 </div>
 )}
 
+{isAdmin&&showPhaseTemplateModal&&(
+<PhaseTemplateModal templates={phaseTemplates} onSave={savePhaseTemplates} onClose={()=>setShowPhaseTemplateModal(false)}/>
+)}
 {isAdmin&&showStatusModal&&(
 <div className="modal-overlay" onClick={()=>setShowStatusModal(false)}>
 <div className="modal" onClick={(e)=>e.stopPropagation()}>
