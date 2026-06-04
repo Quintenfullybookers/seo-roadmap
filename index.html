@@ -62,7 +62,9 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .header{margin-bottom:32px}
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
-.status-overview{display:grid;grid-template-columns:repeat(5,1fr);gap:16px;margin-bottom:32px}
+.status-overview{display:grid;grid-template-columns:repeat(6,1fr);gap:16px;margin-bottom:32px}
+@media(max-width:1100px){.status-overview{grid-template-columns:repeat(3,1fr)}}
+@media(max-width:600px){.status-overview{grid-template-columns:repeat(2,1fr)}}
 .dashboard-stats{margin-bottom:24px}
 .dashboard-stats h3{display:none}
 .stats-grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px}
@@ -106,6 +108,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .status-card.aandacht .status-count{color:var(--orange)}
 .status-card.schema .status-count{color:var(--yellow)}
 .status-card.top .status-count{color:var(--green)}
+.status-card.onhold .status-count{color:#8e8e93}
 .filter-bar{background:var(--white);border:1px solid var(--border);border-radius:8px;padding:12px 16px;margin-bottom:24px;display:flex;align-items:center;gap:12px}
 .filter-label{font-size:13px;font-weight:600;color:var(--text-light)}
 .filter-btn{padding:6px 12px;border:1px solid var(--border);background:var(--white);border-radius:6px;font-size:13px;cursor:pointer;transition:all .2s;display:flex;align-items:center;gap:6px}
@@ -123,6 +126,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .client-status-badge.aandacht{background:var(--orange-bg)}
 .client-status-badge.schema{background:var(--yellow-bg)}
 .client-status-badge.top{background:var(--green-bg)}
+.client-status-badge.onhold{background:#e5e5ea}
 .client-header{margin-bottom:16px;padding-bottom:0;border-bottom:none}
 .client-name{font-size:20px;font-weight:700;color:var(--text);font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display',sans-serif;letter-spacing:-0.02em;line-height:1.2}
 .client-meta{font-size:13px;color:var(--text-light);margin-bottom:12px;margin-top:6px;font-weight:500}
@@ -338,7 +342,8 @@ const STATUS_OPTIONS=[
 {key:'kritiek',label:'Kritiek',icon:'🔴',color:'red'},
 {key:'aandacht',label:'Aandacht Vereist',icon:'🟠',color:'orange'},
 {key:'schema',label:'Op Schema',icon:'🟡',color:'yellow'},
-{key:'top',label:'Loopt als een ☀️',icon:'🟢',color:'green'}
+{key:'top',label:'Loopt als een ☀️',icon:'🟢',color:'green'},
+{key:'onhold',label:'On Hold',icon:'⚪',color:'gray'}
 ];
 
 // PROJECT FASE OPTIES
@@ -3922,7 +3927,7 @@ return(
 
 {isAdmin&&showEditModal&&editingClient&&(
 <div className="modal-overlay" onClick={()=>setShowEditModal(false)}>
-<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'500px'}}>
+<div className="modal" onClick={(e)=>e.stopPropagation()} style={{maxWidth:'720px'}}>
 <h2 className="modal-title">Klant Bewerken</h2>
 <div className="input-group">
 <label className="input-label">Bedrijfsnaam *</label>
