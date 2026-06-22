@@ -816,7 +816,7 @@ autoFocus style={{margin:0}}/>
 }
 
 // QUARTER CARD (één kwartaal in de kwartaalplanning)
-function QuarterCard({client,q,isCurrent,isAdmin,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onMovePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onDeleteTask}){
+function QuarterCard({client,q,isCurrent,isAdmin,carryover,getQuarterPhasesArr,getQuarterPhaseTasks,getQuarterProgress,getTaskAssignee,getAssigneeInfo,getPhaseInfo,PHASE_OPTIONS,ASSIGNEES,onTogglePhase,onMovePhase,onToggleTask,onSetAssignee,onAddTask,onUpdateTask,onDeleteTask}){
 const [newTask,setNewTask]=useState({});
 const [newAssignee,setNewAssignee]=useState({});
 const [editing,setEditing]=useState(null);
@@ -941,6 +941,35 @@ return(
 </div>
 );
 })}
+
+{/* Doorgeschoven taken uit vorige kwartalen */}
+{carryover&&carryover.length>0&&(
+<div style={{borderTop:'2px dashed #f59e0b',paddingTop:'10px',marginTop:'4px'}}>
+<div style={{fontSize:'12px',fontWeight:'700',color:'#b45309',marginBottom:'8px',display:'flex',alignItems:'center',gap:'5px'}}>↩️ Doorgeschoven taken</div>
+<div style={{display:'flex',flexDirection:'column',gap:'6px'}}>
+{carryover.map(item=>{
+const ph=getPhaseInfo(item.phaseKey);
+const checked=!!(client.quarterTaskState||{})[`${item.originQuarterKey}::${item.task.id}`];
+const asgKey=getTaskAssignee(client,item.originQuarterKey,item.task);
+const asg=getAssigneeInfo(asgKey);
+const originLabel=(QUARTERS.find(x=>x.key===item.originQuarterKey)||{}).label||item.originQuarterKey;
+return(
+<div key={item.originQuarterKey+'::'+item.task.id} style={{display:'flex',alignItems:'flex-start',gap:'8px',padding:'8px',borderRadius:'8px',background:'#fffbeb',border:'1px solid #fde68a',fontSize:'13px',lineHeight:'1.4'}}>
+<input type="checkbox" checked={checked} disabled={!isAdmin} onChange={()=>onToggleTask(client.id,item.originQuarterKey,item.task.id)} style={{marginTop:'2px',cursor:isAdmin?'pointer':'default',flexShrink:0}}/>
+<span style={{flex:1,color:checked?'#166534':'var(--text)',textDecoration:checked?'line-through':'none'}}>
+{item.task.label}
+<span style={{display:'block',marginTop:'2px'}}>
+<span style={{fontSize:'9px',padding:'1px 6px',borderRadius:'6px',background:ph.bg,color:ph.color,fontWeight:'600',marginRight:'4px'}}>{ph.icon} {ph.label}</span>
+<span style={{fontSize:'9px',padding:'1px 6px',borderRadius:'6px',background:'#fef3c7',color:'#92400e',fontWeight:'600'}}>uit {originLabel}</span>
+</span>
+</span>
+{asg&&<span style={{flexShrink:0,fontSize:'10px',padding:'2px 7px',borderRadius:'8px',background:asg.bg,color:asg.color,fontWeight:'600',whiteSpace:'nowrap'}}>{asg.label}</span>}
+</div>
+);
+})}
+</div>
+</div>
+)}
 </div>
 );
 }
@@ -4258,7 +4287,6 @@ return(
 
 // KWARTAALOVERZICHT VIEW (alle klanten x kwartalen)
 if(activeView==='kwartaaloverzicht'){
-const agendaItems=getAllAgendaItems();
 const activeClients=clients.filter(c=>!c.archived).slice().sort((a,b)=>(a.name||'').localeCompare(b.name||'','nl',{sensitivity:'base'}));
 const currentQ=getCurrentQuarterKey();
 return(
@@ -5528,6 +5556,18 @@ Project: <span className="banner-client">{currentClient.name}</span>
 const client=clients.find(c=>c.id===selectedClient);
 if(!client)return null;
 const currentQ=getCurrentQuarterKey();
+// Doorgeschoven taken: onafgemaakte taken schuiven automatisch door naar het volgende kwartaal
+const _st=client.quarterTaskState||{};
+const carryMap={};
+let _carriedIn=[];
+QUARTERS.forEach(qt=>{
+carryMap[qt.key]=_carriedIn;
+const own=[];
+getQuarterPhasesArr(client,qt.key).forEach(pk=>{
+getQuarterPhaseTasks(client,qt.key,pk).forEach(t=>{own.push({task:t,originQuarterKey:qt.key,phaseKey:pk});});
+});
+_carriedIn=[..._carriedIn,...own].filter(item=>!_st[`${item.originQuarterKey}::${item.task.id}`]);
+});
 return(
 <div style={{maxWidth:'1100px'}}>
 <div style={{marginBottom:'20px'}}>
@@ -5541,6 +5581,7 @@ client={client}
 q={q}
 isCurrent={q.key===currentQ}
 isAdmin={isAdmin}
+carryover={carryMap[q.key]||[]}
 getQuarterPhasesArr={getQuarterPhasesArr}
 getQuarterPhaseTasks={getQuarterPhaseTasks}
 getQuarterProgress={getQuarterProgress}
