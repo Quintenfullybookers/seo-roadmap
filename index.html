@@ -1577,6 +1577,7 @@ function QuarterCard({
   onMovePhase,
   onToggleTask,
   onSetAssignee,
+  onSetHours,
   onAddTask,
   onUpdateTask,
   onDeleteTask
@@ -1589,6 +1590,9 @@ function QuarterCard({
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
+  const availableHours = (parseFloat(client.budget) || 0) * 3;
+  const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+  const overBudget = availableHours > 0 && plannedHours > availableHours;
   return /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--white)',
@@ -1628,6 +1632,63 @@ function QuarterCard({
       color: 'var(--text-light)'
     }
   }, q.sub)), /*#__PURE__*/React.createElement("div", {
+    style: {
+      background: overBudget ? '#fef2f2' : 'var(--bg,#f8fafc)',
+      border: `1px solid ${overBudget ? '#fecaca' : 'var(--border)'}`,
+      borderRadius: '8px',
+      padding: '8px 10px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'baseline',
+      fontSize: '12px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      color: 'var(--text-light)',
+      fontWeight: '600'
+    }
+  }, "⏱️ Uren"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontWeight: '700',
+      fontSize: '14px',
+      color: overBudget ? '#dc2626' : 'var(--text)'
+    }
+  }, Math.round(plannedHours * 10) / 10, " / ", Math.round(availableHours * 10) / 10, " u")), availableHours > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      marginTop: '6px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '5px',
+      background: 'var(--ios-gray-6,#eee)',
+      borderRadius: '3px',
+      overflow: 'hidden'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      height: '100%',
+      width: `${Math.min(100, plannedHours / availableHours * 100)}%`,
+      background: overBudget ? '#dc2626' : '#16a34a',
+      transition: 'width 0.3s'
+    }
+  })), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '10px',
+      marginTop: '3px',
+      color: overBudget ? '#dc2626' : 'var(--text-light)',
+      fontWeight: overBudget ? '700' : '400'
+    }
+  }, overBudget ? `⚠️ ${Math.round((plannedHours - availableHours) * 10) / 10} u over budget` : `${Math.round((availableHours - plannedHours) * 10) / 10} u beschikbaar`)), availableHours === 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '10px',
+      marginTop: '3px',
+      color: 'var(--text-light)',
+      fontStyle: 'italic'
+    }
+  }, "Geen pakket-uren ingesteld bij deze klant")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -1895,7 +1956,35 @@ function QuarterCard({
           fontWeight: '600',
           whiteSpace: 'nowrap'
         }
-      }, asg.label), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
+      }, asg.label), isAdmin ? /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        min: "0",
+        step: "0.5",
+        value: t.hours === undefined || t.hours === '' ? '' : t.hours,
+        onChange: e => onSetHours(client.id, q.key, t.id, e.target.value),
+        placeholder: "u",
+        title: "Uren",
+        style: {
+          flexShrink: 0,
+          width: '42px',
+          fontSize: '11px',
+          padding: '2px 4px',
+          borderRadius: '6px',
+          border: '1px solid var(--border)',
+          textAlign: 'center'
+        }
+      }) : parseFloat(t.hours) > 0 && /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          background: '#eff6ff',
+          color: '#1d4ed8',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, t.hours, "u"), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
         onClick: () => {
           setEditing(t.id);
           setEditVal(t.label);
@@ -4981,6 +5070,37 @@ function App() {
     saveData({
       clients: updated
     });
+  };
+  const setQuarterTaskHours = (clientId, quarterKey, taskId, hours) => {
+    const h = hours === '' ? '' : Math.max(0, parseFloat(hours) || 0);
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        hours: h
+      } : t);
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+
+  // Beschikbare uren per kwartaal = pakket-uren x 3 maanden
+  const getQuarterAvailableHours = client => {
+    return (parseFloat(client.budget) || 0) * 3;
+  };
+  // Ingeplande uren in een kwartaal = som van uren van alle eigen taken
+  const getQuarterPlannedHours = (client, quarterKey) => {
+    const tasks = (client.quarterCustomTasks || {})[quarterKey] || [];
+    return tasks.reduce((sum, t) => sum + (parseFloat(t.hours) || 0), 0);
   };
 
   // Geeft de taken voor een fase in een kwartaal: volledig klant-specifiek
@@ -10694,6 +10814,7 @@ function App() {
       onMovePhase: moveClientQuarterPhase,
       onToggleTask: toggleQuarterTask,
       onSetAssignee: setQuarterTaskAssignee,
+      onSetHours: setQuarterTaskHours,
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
       onDeleteTask: deleteQuarterCustomTask
