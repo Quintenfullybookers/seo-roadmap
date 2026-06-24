@@ -1565,6 +1565,7 @@ function QuarterCard({
   isCurrent,
   isAdmin,
   carryover,
+  carriedInHours,
   getQuarterPhasesArr,
   getQuarterPhaseTasks,
   getQuarterProgress,
@@ -1590,9 +1591,14 @@ function QuarterCard({
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
-  const availableHours = (parseFloat(client.budget) || 0) * 3;
+  const baseAvailHours = (parseFloat(client.budget) || 0) * 3;
+  const reserveHours = Math.round((carriedInHours || 0) * 10) / 10;
   const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-  const overBudget = availableHours > 0 && plannedHours > availableHours;
+  const r1 = n => Math.round(n * 10) / 10;
+  const overBase = plannedHours > baseAvailHours; // meer ingepland dan kwartaal-uren
+  const usedFromReserve = Math.max(0, plannedHours - baseAvailHours); // wat uit de reserve komt
+  const reserveLeft = Math.max(0, reserveHours - usedFromReserve);
+  const trulyOver = baseAvailHours > 0 && plannedHours > baseAvailHours + reserveHours; // ook reserve op
   return /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--white)',
@@ -1633,12 +1639,22 @@ function QuarterCard({
     }
   }, q.sub)), /*#__PURE__*/React.createElement("div", {
     style: {
-      background: overBudget ? '#fef2f2' : 'var(--bg,#f8fafc)',
-      border: `1px solid ${overBudget ? '#fecaca' : 'var(--border)'}`,
+      background: trulyOver ? '#fef2f2' : 'var(--bg,#f8fafc)',
+      border: `1px solid ${trulyOver ? '#fecaca' : 'var(--border)'}`,
       borderRadius: '8px',
       padding: '8px 10px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, reserveHours > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '10px',
+      marginBottom: '6px',
+      color: '#7c3aed',
+      fontWeight: '600',
+      background: '#f5f3ff',
+      borderRadius: '6px',
+      padding: '4px 7px'
+    }
+  }, "↩️ Nog ", reserveHours, " u ongebruikt uit eerdere kwartalen", usedFromReserve > 0 && ` · ${r1(reserveLeft)} u over`), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -1650,13 +1666,13 @@ function QuarterCard({
       color: 'var(--text-light)',
       fontWeight: '600'
     }
-  }, "⏱️ Uren"), /*#__PURE__*/React.createElement("span", {
+  }, "⏱️ Uren dit kwartaal"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontWeight: '700',
       fontSize: '14px',
-      color: overBudget ? '#dc2626' : 'var(--text)'
+      color: trulyOver ? '#dc2626' : overBase ? '#d97706' : 'var(--text)'
     }
-  }, Math.round(plannedHours * 10) / 10, " / ", Math.round(availableHours * 10) / 10, " u")), availableHours > 0 && /*#__PURE__*/React.createElement("div", {
+  }, r1(plannedHours), " / ", r1(baseAvailHours), " u")), baseAvailHours > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: '6px'
     }
@@ -1670,18 +1686,18 @@ function QuarterCard({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       height: '100%',
-      width: `${Math.min(100, plannedHours / availableHours * 100)}%`,
-      background: overBudget ? '#dc2626' : '#16a34a',
+      width: `${Math.min(100, plannedHours / baseAvailHours * 100)}%`,
+      background: trulyOver ? '#dc2626' : overBase ? '#d97706' : '#16a34a',
       transition: 'width 0.3s'
     }
   })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '10px',
       marginTop: '3px',
-      color: overBudget ? '#dc2626' : 'var(--text-light)',
-      fontWeight: overBudget ? '700' : '400'
+      color: trulyOver ? '#dc2626' : overBase ? '#b45309' : 'var(--text-light)',
+      fontWeight: trulyOver || overBase ? '700' : '400'
     }
-  }, overBudget ? `⚠️ ${Math.round((plannedHours - availableHours) * 10) / 10} u over budget` : `${Math.round((availableHours - plannedHours) * 10) / 10} u beschikbaar`)), availableHours === 0 && /*#__PURE__*/React.createElement("div", {
+  }, !overBase ? `${r1(baseAvailHours - plannedHours)} u over dit kwartaal` : trulyOver ? `⚠️ ${r1(plannedHours - baseAvailHours - reserveHours)} u over budget (ook reserve op)` : `${r1(usedFromReserve)} u uit reserve gebruikt · ${r1(reserveLeft)} u reserve over`)), baseAvailHours === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '10px',
       marginTop: '3px',
@@ -10775,6 +10791,16 @@ function App() {
       });
       _carriedIn = [..._carriedIn, ...own].filter(item => !_st[`${item.originQuarterKey}::${item.task.id}`]);
     });
+    // Doorrollende uren: ongebruikte uren uit eerdere kwartalen tellen mee
+    const baseAvail = (parseFloat(client.budget) || 0) * 3;
+    const hoursCarryMap = {};
+    let _hoursCarriedIn = 0;
+    QUARTERS.forEach(qt => {
+      hoursCarryMap[qt.key] = _hoursCarriedIn;
+      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+      const effective = baseAvail + _hoursCarriedIn;
+      _hoursCarriedIn = Math.max(0, effective - planned);
+    });
     return /*#__PURE__*/React.createElement("div", {
       style: {
         maxWidth: '1100px'
@@ -10802,6 +10828,7 @@ function App() {
       isCurrent: q.key === currentQ,
       isAdmin: isAdmin,
       carryover: carryMap[q.key] || [],
+      carriedInHours: hoursCarryMap[q.key] || 0,
       getQuarterPhasesArr: getQuarterPhasesArr,
       getQuarterPhaseTasks: getQuarterPhaseTasks,
       getQuarterProgress: getQuarterProgress,
