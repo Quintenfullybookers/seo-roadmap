@@ -1566,6 +1566,9 @@ function QuarterCard({
   isAdmin,
   carryover,
   carriedInHours,
+  baseAvailHours,
+  workedHours,
+  packageHours,
   getQuarterPhasesArr,
   getQuarterPhaseTasks,
   getQuarterProgress,
@@ -1579,6 +1582,7 @@ function QuarterCard({
   onToggleTask,
   onSetAssignee,
   onSetHours,
+  onMoveTaskToQuarter,
   onAddTask,
   onUpdateTask,
   onDeleteTask
@@ -1588,27 +1592,49 @@ function QuarterCard({
   const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState('');
   const [showPhasePicker, setShowPhasePicker] = useState(false);
+  const [dragOver, setDragOver] = useState(false);
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
-  const baseAvailHours = (parseFloat(client.budget) || 0) * 3;
+  const pkgHours = Math.round((packageHours || 0) * 10) / 10;
+  const workedQ = Math.round((workedHours || 0) * 10) / 10;
   const reserveHours = Math.round((carriedInHours || 0) * 10) / 10;
   const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
   const r1 = n => Math.round(n * 10) / 10;
-  const overBase = plannedHours > baseAvailHours; // meer ingepland dan kwartaal-uren
+  const overBase = plannedHours > baseAvailHours; // meer ingepland dan resterende kwartaal-ruimte
   const usedFromReserve = Math.max(0, plannedHours - baseAvailHours); // wat uit de reserve komt
   const reserveLeft = Math.max(0, reserveHours - usedFromReserve);
-  const trulyOver = baseAvailHours > 0 && plannedHours > baseAvailHours + reserveHours; // ook reserve op
+  const trulyOver = plannedHours > baseAvailHours + reserveHours; // ook reserve op
   return /*#__PURE__*/React.createElement("div", {
+    onDragOver: isAdmin ? e => {
+      e.preventDefault();
+      e.dataTransfer.dropEffect = 'move';
+    } : undefined,
+    onDragEnter: isAdmin ? e => {
+      e.preventDefault();
+      setDragOver(true);
+    } : undefined,
+    onDragLeave: isAdmin ? e => {
+      if (!e.currentTarget.contains(e.relatedTarget)) setDragOver(false);
+    } : undefined,
+    onDrop: isAdmin ? e => {
+      e.preventDefault();
+      setDragOver(false);
+      try {
+        const d = JSON.parse(e.dataTransfer.getData('text/plain'));
+        if (d && d.taskId && d.fromQ && d.fromQ !== q.key) onMoveTaskToQuarter(client.id, d.fromQ, q.key, d.taskId);
+      } catch (_) {}
+    } : undefined,
     style: {
-      background: 'var(--white)',
-      border: isCurrent ? '2px solid #3b82f6' : '1px solid var(--border)',
+      background: dragOver ? '#eff6ff' : 'var(--white)',
+      border: dragOver ? '2px dashed #3b82f6' : isCurrent ? '2px solid #3b82f6' : '1px solid var(--border)',
       borderRadius: '12px',
       padding: '16px',
       boxShadow: 'var(--shadow-sm)',
       display: 'flex',
       flexDirection: 'column',
-      gap: '12px'
+      gap: '12px',
+      transition: 'background 0.15s'
     }
   }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
@@ -1672,7 +1698,7 @@ function QuarterCard({
       fontSize: '14px',
       color: trulyOver ? '#dc2626' : overBase ? '#d97706' : 'var(--text)'
     }
-  }, r1(plannedHours), " / ", r1(baseAvailHours), " u")), baseAvailHours > 0 && /*#__PURE__*/React.createElement("div", {
+  }, r1(plannedHours), " / ", r1(Math.max(0, baseAvailHours)), " u")), pkgHours > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: '6px'
     }
@@ -1686,7 +1712,7 @@ function QuarterCard({
   }, /*#__PURE__*/React.createElement("div", {
     style: {
       height: '100%',
-      width: `${Math.min(100, plannedHours / baseAvailHours * 100)}%`,
+      width: `${baseAvailHours <= 0 ? 100 : Math.min(100, plannedHours / baseAvailHours * 100)}%`,
       background: trulyOver ? '#dc2626' : overBase ? '#d97706' : '#16a34a',
       transition: 'width 0.3s'
     }
@@ -1694,10 +1720,17 @@ function QuarterCard({
     style: {
       fontSize: '10px',
       marginTop: '3px',
+      color: '#0d9488',
+      fontWeight: '600'
+    }
+  }, r1(pkgHours), " u pakket − ", r1(workedQ), " u gewerkt = ", r1(baseAvailHours), " u beschikbaar"), /*#__PURE__*/React.createElement("div", {
+    style: {
+      fontSize: '10px',
+      marginTop: '2px',
       color: trulyOver ? '#dc2626' : overBase ? '#b45309' : 'var(--text-light)',
       fontWeight: trulyOver || overBase ? '700' : '400'
     }
-  }, !overBase ? `${r1(baseAvailHours - plannedHours)} u over dit kwartaal` : trulyOver ? `⚠️ ${r1(plannedHours - baseAvailHours - reserveHours)} u over budget (ook reserve op)` : `${r1(usedFromReserve)} u uit reserve gebruikt · ${r1(reserveLeft)} u reserve over`)), baseAvailHours === 0 && /*#__PURE__*/React.createElement("div", {
+  }, !overBase ? `${r1(baseAvailHours - plannedHours)} u over dit kwartaal` : trulyOver ? `⚠️ ${r1(plannedHours - baseAvailHours - reserveHours)} u over budget (ook reserve op)` : `${r1(usedFromReserve)} u uit reserve gebruikt · ${r1(reserveLeft)} u reserve over`)), pkgHours === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '10px',
       marginTop: '3px',
@@ -1903,7 +1936,25 @@ function QuarterCard({
           fontSize: '13px',
           lineHeight: '1.4'
         }
-      }, /*#__PURE__*/React.createElement("input", {
+      }, isAdmin && /*#__PURE__*/React.createElement("span", {
+        draggable: true,
+        onDragStart: e => {
+          e.dataTransfer.setData('text/plain', JSON.stringify({
+            fromQ: q.key,
+            taskId: t.id
+          }));
+          e.dataTransfer.effectAllowed = 'move';
+        },
+        title: "Sleep naar ander kwartaal",
+        style: {
+          cursor: 'grab',
+          color: 'var(--text-light)',
+          fontSize: '13px',
+          marginTop: '1px',
+          flexShrink: 0,
+          userSelect: 'none'
+        }
+      }, "⠿"), /*#__PURE__*/React.createElement("input", {
         type: "checkbox",
         checked: checked,
         disabled: !isAdmin,
@@ -5109,9 +5160,81 @@ function App() {
     });
   };
 
-  // Beschikbare uren per kwartaal = pakket-uren x 3 maanden
-  const getQuarterAvailableHours = client => {
-    return (parseFloat(client.budget) || 0) * 3;
+  // Verplaats een taak naar een ander kwartaal (met afvink-status, uitvoerder en fase mee)
+  const moveTaskToQuarter = (clientId, fromQ, toQ, taskId) => {
+    if (fromQ === toQ) return;
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      const fromArr = [...(qct[fromQ] || [])];
+      const idx = fromArr.findIndex(t => t.id === taskId);
+      if (idx < 0) return c;
+      const task = fromArr[idx];
+      fromArr.splice(idx, 1);
+      qct[fromQ] = fromArr;
+      qct[toQ] = [...(qct[toQ] || []), task];
+      // Zorg dat het doel-kwartaal de fase van de taak actief heeft
+      const qp = {
+        ...(c.quarterPhases || {})
+      };
+      let arr = qp[toQ];
+      arr = Array.isArray(arr) ? [...arr] : arr ? [arr] : [];
+      if (task.phaseKey && !arr.includes(task.phaseKey)) {
+        arr.push(task.phaseKey);
+        qp[toQ] = arr;
+      }
+      // Verplaats afvink-status
+      const stt = {
+        ...(c.quarterTaskState || {})
+      };
+      const fromKey = `${fromQ}::${taskId}`,
+        toKey = `${toQ}::${taskId}`;
+      if (stt[fromKey] !== undefined) {
+        stt[toKey] = stt[fromKey];
+        delete stt[fromKey];
+      }
+      // Verplaats uitvoerder-override
+      const asg = {
+        ...(c.quarterTaskAssignee || {})
+      };
+      if (asg[fromKey] !== undefined) {
+        asg[toKey] = asg[fromKey];
+        delete asg[fromKey];
+      }
+      return {
+        ...c,
+        quarterCustomTasks: qct,
+        quarterPhases: qp,
+        quarterTaskState: stt,
+        quarterTaskAssignee: asg
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+
+  // De 3 maand-keys (YYYY-MM) van een kwartaal-key (bijv. 2026-Q2)
+  const getQuarterMonths = quarterKey => {
+    const m = /^(\d{4})-Q([1-4])$/.exec(quarterKey);
+    if (!m) return [];
+    const year = parseInt(m[1]);
+    const q = parseInt(m[2]);
+    const startMonth = (q - 1) * 3 + 1; // Q1->1, Q2->4, Q3->7, Q4->10
+    return [0, 1, 2].map(o => `${year}-${String(startMonth + o).padStart(2, '0')}`);
+  };
+  // Pakket-uren per kwartaal = maand-pakket x 3
+  const getQuarterPackageHours = client => (parseFloat(client.budget) || 0) * 3;
+  // Gewerkte uren in een kwartaal = som van Tijd Tracking over de 3 maanden
+  const getQuarterWorkedHours = (clientId, quarterKey) => {
+    return getQuarterMonths(quarterKey).reduce((sum, mk) => sum + getClientHoursForMonth(clientId, mk), 0);
+  };
+  // Beschikbare uren = pakket - gewerkt (echte resterende ruimte)
+  const getQuarterAvailableHours = (client, quarterKey) => {
+    return getQuarterPackageHours(client) - getQuarterWorkedHours(client.id, quarterKey);
   };
   // Ingeplande uren in een kwartaal = som van uren van alle eigen taken
   const getQuarterPlannedHours = (client, quarterKey) => {
@@ -10791,14 +10914,20 @@ function App() {
       });
       _carriedIn = [..._carriedIn, ...own].filter(item => !_st[`${item.originQuarterKey}::${item.task.id}`]);
     });
-    // Doorrollende uren: ongebruikte uren uit eerdere kwartalen tellen mee
-    const baseAvail = (parseFloat(client.budget) || 0) * 3;
+    // Doorrollende uren: base = pakket - gewerkt (echte ruimte), ongebruikte uren rollen door
+    const pkgPerQuarter = getQuarterPackageHours(client);
     const hoursCarryMap = {};
+    const baseAvailMap = {};
+    const workedMap = {};
     let _hoursCarriedIn = 0;
     QUARTERS.forEach(qt => {
+      const worked = getQuarterWorkedHours(client.id, qt.key);
+      const base = pkgPerQuarter - worked; // resterende ruimte dit kwartaal
+      workedMap[qt.key] = worked;
+      baseAvailMap[qt.key] = base;
       hoursCarryMap[qt.key] = _hoursCarriedIn;
       const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-      const effective = baseAvail + _hoursCarriedIn;
+      const effective = base + _hoursCarriedIn;
       _hoursCarriedIn = Math.max(0, effective - planned);
     });
     return /*#__PURE__*/React.createElement("div", {
@@ -10829,6 +10958,9 @@ function App() {
       isAdmin: isAdmin,
       carryover: carryMap[q.key] || [],
       carriedInHours: hoursCarryMap[q.key] || 0,
+      baseAvailHours: baseAvailMap[q.key] || 0,
+      workedHours: workedMap[q.key] || 0,
+      packageHours: pkgPerQuarter,
       getQuarterPhasesArr: getQuarterPhasesArr,
       getQuarterPhaseTasks: getQuarterPhaseTasks,
       getQuarterProgress: getQuarterProgress,
@@ -10842,6 +10974,7 @@ function App() {
       onToggleTask: toggleQuarterTask,
       onSetAssignee: setQuarterTaskAssignee,
       onSetHours: setQuarterTaskHours,
+      onMoveTaskToQuarter: moveTaskToQuarter,
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
       onDeleteTask: deleteQuarterCustomTask
