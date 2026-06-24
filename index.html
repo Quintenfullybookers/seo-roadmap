@@ -58,7 +58,8 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 .nav-icon{font-size:18px}
 .nav-text{flex:1;font-size:14px;font-weight:500}
 .nav-count{font-size:12px;color:var(--text-light);background:var(--gray-bg);padding:2px 8px;border-radius:12px}
-.main{flex:1;padding:48px 64px;max-width:1800px;margin-left:280px}
+.main{flex:1;padding:48px 64px;max-width:2600px;margin-left:280px}
+@media(min-width:1700px){.main{padding:56px 96px}}
 .header{margin-bottom:32px}
 .title{font-size:36px;font-weight:700;color:var(--text);margin-bottom:8px;font-family:'DM Sans',sans-serif}
 .subtitle{font-size:16px;color:var(--text-light)}
@@ -5306,288 +5307,6 @@ function App() {
     }, "Laden..."));
   }
 
-  // INBOX (SEO Audit Pipeline)
-  if (activeView === 'inbox') {
-    const open = inboxItems.filter(t => getEffectiveStatus(t.id) === 'inbox');
-    const groups = {};
-    open.forEach(t => {
-      if (!groups[t.klant]) groups[t.klant] = [];
-      groups[t.klant].push(t);
-    });
-    return /*#__PURE__*/React.createElement("div", {
-      className: `app ${!isAdmin ? 'viewer-mode' : ''}`
-    }, /*#__PURE__*/React.createElement("aside", {
-      className: "sidebar"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "logo"
-    }, /*#__PURE__*/React.createElement("div", {
-      className: "logo-text"
-    }, "THE FULLY BOOKERS"), /*#__PURE__*/React.createElement("div", {
-      className: "logo-subtitle"
-    }, "SEO Roadmap")), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
-      className: `nav-item active`,
-      onClick: () => setActiveView('inbox'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📥"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Inbox"), inboxCount > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, inboxCount)), /*#__PURE__*/React.createElement("div", {
-      className: "nav-item",
-      onClick: () => setActiveView('dashboard'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📊"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Dashboard"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-count"
-    }, clients.filter(c => !c.archived).length)), /*#__PURE__*/React.createElement("div", {
-      className: "nav-item",
-      onClick: () => setActiveView('kwartaaloverzicht'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "🗓️"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
-      className: "nav-item",
-      onClick: () => setActiveView('rapportages-overzicht'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📋"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Rapportages")), /*#__PURE__*/React.createElement("div", {
-      className: "nav-item",
-      onClick: () => setActiveView('archief'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📦"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Archief")))), /*#__PURE__*/React.createElement("main", {
-      className: "main"
-    }, /*#__PURE__*/React.createElement("header", {
-      className: "header"
-    }, /*#__PURE__*/React.createElement("h1", {
-      className: "title"
-    }, "📥 Audit Inbox"), /*#__PURE__*/React.createElement("p", {
-      className: "subtitle"
-    }, "Taken uit recente SEO audits — kies per item: naar planning of verwerpen")), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '24px',
-        alignItems: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: fetchPipelineData,
-      disabled: inboxLoading,
-      style: {
-        padding: '8px 14px',
-        borderRadius: '8px',
-        background: 'var(--ios-blue)',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '13px',
-        fontWeight: '600'
-      }
-    }, inboxLoading ? '⏳ Ophalen...' : '🔄 Vernieuwen'), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: 'var(--text-light)',
-        fontSize: '13px'
-      }
-    }, inboxCount, " open · ", inboxItems.length, " totaal in pipeline")), open.length === 0 ? /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '40px',
-        textAlign: 'center',
-        color: 'var(--text-light)',
-        background: 'var(--white)',
-        borderRadius: '12px',
-        border: '1px solid var(--border)'
-      }
-    }, "Geen openstaande taken in je Inbox. Plaats het label ", /*#__PURE__*/React.createElement("code", {
-      style: {
-        background: 'var(--ios-gray-6)',
-        padding: '2px 6px',
-        borderRadius: '4px'
-      }
-    }, "goedgekeurd"), " op een SEO-audit issue om hier taken te krijgen.") : Object.entries(groups).map(([klant, items]) => {
-      const matched = matchKlantToClient(klant);
-      return /*#__PURE__*/React.createElement("div", {
-        key: klant,
-        style: {
-          marginBottom: '32px'
-        }
-      }, /*#__PURE__*/React.createElement("h2", {
-        style: {
-          fontSize: '18px',
-          fontWeight: '700',
-          marginBottom: '12px',
-          display: 'flex',
-          alignItems: 'center',
-          gap: '10px',
-          flexWrap: 'wrap'
-        }
-      }, /*#__PURE__*/React.createElement("span", null, klant), /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: '12px',
-          color: 'var(--text-light)',
-          fontWeight: '400'
-        }
-      }, "(", items.length, " ", items.length === 1 ? 'taak' : 'taken', ")"), !matched && /*#__PURE__*/React.createElement("span", {
-        style: {
-          fontSize: '11px',
-          color: '#92400e',
-          background: '#fef3c7',
-          padding: '2px 8px',
-          borderRadius: '4px',
-          fontWeight: '500'
-        }
-      }, "⚠ niet gekoppeld aan klant in dashboard")), items.map(t => /*#__PURE__*/React.createElement("div", {
-        key: t.id,
-        style: {
-          background: 'var(--white)',
-          border: '1px solid var(--border)',
-          borderRadius: '12px',
-          padding: '16px',
-          marginBottom: '12px',
-          boxShadow: 'var(--shadow-sm)'
-        }
-      }, /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'flex-start',
-          gap: '12px',
-          marginBottom: '10px'
-        }
-      }, /*#__PURE__*/React.createElement("h3", {
-        style: {
-          fontSize: '15px',
-          fontWeight: '600',
-          flex: 1,
-          lineHeight: '1.4'
-        }
-      }, t.titel), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          gap: '6px',
-          flexShrink: 0
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          padding: '3px 10px',
-          borderRadius: '4px',
-          fontSize: '11px',
-          fontWeight: '600',
-          background: t.prioriteit === 'Hoog' ? '#fee2e2' : t.prioriteit === 'Middel' ? '#fef3c7' : '#dbeafe',
-          color: t.prioriteit === 'Hoog' ? '#dc2626' : t.prioriteit === 'Middel' ? '#92400e' : '#1e40af'
-        }
-      }, t.prioriteit), /*#__PURE__*/React.createElement("span", {
-        style: {
-          padding: '3px 10px',
-          borderRadius: '4px',
-          fontSize: '11px',
-          background: 'var(--ios-gray-6)',
-          color: 'var(--text-light)'
-        }
-      }, t.categorie))), t.probleem && /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: '13px',
-          color: 'var(--text)',
-          marginBottom: '8px',
-          lineHeight: '1.5'
-        }
-      }, /*#__PURE__*/React.createElement("strong", {
-        style: {
-          color: 'var(--text-light)'
-        }
-      }, "Probleem:"), " ", t.probleem), t.actie && /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: '13px',
-          color: 'var(--text)',
-          marginBottom: '8px',
-          lineHeight: '1.5',
-          whiteSpace: 'pre-wrap'
-        }
-      }, /*#__PURE__*/React.createElement("strong", {
-        style: {
-          color: 'var(--text-light)'
-        }
-      }, "Actie:"), " ", t.actie), t.verwachte_impact && /*#__PURE__*/React.createElement("div", {
-        style: {
-          fontSize: '13px',
-          color: 'var(--text)',
-          marginBottom: '14px',
-          lineHeight: '1.5',
-          whiteSpace: 'pre-wrap'
-        }
-      }, /*#__PURE__*/React.createElement("strong", {
-        style: {
-          color: 'var(--text-light)'
-        }
-      }, "Verwachte impact:"), " ", t.verwachte_impact), /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          gap: '8px',
-          alignItems: 'center'
-        }
-      }, /*#__PURE__*/React.createElement("button", {
-        onClick: () => openPlanningModal(t),
-        style: {
-          padding: '7px 14px',
-          borderRadius: '8px',
-          background: 'var(--ios-blue)',
-          color: 'white',
-          border: 'none',
-          cursor: 'pointer',
-          fontSize: '13px',
-          fontWeight: '600'
-        }
-      }, "📅 Naar planning"), /*#__PURE__*/React.createElement("button", {
-        onClick: () => updateInboxStatus(t.id, 'verworpen'),
-        style: {
-          padding: '7px 14px',
-          borderRadius: '8px',
-          background: 'var(--ios-gray-6)',
-          color: 'var(--text)',
-          border: '1px solid var(--border)',
-          cursor: 'pointer',
-          fontSize: '13px'
-        }
-      }, "✕ Verwerpen"), t.issue_url && /*#__PURE__*/React.createElement("a", {
-        href: t.issue_url,
-        target: "_blank",
-        rel: "noopener noreferrer",
-        style: {
-          fontSize: '12px',
-          color: 'var(--text-light)',
-          marginLeft: 'auto',
-          textDecoration: 'none'
-        }
-      }, "↗ Audit issue #", t.issue_number)))));
-    })));
-  }
-
   // DASHBOARD
   if (activeView === 'dashboard') {
     const statusCounts = getStatusCounts();
@@ -5700,22 +5419,6 @@ function App() {
         }
       }, "Bekijken")))))));
     })(), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
-      className: `nav-item ${activeView === 'inbox' ? 'active' : ''}`,
-      onClick: () => setActiveView('inbox'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📥"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Inbox"), inboxCount > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, inboxCount)), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'dashboard' ? 'active' : ''}`,
       onClick: () => setActiveView('dashboard'),
       style: {
@@ -7958,22 +7661,6 @@ function App() {
       className: "dark-toggle",
       onClick: toggleDarkMode
     }, darkMode ? '☀️' : '🌙')), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
-      className: `nav-item ${activeView === 'inbox' ? 'active' : ''}`,
-      onClick: () => setActiveView('inbox'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📥"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Inbox"), inboxCount > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, inboxCount)), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'dashboard' ? 'active' : ''}`,
       onClick: () => setActiveView('dashboard'),
       style: {
@@ -8198,22 +7885,6 @@ function App() {
     }, /*#__PURE__*/React.createElement("div", {
       className: `save-status-dot ${saveStatus}`
     }), /*#__PURE__*/React.createElement("span", null, saveStatus === 'saving' && 'Opslaan...', saveStatus === 'success' && 'Opgeslagen', saveStatus === 'error' && 'Fout')), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
-      className: `nav-item ${activeView === 'inbox' ? 'active' : ''}`,
-      onClick: () => setActiveView('inbox'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📥"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Inbox"), inboxCount > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, inboxCount)), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'dashboard' ? 'active' : ''}`,
       onClick: () => setActiveView('dashboard'),
       style: {
@@ -10062,22 +9733,6 @@ function App() {
     }, /*#__PURE__*/React.createElement("div", {
       className: `save-status-dot ${saveStatus}`
     }), /*#__PURE__*/React.createElement("span", null, saveStatus === 'saving' && 'Opslaan...', saveStatus === 'success' && 'Opgeslagen', saveStatus === 'error' && 'Fout')), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
-      className: `nav-item ${activeView === 'inbox' ? 'active' : ''}`,
-      onClick: () => setActiveView('inbox'),
-      style: {
-        cursor: 'pointer'
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      className: "nav-icon"
-    }, "📥"), /*#__PURE__*/React.createElement("span", {
-      className: "nav-text"
-    }, "Inbox"), inboxCount > 0 && /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, inboxCount)), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'dashboard' ? 'active' : ''}`,
       onClick: () => setActiveView('dashboard'),
       style: {
@@ -10771,29 +10426,6 @@ function App() {
     return count > 0 ? /*#__PURE__*/React.createElement("span", {
       className: "nav-count"
     }, count) : null;
-  })()), /*#__PURE__*/React.createElement("div", {
-    className: `nav-item ${activeStep === 'klant-inbox' ? 'active' : ''}`,
-    onClick: () => setActiveStep('klant-inbox')
-  }, /*#__PURE__*/React.createElement("span", {
-    className: "nav-icon"
-  }, "📥"), /*#__PURE__*/React.createElement("span", {
-    className: "nav-text"
-  }, "Inbox"), (() => {
-    const cur = clients.find(c => c.id === selectedClient);
-    if (!cur) return null;
-    const cname = cur.name && cur.name.toLowerCase().trim();
-    const count = inboxItems.filter(t => {
-      if (getEffectiveStatus(t.id) !== 'inbox') return false;
-      const target = t.klant && t.klant.toLowerCase().trim();
-      return target && cname && (target === cname || cname.includes(target) || target.includes(cname));
-    }).length;
-    return count > 0 ? /*#__PURE__*/React.createElement("span", {
-      className: "nav-count",
-      style: {
-        background: '#FF3B30',
-        color: 'white'
-      }
-    }, count) : null;
   })())), isAdmin && /*#__PURE__*/React.createElement("button", {
     className: "export-btn",
     onClick: exportData
@@ -10884,11 +10516,7 @@ function App() {
     className: "title"
   }, "🔍 SEO Audits"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "Geschiedenis van audits en samenvattingen voor ", currentClient.name)) : activeStep === 'klant-inbox' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
-    className: "title"
-  }, "📥 Inbox"), /*#__PURE__*/React.createElement("p", {
-    className: "subtitle"
-  }, "Open audit-taken voor ", currentClient.name)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
+  }, "Geschiedenis van audits en samenvattingen voor ", currentClient.name)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
     className: "title"
   }, currentStep?.icon, " ", currentStep?.name), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
@@ -10932,7 +10560,7 @@ function App() {
     });
     return /*#__PURE__*/React.createElement("div", {
       style: {
-        maxWidth: '1100px'
+        maxWidth: '1600px'
       }
     }, /*#__PURE__*/React.createElement("div", {
       style: {
@@ -10979,180 +10607,6 @@ function App() {
       onUpdateTask: updateQuarterCustomTask,
       onDeleteTask: deleteQuarterCustomTask
     }))));
-  })(), activeStep === 'klant-inbox' && (() => {
-    const cname = currentClient.name && currentClient.name.toLowerCase().trim();
-    const items = inboxItems.filter(t => {
-      if (getEffectiveStatus(t.id) !== 'inbox') return false;
-      const target = t.klant && t.klant.toLowerCase().trim();
-      return target && cname && (target === cname || cname.includes(target) || target.includes(cname));
-    });
-    return /*#__PURE__*/React.createElement("div", {
-      style: {
-        maxWidth: '900px'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: '12px',
-        marginBottom: '20px',
-        alignItems: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: fetchPipelineData,
-      disabled: inboxLoading,
-      style: {
-        padding: '7px 14px',
-        borderRadius: '8px',
-        background: 'var(--ios-blue)',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '13px',
-        fontWeight: '600'
-      }
-    }, inboxLoading ? '⏳ Ophalen...' : '🔄 Vernieuwen'), /*#__PURE__*/React.createElement("span", {
-      style: {
-        color: 'var(--text-light)',
-        fontSize: '13px'
-      }
-    }, items.length, " open ", items.length === 1 ? 'taak' : 'taken', " voor ", currentClient.name)), items.length === 0 ? /*#__PURE__*/React.createElement("div", {
-      style: {
-        padding: '40px',
-        textAlign: 'center',
-        color: 'var(--text-light)',
-        background: 'var(--white)',
-        borderRadius: '12px',
-        border: '1px solid var(--border)'
-      }
-    }, "Geen openstaande audit-taken voor ", currentClient.name, ". Plaats label ", /*#__PURE__*/React.createElement("code", {
-      style: {
-        background: 'var(--ios-gray-6)',
-        padding: '2px 6px',
-        borderRadius: '4px'
-      }
-    }, "goedgekeurd"), " op een audit-issue om hier taken te krijgen.") : items.map(t => /*#__PURE__*/React.createElement("div", {
-      key: t.id,
-      style: {
-        background: 'var(--white)',
-        border: '1px solid var(--border)',
-        borderRadius: '12px',
-        padding: '16px',
-        marginBottom: '12px',
-        boxShadow: 'var(--shadow-sm)'
-      }
-    }, /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: '12px',
-        marginBottom: '10px'
-      }
-    }, /*#__PURE__*/React.createElement("h3", {
-      style: {
-        fontSize: '15px',
-        fontWeight: '600',
-        flex: 1,
-        lineHeight: '1.4'
-      }
-    }, t.titel), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: '6px',
-        flexShrink: 0
-      }
-    }, /*#__PURE__*/React.createElement("span", {
-      style: {
-        padding: '3px 10px',
-        borderRadius: '4px',
-        fontSize: '11px',
-        fontWeight: '600',
-        background: t.prioriteit === 'Hoog' ? '#fee2e2' : t.prioriteit === 'Middel' ? '#fef3c7' : '#dbeafe',
-        color: t.prioriteit === 'Hoog' ? '#dc2626' : t.prioriteit === 'Middel' ? '#92400e' : '#1e40af'
-      }
-    }, t.prioriteit), /*#__PURE__*/React.createElement("span", {
-      style: {
-        padding: '3px 10px',
-        borderRadius: '4px',
-        fontSize: '11px',
-        background: 'var(--ios-gray-6)',
-        color: 'var(--text-light)'
-      }
-    }, t.categorie))), t.probleem && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '13px',
-        color: 'var(--text)',
-        marginBottom: '8px',
-        lineHeight: '1.5'
-      }
-    }, /*#__PURE__*/React.createElement("strong", {
-      style: {
-        color: 'var(--text-light)'
-      }
-    }, "Probleem:"), " ", t.probleem), t.actie && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '13px',
-        color: 'var(--text)',
-        marginBottom: '8px',
-        lineHeight: '1.5',
-        whiteSpace: 'pre-wrap'
-      }
-    }, /*#__PURE__*/React.createElement("strong", {
-      style: {
-        color: 'var(--text-light)'
-      }
-    }, "Actie:"), " ", t.actie), t.verwachte_impact && /*#__PURE__*/React.createElement("div", {
-      style: {
-        fontSize: '13px',
-        color: 'var(--text)',
-        marginBottom: '14px',
-        lineHeight: '1.5',
-        whiteSpace: 'pre-wrap'
-      }
-    }, /*#__PURE__*/React.createElement("strong", {
-      style: {
-        color: 'var(--text-light)'
-      }
-    }, "Verwachte impact:"), " ", t.verwachte_impact), /*#__PURE__*/React.createElement("div", {
-      style: {
-        display: 'flex',
-        gap: '8px',
-        alignItems: 'center'
-      }
-    }, /*#__PURE__*/React.createElement("button", {
-      onClick: () => openPlanningModal(t),
-      style: {
-        padding: '7px 14px',
-        borderRadius: '8px',
-        background: 'var(--ios-blue)',
-        color: 'white',
-        border: 'none',
-        cursor: 'pointer',
-        fontSize: '13px',
-        fontWeight: '600'
-      }
-    }, "📅 Naar planning"), /*#__PURE__*/React.createElement("button", {
-      onClick: () => updateInboxStatus(t.id, 'verworpen'),
-      style: {
-        padding: '7px 14px',
-        borderRadius: '8px',
-        background: 'var(--ios-gray-6)',
-        color: 'var(--text)',
-        border: '1px solid var(--border)',
-        cursor: 'pointer',
-        fontSize: '13px'
-      }
-    }, "✕ Verwerpen"), t.issue_url && /*#__PURE__*/React.createElement("a", {
-      href: t.issue_url,
-      target: "_blank",
-      rel: "noopener noreferrer",
-      style: {
-        fontSize: '12px',
-        color: 'var(--text-light)',
-        marginLeft: 'auto',
-        textDecoration: 'none'
-      }
-    }, "↗ Audit issue #", t.issue_number)))));
   })(), activeStep === 'audits' && (() => {
     const cname = currentClient.name && currentClient.name.toLowerCase().trim();
     const items = auditSummaries.filter(a => {
