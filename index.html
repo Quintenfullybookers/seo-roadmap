@@ -8113,6 +8113,138 @@ function App() {
           color: '#3b82f6'
         }
       }, r1(grandTotal), " u")))));
+    })(), (() => {
+      const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => tot + ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0), 0);
+      const r1 = n => Math.round(n * 10) / 10;
+      const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQAll(a.key, qt.key) > 0));
+      const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQAll(a.key, qt.key), 0), 0);
+      if (asgWithHours.length === 0) return null;
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginBottom: '24px',
+          background: 'var(--white)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '16px',
+          boxShadow: 'var(--shadow-sm)',
+          overflowX: 'auto'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: '15px',
+          fontWeight: '700',
+          marginBottom: '4px',
+          color: 'var(--text)'
+        }
+      }, "👥 Uren per persoon — alle klanten samen"), /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: '12px',
+          color: 'var(--text-light)',
+          marginBottom: '12px'
+        }
+      }, "Totaal geplande uren per uitvoerder, per kwartaal"), /*#__PURE__*/React.createElement("table", {
+        style: {
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '13px',
+          minWidth: '480px'
+        }
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderBottom: '2px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("th", {
+        style: {
+          textAlign: 'left',
+          padding: '8px 10px',
+          color: 'var(--text-light)',
+          fontWeight: '600'
+        }
+      }, "Wie"), QUARTERS.map(qt => /*#__PURE__*/React.createElement("th", {
+        key: qt.key,
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          color: 'var(--text-light)',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, qt.label)), /*#__PURE__*/React.createElement("th", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          color: 'var(--text)',
+          fontWeight: '700'
+        }
+      }, "Totaal"))), /*#__PURE__*/React.createElement("tbody", null, asgWithHours.map(a => {
+        const rowTotal = QUARTERS.reduce((s, qt) => s + sumAsgQAll(a.key, qt.key), 0);
+        return /*#__PURE__*/React.createElement("tr", {
+          key: a.key,
+          style: {
+            borderBottom: '1px solid var(--border)'
+          }
+        }, /*#__PURE__*/React.createElement("td", {
+          style: {
+            padding: '8px 10px'
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '8px',
+            background: a.bg,
+            color: a.color
+          }
+        }, a.label)), QUARTERS.map(qt => {
+          const h = sumAsgQAll(a.key, qt.key);
+          return /*#__PURE__*/React.createElement("td", {
+            key: qt.key,
+            style: {
+              textAlign: 'center',
+              padding: '8px 10px',
+              color: h > 0 ? 'var(--text)' : 'var(--text-lighter,#cbd5e1)'
+            }
+          }, h > 0 ? `${r1(h)} u` : '–');
+        }), /*#__PURE__*/React.createElement("td", {
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            fontWeight: '700',
+            color: a.color
+          }
+        }, r1(rowTotal), " u"));
+      })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderTop: '2px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: 'var(--text)'
+        }
+      }, "Totaal"), QUARTERS.map(qt => {
+        const colTotal = ASSIGNEES.reduce((s, a) => s + sumAsgQAll(a.key, qt.key), 0);
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            fontWeight: '700',
+            color: 'var(--text)'
+          }
+        }, r1(colTotal), " u");
+      }), /*#__PURE__*/React.createElement("td", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          fontWeight: '800',
+          color: '#3b82f6'
+        }
+      }, r1(grandTotal), " u")))));
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         overflowX: 'auto',
@@ -10808,6 +10940,132 @@ function App() {
         }
       }, "Totaal"), QUARTERS.map(qt => {
         const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0);
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            fontWeight: '700',
+            color: 'var(--text)'
+          }
+        }, r1(colTotal), " u");
+      }), /*#__PURE__*/React.createElement("td", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          fontWeight: '800',
+          color: '#3b82f6'
+        }
+      }, r1(grandTotal), " u")))));
+    })(), (() => {
+      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+      const r1 = n => Math.round(n * 10) / 10;
+      const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQ(a.key, qt.key) > 0));
+      const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQ(a.key, qt.key), 0), 0);
+      if (asgWithHours.length === 0) return null;
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginBottom: '24px',
+          background: 'var(--white)',
+          border: '1px solid var(--border)',
+          borderRadius: '12px',
+          padding: '16px',
+          boxShadow: 'var(--shadow-sm)',
+          overflowX: 'auto'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: '15px',
+          fontWeight: '700',
+          marginBottom: '12px',
+          color: 'var(--text)'
+        }
+      }, "👥 Uren per persoon"), /*#__PURE__*/React.createElement("table", {
+        style: {
+          width: '100%',
+          borderCollapse: 'collapse',
+          fontSize: '13px',
+          minWidth: '480px'
+        }
+      }, /*#__PURE__*/React.createElement("thead", null, /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderBottom: '2px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("th", {
+        style: {
+          textAlign: 'left',
+          padding: '8px 10px',
+          color: 'var(--text-light)',
+          fontWeight: '600'
+        }
+      }, "Wie"), QUARTERS.map(qt => /*#__PURE__*/React.createElement("th", {
+        key: qt.key,
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          color: 'var(--text-light)',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, qt.label)), /*#__PURE__*/React.createElement("th", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          color: 'var(--text)',
+          fontWeight: '700'
+        }
+      }, "Totaal"))), /*#__PURE__*/React.createElement("tbody", null, asgWithHours.map(a => {
+        const rowTotal = QUARTERS.reduce((s, qt) => s + sumAsgQ(a.key, qt.key), 0);
+        return /*#__PURE__*/React.createElement("tr", {
+          key: a.key,
+          style: {
+            borderBottom: '1px solid var(--border)'
+          }
+        }, /*#__PURE__*/React.createElement("td", {
+          style: {
+            padding: '8px 10px'
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '5px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '8px',
+            background: a.bg,
+            color: a.color
+          }
+        }, a.label)), QUARTERS.map(qt => {
+          const h = sumAsgQ(a.key, qt.key);
+          return /*#__PURE__*/React.createElement("td", {
+            key: qt.key,
+            style: {
+              textAlign: 'center',
+              padding: '8px 10px',
+              color: h > 0 ? 'var(--text)' : 'var(--text-lighter,#cbd5e1)'
+            }
+          }, h > 0 ? `${r1(h)} u` : '–');
+        }), /*#__PURE__*/React.createElement("td", {
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            fontWeight: '700',
+            color: a.color
+          }
+        }, r1(rowTotal), " u"));
+      })), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderTop: '2px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: 'var(--text)'
+        }
+      }, "Totaal"), QUARTERS.map(qt => {
+        const colTotal = ASSIGNEES.reduce((s, a) => s + sumAsgQ(a.key, qt.key), 0);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
           style: {
