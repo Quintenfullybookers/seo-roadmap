@@ -1589,7 +1589,8 @@ function QuarterCard({
   carryover,
   carriedInHours,
   rapportageHours,
-  rapportageMonth,
+  rapportageMonths,
+  rapportageRate,
   auditHours,
   controlHours,
   controlRate,
@@ -2119,9 +2120,10 @@ function QuarterCard({
     return buckets.map(mk => {
       const mtasks = allTasks.filter(t => (t.month || '') === mk).slice().sort((a, b) => phaseRank(a.phaseKey) - phaseRank(b.phaseKey));
       const mHours = mtasks.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-      const rapHere = (parseFloat(rapportageHours) || 0) > 0 && mk === (rapportageMonth || '');
+      const rapHere = Array.isArray(rapportageMonths) && rapportageMonths.includes(mk);
+      const rapH = rapHere ? parseFloat(rapportageRate) || 0 : 0;
       const cnt = mtasks.length + (rapHere ? 1 : 0);
-      const hrs = mHours + (rapHere ? parseFloat(rapportageHours) || 0 : 0);
+      const hrs = mHours + rapH;
       const collapsed = !!collapsedMonths[mk];
       const k = mkey(mk);
       const defPhase = newPhase[k] || activePhases[0] || PHASE_OPTIONS[0] && PHASE_OPTIONS[0].key || '';
@@ -2450,7 +2452,7 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(parseFloat(rapportageHours) || 0), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
+      }, r1(rapH), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: '6px',
@@ -5743,10 +5745,9 @@ function App() {
     });
   };
 
-  // Rapportages: standaard 0,5 u per kwartaal per klant, per klant uit te zetten
+  // Rapportages: schema-gestuurd vanuit Rapportage Planning. 0,5 u per ingeplande maand-rapportage.
   const RAPPORTAGE_HRS_PER_Q = 0.5;
   const isRapportageOn = client => client && client.rapportageEnabled !== false;
-  const getRapportageHours = client => isRapportageOn(client) ? RAPPORTAGE_HRS_PER_Q : 0;
   const toggleRapportage = clientId => {
     const updated = clients.map(c => c.id === clientId ? {
       ...c,
@@ -5757,15 +5758,25 @@ function App() {
       clients: updated
     });
   };
-  // Welke maand binnen het kwartaal is de rapportage ingepland (uit Rapportage Planning)? '' = geen
-  const getRapportageMonthForQuarter = (client, quarterKey) => {
-    if (!client) return '';
+  // Welke maanden binnen het kwartaal hebben een ingeplande rapportage (uit Rapportage Planning)? -> ['1','3'] etc.
+  const getRapportageMonthsForQuarter = (client, quarterKey) => {
+    if (!client || !isRapportageOn(client)) return [];
     const months = getQuarterMonths(quarterKey);
+    const out = [];
     for (let i = 0; i < months.length; i++) {
-      if (rapportages[`${String(client.id)}-${months[i]}`]) return String(i + 1);
+      if (rapportages[`${String(client.id)}-${months[i]}`]) out.push(String(i + 1));
     }
-    return '';
+    return out;
   };
+  // Eerste ingeplande rapportage-maand (voor compatibiliteit)
+  const getRapportageMonthForQuarter = (client, quarterKey) => {
+    const a = getRapportageMonthsForQuarter(client, quarterKey);
+    return a[0] || '';
+  };
+  // Rapportage-uren per kwartaal = aantal ingeplande maand-rapportages x 0,5 u
+  const getRapportageHoursForQuarter = (client, quarterKey) => getRapportageMonthsForQuarter(client, quarterKey).length * RAPPORTAGE_HRS_PER_Q;
+  // Oude flat-helper blijft bestaan maar wordt niet meer voor uren gebruikt
+  const getRapportageHours = client => isRapportageOn(client) ? RAPPORTAGE_HRS_PER_Q : 0;
 
   // Audit: standaard 0,5 u per klant per maand = 1,5 u per kwartaal, per klant uit te zetten
   const AUDIT_HRS_PER_MONTH = 0.5;
@@ -8544,6 +8555,16 @@ function App() {
     }, "Dashboard"), /*#__PURE__*/React.createElement("span", {
       className: "nav-count"
     }, clients.filter(c => !c.archived).length)), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'kwartaaloverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('kwartaaloverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "🗓️"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'content' ? 'active' : ''}`,
       onClick: () => setActiveView('content'),
       style: {
@@ -8633,7 +8654,7 @@ function App() {
       }
     }, "Nog geen actieve klanten")) : /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
       const sumPhaseQAll = (pk, qk) => activeClients.reduce((tot, cl) => tot + ((cl.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0), 0);
-      const rapQAll = qk => activeClients.reduce((s, cl) => s + getRapportageHours(cl), 0);
+      const rapQAll = qk => activeClients.reduce((s, cl) => s + getRapportageHoursForQuarter(cl, qk), 0);
       const auditQAll = qk => activeClients.reduce((s, cl) => s + getAuditHours(cl), 0);
       const controlQAll = qk => activeClients.reduce((s, cl) => s + getControlHoursForQuarter(cl, qk), 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -8908,7 +8929,7 @@ function App() {
       // Ingepland voor mij = taken toegewezen aan Quinten + rapportage-uren (1u per actieve klant)
       const plannedQ = qk => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '') === 'quinten').reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        return tot + taskH + getRapportageHours(cl) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk);
+        return tot + taskH + getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk);
       }, 0);
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -9171,7 +9192,7 @@ function App() {
     })(), (() => {
       const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        const rap = ak === 'quinten' ? getRapportageHours(cl) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk) : 0;
+        const rap = ak === 'quinten' ? getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk) : 0;
         return tot + taskH + rap;
       }, 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -11881,7 +11902,7 @@ function App() {
       workedMap[qt.key] = worked;
       baseAvailMap[qt.key] = base;
       hoursCarryMap[qt.key] = _hoursCarriedIn;
-      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHours(client) + getAuditHours(client) + getControlHoursForQuarter(client, qt.key);
+      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHoursForQuarter(client, qt.key) + getAuditHours(client) + getControlHoursForQuarter(client, qt.key);
       const effective = base + _hoursCarriedIn;
       _hoursCarriedIn = Math.max(0, effective - planned);
     });
@@ -11950,12 +11971,16 @@ function App() {
       }
     }), "🔍 Audit (0,5 u per maand)")), (() => {
       const sumPhaseQ = (pk, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-      const rapQ = getRapportageHours(client);
       const auditQ = getAuditHours(client);
       const r1 = n => Math.round(n * 10) / 10;
       // alleen fases tonen die ergens uren hebben
       const phasesWithHours = PHASE_OPTIONS.filter(ph => QUARTERS.some(qt => sumPhaseQ(ph.key, qt.key) > 0));
-      const showRap = rapQ > 0;
+      const rapByQ = {};
+      QUARTERS.forEach(qt => {
+        rapByQ[qt.key] = getRapportageHoursForQuarter(client, qt.key);
+      });
+      const rapTotal = QUARTERS.reduce((s, qt) => s + rapByQ[qt.key], 0);
+      const showRap = rapTotal > 0;
       const showAudit = auditQ > 0;
       const controlByQ = {};
       QUARTERS.forEach(qt => {
@@ -11964,7 +11989,7 @@ function App() {
       const controlTotal = QUARTERS.reduce((s, qt) => s + controlByQ[qt.key], 0);
       const showControl = controlTotal > 0;
       const hasPackage = (parseFloat(client.budget) || 0) * 3 > 0;
-      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + (showRap ? rapQ * QUARTERS.length : 0) + (showAudit ? auditQ * QUARTERS.length : 0) + controlTotal;
+      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + rapTotal + (showAudit ? auditQ * QUARTERS.length : 0) + controlTotal;
       if (phasesWithHours.length === 0 && !showRap && !showAudit && !showControl && !hasPackage) return null;
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -12070,20 +12095,24 @@ function App() {
           fontWeight: '600',
           color: '#0d9488'
         }
-      }, "📄 Rapportages")), QUARTERS.map(qt => /*#__PURE__*/React.createElement("td", {
-        key: qt.key,
-        style: {
-          textAlign: 'center',
-          padding: '8px 10px'
-        }
-      }, r1(rapQ), " u")), /*#__PURE__*/React.createElement("td", {
+      }, "📄 Rapportages")), QUARTERS.map(qt => {
+        const h = rapByQ[qt.key];
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            color: h > 0 ? 'var(--text)' : 'var(--text-lighter,#cbd5e1)'
+          }
+        }, h > 0 ? `${r1(h)} u` : '–');
+      }), /*#__PURE__*/React.createElement("td", {
         style: {
           textAlign: 'center',
           padding: '8px 10px',
           fontWeight: '700',
           color: '#0d9488'
         }
-      }, r1(rapQ * QUARTERS.length), " u")), showAudit && /*#__PURE__*/React.createElement("tr", {
+      }, r1(rapTotal), " u")), showAudit && /*#__PURE__*/React.createElement("tr", {
         style: {
           borderBottom: '1px solid var(--border)'
         }
@@ -12156,7 +12185,7 @@ function App() {
           color: 'var(--text)'
         }
       }, "Totaal ingepland"), QUARTERS.map(qt => {
-        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
+        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
           style: {
@@ -12181,7 +12210,7 @@ function App() {
         }
       }, "📦 Beschikbaar (pakket)"), QUARTERS.map(qt => {
         const avail = getQuarterAvailableHours(client, qt.key);
-        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
+        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
         const over = planned > avail;
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
@@ -12201,7 +12230,7 @@ function App() {
         }
       }, r1(QUARTERS.reduce((s, qt) => s + getQuarterAvailableHours(client, qt.key), 0)), " u")))));
     })(), (() => {
-      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHours(client) + getAuditHours(client) + getControlHoursForQuarter(client, qk) : 0);
+      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHoursForQuarter(client, qk) + getAuditHours(client) + getControlHoursForQuarter(client, qk) : 0);
       const r1 = n => Math.round(n * 10) / 10;
       const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQ(a.key, qt.key) > 0));
       const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQ(a.key, qt.key), 0), 0);
@@ -12343,8 +12372,9 @@ function App() {
       onToggleCollapse: toggleQuarterCollapsed,
       carryover: carryMap[q.key] || [],
       carriedInHours: hoursCarryMap[q.key] || 0,
-      rapportageHours: getRapportageHours(client),
-      rapportageMonth: getRapportageMonthForQuarter(client, q.key),
+      rapportageHours: getRapportageHoursForQuarter(client, q.key),
+      rapportageMonths: getRapportageMonthsForQuarter(client, q.key),
+      rapportageRate: RAPPORTAGE_HRS_PER_Q,
       auditHours: getAuditHours(client),
       controlHours: getControlHoursForQuarter(client, q.key),
       controlRate: getControlRate(),
