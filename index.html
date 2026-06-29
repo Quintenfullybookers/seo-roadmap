@@ -2260,7 +2260,8 @@ function App() {
   const [timeTracking, setTimeTracking] = useState({});
   const [settings, setSettings] = useState({
     myWeeklyHours: 32,
-    onboardingHours: 5
+    onboardingHours: 5,
+    freeHoursPerYear: 176
   });
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -5195,6 +5196,17 @@ function App() {
     const ns = {
       ...settings,
       onboardingHours: h
+    };
+    setSettings(ns);
+    saveData({
+      settings: ns
+    });
+  };
+  const setFreeHours = val => {
+    const h = val === '' ? '' : Math.max(0, parseFloat(val) || 0);
+    const ns = {
+      ...settings,
+      freeHoursPerYear: h
     };
     setSettings(ns);
     saveData({
@@ -8210,9 +8222,11 @@ function App() {
       const weekly = parseFloat(settings.myWeeklyHours) || 0;
       const onbWeekly = parseFloat(settings.onboardingHours) || 0;
       const availPerQ = weekly * WEEKS_PER_Q;
-      const normPerQ = availPerQ * 0.75;
+      const normPerQ = availPerQ * 0.80;
       const onbPerQ = onbWeekly * WEEKS_PER_Q;
-      const netPerQ = normPerQ - onbPerQ; // netto beschikbaar voor klantwerk
+      const freePerYear = parseFloat(settings.freeHoursPerYear) || 0;
+      const freePerQ = freePerYear / 4; // vrije uren per jaar gelijk over 4 kwartalen
+      const netPerQ = normPerQ - onbPerQ - freePerQ; // netto beschikbaar voor klantwerk
       const r1 = n => Math.round(n * 10) / 10;
       // Ingepland voor mij = taken toegewezen aan Quinten + rapportage-uren (1u per actieve klant)
       const plannedQ = qk => activeClients.reduce((tot, cl) => {
@@ -8287,12 +8301,34 @@ function App() {
           border: '1px solid var(--border)',
           textAlign: 'center'
         }
-      }), /*#__PURE__*/React.createElement("span", null, "u/week"))) : /*#__PURE__*/React.createElement("div", {
+      }), /*#__PURE__*/React.createElement("span", null, "u/week")), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '13px',
+          color: 'var(--text-light)'
+        }
+      }, /*#__PURE__*/React.createElement("span", null, "vrije dagen"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        min: "0",
+        step: "1",
+        value: settings.freeHoursPerYear === '' ? '' : settings.freeHoursPerYear == null ? 176 : settings.freeHoursPerYear,
+        onChange: e => setFreeHours(e.target.value),
+        style: {
+          width: '56px',
+          fontSize: '13px',
+          padding: '4px 6px',
+          borderRadius: '6px',
+          border: '1px solid var(--border)',
+          textAlign: 'center'
+        }
+      }), /*#__PURE__*/React.createElement("span", null, "u/jaar"))) : /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: '13px',
           color: 'var(--text-light)'
         }
-      }, weekly, " u/week · onboarding ", onbWeekly, " u/week")), /*#__PURE__*/React.createElement("table", {
+      }, weekly, " u/week · onboarding ", onbWeekly, " u/week · vrije dagen ", freePerYear, " u/jaar")), /*#__PURE__*/React.createElement("table", {
         style: {
           width: '100%',
           borderCollapse: 'collapse',
@@ -8345,7 +8381,7 @@ function App() {
           fontWeight: '600',
           color: '#7c3aed'
         }
-      }, "75% norm"), QUARTERS.map(qt => /*#__PURE__*/React.createElement("td", {
+      }, "80% norm"), QUARTERS.map(qt => /*#__PURE__*/React.createElement("td", {
         key: qt.key,
         style: {
           textAlign: 'center',
@@ -8372,6 +8408,24 @@ function App() {
           fontWeight: '600'
         }
       }, "−", r1(onbPerQ), " u"))), /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderBottom: '1px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          fontWeight: '600',
+          color: '#ea580c'
+        }
+      }, "− Vrije dagen (", freePerYear, " u/jaar)"), QUARTERS.map(qt => /*#__PURE__*/React.createElement("td", {
+        key: qt.key,
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          color: '#ea580c',
+          fontWeight: '600'
+        }
+      }, "−", r1(freePerQ), " u"))), /*#__PURE__*/React.createElement("tr", {
         style: {
           borderBottom: '1px solid var(--border)',
           background: '#f8fafc'
@@ -8414,7 +8468,7 @@ function App() {
           color: 'var(--text-light)',
           marginTop: '8px'
         }
-      }, "Netto = 75%-norm minus onboarding. Rood = meer ingepland dan netto beschikbaar. Ingepland is incl. 1 u rapportage per actieve klant."));
+      }, "Netto = 80%-norm minus onboarding en vrije dagen. Vrije dagen worden gelijk over 4 kwartalen verdeeld. Rood = meer ingepland dan netto beschikbaar. Ingepland is incl. 1 u rapportage per actieve klant."));
     })(), (() => {
       const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
