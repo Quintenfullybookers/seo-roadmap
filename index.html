@@ -1584,10 +1584,15 @@ function QuarterCard({
   q,
   isCurrent,
   isAdmin,
+  collapsed,
+  onToggleCollapse,
   carryover,
   carriedInHours,
   rapportageHours,
+  rapportageMonth,
   auditHours,
+  controlHours,
+  controlRate,
   baseAvailHours,
   workedHours,
   packageHours,
@@ -1635,12 +1640,65 @@ function QuarterCard({
   const pkgHours = Math.round((packageHours || 0) * 10) / 10;
   const workedQ = Math.round((workedHours || 0) * 10) / 10;
   const reserveHours = Math.round((carriedInHours || 0) * 10) / 10;
-  const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (parseFloat(rapportageHours) || 0) + (parseFloat(auditHours) || 0);
+  const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (parseFloat(rapportageHours) || 0) + (parseFloat(auditHours) || 0) + (parseFloat(controlHours) || 0);
   const r1 = n => Math.round(n * 10) / 10;
   const overBase = plannedHours > baseAvailHours; // meer ingepland dan resterende kwartaal-ruimte
   const usedFromReserve = Math.max(0, plannedHours - baseAvailHours); // wat uit de reserve komt
   const reserveLeft = Math.max(0, reserveHours - usedFromReserve);
   const trulyOver = plannedHours > baseAvailHours + reserveHours; // ook reserve op
+  if (collapsed) {
+    return /*#__PURE__*/React.createElement("div", {
+      onClick: () => isAdmin && onToggleCollapse(q.key),
+      title: "Klik om uit te klappen",
+      style: {
+        background: isCurrent ? '#eff6ff' : 'var(--white)',
+        border: isCurrent ? '2px solid #3b82f6' : '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '12px 4px',
+        boxShadow: 'var(--shadow-sm)',
+        cursor: isAdmin ? 'pointer' : 'default',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
+        minHeight: '160px'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '14px',
+        color: 'var(--text-light)'
+      }
+    }, "▸"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        writingMode: 'vertical-rl',
+        transform: 'rotate(180deg)',
+        fontSize: '13px',
+        fontWeight: '700',
+        color: 'var(--text)',
+        whiteSpace: 'nowrap'
+      }
+    }, q.label), isCurrent && /*#__PURE__*/React.createElement("span", {
+      style: {
+        writingMode: 'vertical-rl',
+        transform: 'rotate(180deg)',
+        fontSize: '9px',
+        background: '#3b82f6',
+        color: 'white',
+        padding: '4px 2px',
+        borderRadius: '8px',
+        fontWeight: '600'
+      }
+    }, "NU"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        writingMode: 'vertical-rl',
+        transform: 'rotate(180deg)',
+        fontSize: '10px',
+        color: '#0d9488',
+        fontWeight: '700',
+        whiteSpace: 'nowrap'
+      }
+    }, r1(plannedHours), " u"));
+  }
   return /*#__PURE__*/React.createElement("div", {
     onDragOver: isAdmin ? e => {
       e.preventDefault();
@@ -1685,7 +1743,13 @@ function QuarterCard({
       fontWeight: '700',
       color: 'var(--text)'
     }
-  }, q.label), isCurrent && /*#__PURE__*/React.createElement("span", {
+  }, q.label), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px'
+    }
+  }, isCurrent && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: '10px',
       background: '#3b82f6',
@@ -1694,7 +1758,16 @@ function QuarterCard({
       borderRadius: '10px',
       fontWeight: '600'
     }
-  }, "NU")), /*#__PURE__*/React.createElement("div", {
+  }, "NU"), isAdmin && /*#__PURE__*/React.createElement("span", {
+    onClick: () => onToggleCollapse(q.key),
+    title: "Kwartaal inklappen",
+    style: {
+      cursor: 'pointer',
+      fontSize: '13px',
+      color: 'var(--text-light)',
+      padding: '0 2px'
+    }
+  }, "◂"))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: '11px',
       color: 'var(--text-light)'
@@ -1920,6 +1993,7 @@ function QuarterCard({
     });
     if (toCheck.length === 0) return null;
     const totH = toCheck.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+    const myCtrlH = toCheck.length * (parseFloat(controlRate) || 0);
     return /*#__PURE__*/React.createElement("div", {
       style: {
         border: '1.5px solid #2563eb',
@@ -1932,7 +2006,7 @@ function QuarterCard({
         display: 'flex',
         alignItems: 'center',
         gap: '6px',
-        marginBottom: '8px'
+        marginBottom: '2px'
       }
     }, /*#__PURE__*/React.createElement("span", {
       style: {
@@ -1948,7 +2022,13 @@ function QuarterCard({
         color: '#1d4ed8',
         whiteSpace: 'nowrap'
       }
-    }, toCheck.length, " ", toCheck.length === 1 ? 'taak' : 'taken', totH > 0 ? ` · ${r1(totH)} u` : '')), /*#__PURE__*/React.createElement("div", {
+    }, toCheck.length, " ", toCheck.length === 1 ? 'taak' : 'taken')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: '10px',
+        color: '#1d4ed8',
+        marginBottom: '8px'
+      }
+    }, r1(totH), " u werk van anderen", myCtrlH > 0 ? ` · ${r1(myCtrlH)} u controle (jouw tijd)` : ''), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
@@ -2039,6 +2119,9 @@ function QuarterCard({
     return buckets.map(mk => {
       const mtasks = allTasks.filter(t => (t.month || '') === mk).slice().sort((a, b) => phaseRank(a.phaseKey) - phaseRank(b.phaseKey));
       const mHours = mtasks.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+      const rapHere = (parseFloat(rapportageHours) || 0) > 0 && mk === (rapportageMonth || '');
+      const cnt = mtasks.length + (rapHere ? 1 : 0);
+      const hrs = mHours + (rapHere ? parseFloat(rapportageHours) || 0 : 0);
       const collapsed = !!collapsedMonths[mk];
       const k = mkey(mk);
       const defPhase = newPhase[k] || activePhases[0] || PHASE_OPTIONS[0] && PHASE_OPTIONS[0].key || '';
@@ -2083,14 +2166,14 @@ function QuarterCard({
           fontWeight: '600',
           whiteSpace: 'nowrap'
         }
-      }, mtasks.length, " ", mtasks.length === 1 ? 'taak' : 'taken', mHours > 0 ? ` · ${r1(mHours)} u` : '')), !collapsed && /*#__PURE__*/React.createElement("div", {
+      }, cnt, " ", cnt === 1 ? 'taak' : 'taken', hrs > 0 ? ` · ${r1(hrs)} u` : '')), !collapsed && /*#__PURE__*/React.createElement("div", {
         style: {
           padding: '10px 12px',
           display: 'flex',
           flexDirection: 'column',
           gap: '6px'
         }
-      }, mtasks.length === 0 && /*#__PURE__*/React.createElement("div", {
+      }, cnt === 0 && /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: '12px',
           color: 'var(--text-light)',
@@ -2317,7 +2400,57 @@ function QuarterCard({
             color: '#dc2626'
           }
         }, "×"));
-      }), isAdmin && /*#__PURE__*/React.createElement("div", {
+      }), rapHere && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px',
+          borderRadius: '8px',
+          background: '#f0fdfa',
+          border: '1px solid #99f6e4',
+          fontSize: '13px',
+          lineHeight: '1.4'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: '#ccfbf1',
+          color: '#0f6e56',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, "📄 Rapportage"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          color: 'var(--text)'
+        }
+      }, "Maandelijkse rapportage"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: '#dbeafe',
+          color: '#2563eb',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, "Quinten"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '11px',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          background: '#ccfbf1',
+          color: '#0d9488',
+          fontWeight: '700',
+          whiteSpace: 'nowrap'
+        }
+      }, r1(parseFloat(rapportageHours) || 0), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: '6px',
@@ -2401,65 +2534,7 @@ function QuarterCard({
         }
       }, "+"))));
     });
-  })(), (parseFloat(rapportageHours) || 0) > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      borderTop: '1px solid var(--border)',
-      paddingTop: '10px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-      marginBottom: '8px'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: '12px',
-      fontWeight: '700',
-      color: '#0d9488',
-      flex: 1
-    }
-  }, "📄 Rapportages")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '8px',
-      padding: '8px',
-      borderRadius: '8px',
-      background: '#f0fdfa',
-      border: '1px solid #99f6e4',
-      fontSize: '13px',
-      lineHeight: '1.4'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      color: 'var(--text)'
-    }
-  }, "Maandelijkse rapportage"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flexShrink: 0,
-      fontSize: '10px',
-      padding: '2px 7px',
-      borderRadius: '8px',
-      background: '#dbeafe',
-      color: '#2563eb',
-      fontWeight: '600',
-      whiteSpace: 'nowrap'
-    }
-  }, "Quinten"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flexShrink: 0,
-      fontSize: '11px',
-      padding: '2px 6px',
-      borderRadius: '6px',
-      background: '#ccfbf1',
-      color: '#0d9488',
-      fontWeight: '700',
-      whiteSpace: 'nowrap'
-    }
-  }, Math.round((parseFloat(rapportageHours) || 0) * 10) / 10, "u"))), (parseFloat(auditHours) || 0) > 0 && /*#__PURE__*/React.createElement("div", {
+  })(), (parseFloat(auditHours) || 0) > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: '1px solid var(--border)',
       paddingTop: '10px'
@@ -2609,7 +2684,22 @@ function QuarterCard({
         fontWeight: '600',
         whiteSpace: 'nowrap'
       }
-    }, asg.label));
+    }, asg.label), isAdmin && /*#__PURE__*/React.createElement("button", {
+      onClick: () => onMoveTaskToQuarter(client.id, item.originQuarterKey, q.key, item.task.id),
+      title: "Verplaats naar dit kwartaal",
+      style: {
+        flexShrink: 0,
+        fontSize: '10px',
+        padding: '3px 8px',
+        borderRadius: '8px',
+        background: '#3b82f6',
+        color: 'white',
+        border: 'none',
+        cursor: 'pointer',
+        fontWeight: '600',
+        whiteSpace: 'nowrap'
+      }
+    }, "➕ In dit kwartaal"));
   }))));
 }
 
@@ -2635,7 +2725,8 @@ function App() {
   const [settings, setSettings] = useState({
     myWeeklyHours: 32,
     onboardingHours: 5,
-    freeHoursPerYear: 176
+    freeHoursPerYear: 176,
+    controlHoursPerTask: 0.25
   });
   const [showModal, setShowModal] = useState(false);
   const [showEditModal, setShowEditModal] = useState(false);
@@ -5636,6 +5727,22 @@ function App() {
     });
   };
 
+  // Kwartaal inklappen tot smalle strook (per kwartaal, bewaard in instellingen)
+  const toggleQuarterCollapsed = quarterKey => {
+    const cur = {
+      ...(settings.collapsedQuarters || {})
+    };
+    cur[quarterKey] = !cur[quarterKey];
+    const ns = {
+      ...settings,
+      collapsedQuarters: cur
+    };
+    setSettings(ns);
+    saveData({
+      settings: ns
+    });
+  };
+
   // Rapportages: standaard 0,5 u per kwartaal per klant, per klant uit te zetten
   const RAPPORTAGE_HRS_PER_Q = 0.5;
   const isRapportageOn = client => client && client.rapportageEnabled !== false;
@@ -5650,6 +5757,15 @@ function App() {
       clients: updated
     });
   };
+  // Welke maand binnen het kwartaal is de rapportage ingepland (uit Rapportage Planning)? '' = geen
+  const getRapportageMonthForQuarter = (client, quarterKey) => {
+    if (!client) return '';
+    const months = getQuarterMonths(quarterKey);
+    for (let i = 0; i < months.length; i++) {
+      if (rapportages[`${String(client.id)}-${months[i]}`]) return String(i + 1);
+    }
+    return '';
+  };
 
   // Audit: standaard 0,5 u per klant per maand = 1,5 u per kwartaal, per klant uit te zetten
   const AUDIT_HRS_PER_MONTH = 0.5;
@@ -5663,6 +5779,32 @@ function App() {
     setClients(updated);
     saveData({
       clients: updated
+    });
+  };
+
+  // Controle door mij: vast aantal uren per taak die door een ander wordt uitgevoerd
+  const getControlRate = () => {
+    const v = settings.controlHoursPerTask;
+    return v === '' || v == null ? 0 : parseFloat(v) || 0;
+  };
+  const taskNeedsControl = (client, quarterKey, t) => {
+    const ak = getTaskAssignee(client, quarterKey, t);
+    return !!ak && ak !== 'quinten';
+  };
+  const getControlHoursForQuarter = (client, quarterKey) => {
+    const tasks = (client.quarterCustomTasks || {})[quarterKey] || [];
+    const n = tasks.filter(t => taskNeedsControl(client, quarterKey, t)).length;
+    return n * getControlRate();
+  };
+  const setControlHoursPerTask = val => {
+    const h = val === '' ? '' : Math.max(0, parseFloat(val) || 0);
+    const ns = {
+      ...settings,
+      controlHoursPerTask: h
+    };
+    setSettings(ns);
+    saveData({
+      settings: ns
     });
   };
 
@@ -8493,14 +8635,17 @@ function App() {
       const sumPhaseQAll = (pk, qk) => activeClients.reduce((tot, cl) => tot + ((cl.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0), 0);
       const rapQAll = qk => activeClients.reduce((s, cl) => s + getRapportageHours(cl), 0);
       const auditQAll = qk => activeClients.reduce((s, cl) => s + getAuditHours(cl), 0);
+      const controlQAll = qk => activeClients.reduce((s, cl) => s + getControlHoursForQuarter(cl, qk), 0);
       const r1 = n => Math.round(n * 10) / 10;
       const phasesWithHours = PHASE_OPTIONS.filter(ph => QUARTERS.some(qt => sumPhaseQAll(ph.key, qt.key) > 0));
       const rapTotalAll = QUARTERS.reduce((s, qt) => s + rapQAll(qt.key), 0);
       const auditTotalAll = QUARTERS.reduce((s, qt) => s + auditQAll(qt.key), 0);
+      const controlTotalAll = QUARTERS.reduce((s, qt) => s + controlQAll(qt.key), 0);
       const showRap = rapTotalAll > 0;
       const showAudit = auditTotalAll > 0;
-      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQAll(ph.key, qt.key), 0), 0) + rapTotalAll + auditTotalAll;
-      if (phasesWithHours.length === 0 && !showRap && !showAudit) return null;
+      const showControl = controlTotalAll > 0;
+      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQAll(ph.key, qt.key), 0), 0) + rapTotalAll + auditTotalAll + controlTotalAll;
+      if (phasesWithHours.length === 0 && !showRap && !showAudit && !showControl) return null;
       return /*#__PURE__*/React.createElement("div", {
         style: {
           marginBottom: '24px',
@@ -8661,7 +8806,40 @@ function App() {
           fontWeight: '700',
           color: '#7c3aed'
         }
-      }, r1(auditTotalAll), " u"))), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
+      }, r1(auditTotalAll), " u")), showControl && /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderBottom: '1px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          fontWeight: '600',
+          color: '#1d4ed8'
+        }
+      }, "🔍 Controle (door mij)")), QUARTERS.map(qt => {
+        const h = controlQAll(qt.key);
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            color: h > 0 ? 'var(--text)' : 'var(--text-lighter,#cbd5e1)'
+          }
+        }, h > 0 ? `${r1(h)} u` : '–');
+      }), /*#__PURE__*/React.createElement("td", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: '#1d4ed8'
+        }
+      }, r1(controlTotalAll), " u"))), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
         style: {
           borderTop: '2px solid var(--border)'
         }
@@ -8672,7 +8850,7 @@ function App() {
           color: 'var(--text)'
         }
       }, "Totaal ingepland"), QUARTERS.map(qt => {
-        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQAll(ph.key, qt.key), 0) + rapQAll(qt.key) + auditQAll(qt.key);
+        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQAll(ph.key, qt.key), 0) + rapQAll(qt.key) + auditQAll(qt.key) + controlQAll(qt.key);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
           style: {
@@ -8730,7 +8908,7 @@ function App() {
       // Ingepland voor mij = taken toegewezen aan Quinten + rapportage-uren (1u per actieve klant)
       const plannedQ = qk => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '') === 'quinten').reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        return tot + taskH + getRapportageHours(cl) + getAuditHours(cl);
+        return tot + taskH + getRapportageHours(cl) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk);
       }, 0);
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -8822,12 +9000,34 @@ function App() {
           border: '1px solid var(--border)',
           textAlign: 'center'
         }
-      }), /*#__PURE__*/React.createElement("span", null, "u/jaar"))) : /*#__PURE__*/React.createElement("div", {
+      }), /*#__PURE__*/React.createElement("span", null, "u/jaar")), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          fontSize: '13px',
+          color: 'var(--text-light)'
+        }
+      }, /*#__PURE__*/React.createElement("span", null, "🔍 controle"), /*#__PURE__*/React.createElement("input", {
+        type: "number",
+        min: "0",
+        step: "0.25",
+        value: settings.controlHoursPerTask === '' ? '' : settings.controlHoursPerTask == null ? 0.25 : settings.controlHoursPerTask,
+        onChange: e => setControlHoursPerTask(e.target.value),
+        style: {
+          width: '52px',
+          fontSize: '13px',
+          padding: '4px 6px',
+          borderRadius: '6px',
+          border: '1px solid var(--border)',
+          textAlign: 'center'
+        }
+      }), /*#__PURE__*/React.createElement("span", null, "u/taak"))) : /*#__PURE__*/React.createElement("div", {
         style: {
           fontSize: '13px',
           color: 'var(--text-light)'
         }
-      }, weekly, " u/week · onboarding ", onbWeekly, " u/week · vrije dagen ", freePerYear, " u/jaar")), /*#__PURE__*/React.createElement("table", {
+      }, weekly, " u/week · onboarding ", onbWeekly, " u/week · vrije dagen ", freePerYear, " u/jaar · controle ", settings.controlHoursPerTask == null ? 0.25 : settings.controlHoursPerTask, " u/taak")), /*#__PURE__*/React.createElement("table", {
         style: {
           width: '100%',
           borderCollapse: 'collapse',
@@ -8971,7 +9171,7 @@ function App() {
     })(), (() => {
       const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        const rap = ak === 'quinten' ? getRapportageHours(cl) + getAuditHours(cl) : 0;
+        const rap = ak === 'quinten' ? getRapportageHours(cl) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk) : 0;
         return tot + taskH + rap;
       }, 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -11681,7 +11881,7 @@ function App() {
       workedMap[qt.key] = worked;
       baseAvailMap[qt.key] = base;
       hoursCarryMap[qt.key] = _hoursCarriedIn;
-      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHours(client) + getAuditHours(client);
+      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHours(client) + getAuditHours(client) + getControlHoursForQuarter(client, qt.key);
       const effective = base + _hoursCarriedIn;
       _hoursCarriedIn = Math.max(0, effective - planned);
     });
@@ -11757,9 +11957,15 @@ function App() {
       const phasesWithHours = PHASE_OPTIONS.filter(ph => QUARTERS.some(qt => sumPhaseQ(ph.key, qt.key) > 0));
       const showRap = rapQ > 0;
       const showAudit = auditQ > 0;
+      const controlByQ = {};
+      QUARTERS.forEach(qt => {
+        controlByQ[qt.key] = getControlHoursForQuarter(client, qt.key);
+      });
+      const controlTotal = QUARTERS.reduce((s, qt) => s + controlByQ[qt.key], 0);
+      const showControl = controlTotal > 0;
       const hasPackage = (parseFloat(client.budget) || 0) * 3 > 0;
-      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + (showRap ? rapQ * QUARTERS.length : 0) + (showAudit ? auditQ * QUARTERS.length : 0);
-      if (phasesWithHours.length === 0 && !showRap && !showAudit && !hasPackage) return null;
+      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + (showRap ? rapQ * QUARTERS.length : 0) + (showAudit ? auditQ * QUARTERS.length : 0) + controlTotal;
+      if (phasesWithHours.length === 0 && !showRap && !showAudit && !showControl && !hasPackage) return null;
       return /*#__PURE__*/React.createElement("div", {
         style: {
           marginBottom: '24px',
@@ -11906,7 +12112,40 @@ function App() {
           fontWeight: '700',
           color: '#7c3aed'
         }
-      }, r1(auditQ * QUARTERS.length), " u"))), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
+      }, r1(auditQ * QUARTERS.length), " u")), showControl && /*#__PURE__*/React.createElement("tr", {
+        style: {
+          borderBottom: '1px solid var(--border)'
+        }
+      }, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          fontWeight: '600',
+          color: '#1d4ed8'
+        }
+      }, "🔍 Controle (door mij)")), QUARTERS.map(qt => {
+        const h = controlByQ[qt.key];
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            color: h > 0 ? 'var(--text)' : 'var(--text-lighter,#cbd5e1)'
+          }
+        }, h > 0 ? `${r1(h)} u` : '–');
+      }), /*#__PURE__*/React.createElement("td", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: '#1d4ed8'
+        }
+      }, r1(controlTotal), " u"))), /*#__PURE__*/React.createElement("tfoot", null, /*#__PURE__*/React.createElement("tr", {
         style: {
           borderTop: '2px solid var(--border)'
         }
@@ -11917,7 +12156,7 @@ function App() {
           color: 'var(--text)'
         }
       }, "Totaal ingepland"), QUARTERS.map(qt => {
-        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0);
+        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
           style: {
@@ -11942,7 +12181,7 @@ function App() {
         }
       }, "📦 Beschikbaar (pakket)"), QUARTERS.map(qt => {
         const avail = getQuarterAvailableHours(client, qt.key);
-        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0);
+        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (showRap ? rapQ : 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0);
         const over = planned > avail;
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
@@ -11962,7 +12201,7 @@ function App() {
         }
       }, r1(QUARTERS.reduce((s, qt) => s + getQuarterAvailableHours(client, qt.key), 0)), " u")))));
     })(), (() => {
-      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHours(client) + getAuditHours(client) : 0);
+      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHours(client) + getAuditHours(client) + getControlHoursForQuarter(client, qk) : 0);
       const r1 = n => Math.round(n * 10) / 10;
       const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQ(a.key, qt.key) > 0));
       const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQ(a.key, qt.key), 0), 0);
@@ -12090,8 +12329,9 @@ function App() {
     })(), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
-        gridTemplateColumns: `repeat(${QUARTERS.length},1fr)`,
-        gap: '16px'
+        gridTemplateColumns: QUARTERS.map(q => (settings.collapsedQuarters || {})[q.key] ? '52px' : 'minmax(0,1fr)').join(' '),
+        gap: '16px',
+        alignItems: 'start'
       }
     }, QUARTERS.map(q => /*#__PURE__*/React.createElement(QuarterCard, {
       key: q.key,
@@ -12099,10 +12339,15 @@ function App() {
       q: q,
       isCurrent: q.key === currentQ,
       isAdmin: isAdmin,
+      collapsed: !!(settings.collapsedQuarters || {})[q.key],
+      onToggleCollapse: toggleQuarterCollapsed,
       carryover: carryMap[q.key] || [],
       carriedInHours: hoursCarryMap[q.key] || 0,
       rapportageHours: getRapportageHours(client),
+      rapportageMonth: getRapportageMonthForQuarter(client, q.key),
       auditHours: getAuditHours(client),
+      controlHours: getControlHoursForQuarter(client, q.key),
+      controlRate: getControlRate(),
       baseAvailHours: baseAvailMap[q.key] || 0,
       workedHours: workedMap[q.key] || 0,
       packageHours: pkgPerQuarter,
