@@ -1509,7 +1509,8 @@ function QuarterCard({
   onAddTask,
   onUpdateTask,
   onDeleteTask,
-  onToggleControl
+  onToggleControl,
+  onMovePrio
 }) {
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
@@ -2026,7 +2027,11 @@ function QuarterCard({
     const mkey = mk => mk === '' ? 'q' : mk;
     return buckets.map(mk => {
       const aKey = t => getTaskAssignee(client, q.key, t) || '';
-      const mtasks = allTasks.filter(t => (t.month || '') === mk).filter(t => !assigneeFilter || assigneeFilter === 'all' || aKey(t) === assigneeFilter).slice().sort((a, b) => (aKey(a) === 'quinten' ? 0 : 1) - (aKey(b) === 'quinten' ? 0 : 1) || phaseRank(a.phaseKey) - phaseRank(b.phaseKey));
+      const dispKey = (t, idx) => t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx;
+      const mtasks = allTasks.map((t, idx) => ({
+        t,
+        idx
+      })).filter(x => (x.t.month || '') === mk && (!assigneeFilter || assigneeFilter === 'all' || aKey(x.t) === assigneeFilter)).sort((A, B) => dispKey(A.t, A.idx) - dispKey(B.t, B.idx)).map(x => x.t);
       const mHours = mtasks.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
       const showOwnExtras = !assigneeFilter || assigneeFilter === 'all' || assigneeFilter === 'quinten';
       const rapHere = Array.isArray(rapportageMonths) && rapportageMonths.includes(mk) && showOwnExtras;
@@ -2093,7 +2098,7 @@ function QuarterCard({
           color: 'var(--text-light)',
           fontStyle: 'italic'
         }
-      }, "Nog geen taken in deze maand."), mtasks.map(t => {
+      }, "Nog geen taken in deze maand."), mtasks.map((t, ti) => {
         const checked = !!st[`${q.key}::${t.id}`];
         const controlled = !!controlSt[`${q.key}::${t.id}`];
         const asgKey = getTaskAssignee(client, q.key, t);
@@ -2182,7 +2187,35 @@ function QuarterCard({
             textDecoration: checked ? 'line-through' : 'none',
             fontWeight: '500'
           }
-        }, t.label), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
+        }, t.label), isAdmin && mtasks.length > 1 && /*#__PURE__*/React.createElement("span", {
+          style: {
+            display: 'inline-flex',
+            flexDirection: 'column',
+            lineHeight: '0.8',
+            marginTop: '0px',
+            flexShrink: 0
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          onClick: () => {
+            if (ti > 0) onMovePrio(client.id, q.key, t.id, -1);
+          },
+          title: "Hogere prioriteit",
+          style: {
+            cursor: ti > 0 ? 'pointer' : 'default',
+            fontSize: '11px',
+            color: ti > 0 ? 'var(--text-light)' : 'var(--border)'
+          }
+        }, "▲"), /*#__PURE__*/React.createElement("span", {
+          onClick: () => {
+            if (ti < mtasks.length - 1) onMovePrio(client.id, q.key, t.id, 1);
+          },
+          title: "Lagere prioriteit",
+          style: {
+            cursor: ti < mtasks.length - 1 ? 'pointer' : 'default',
+            fontSize: '11px',
+            color: ti < mtasks.length - 1 ? 'var(--text-light)' : 'var(--border)'
+          }
+        }, "▼")), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
           onClick: () => {
             setEditing(t.id);
             setEditVal(t.label);
@@ -5581,6 +5614,53 @@ function App() {
         quarterCustomTasks: qct
       };
     });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+
+  // Prioriteit: taak omhoog/omlaag binnen dezelfde maand (dir = -1 omhoog, +1 omlaag)
+  const moveTaskPriority = (clientId, quarterKey, taskId, dir) => {
+    if (!isAdmin) return;
+    const client = clients.find(c => c.id === clientId);
+    if (!client) return;
+    const tasks = (client.quarterCustomTasks || {})[quarterKey] || [];
+    const task = tasks.find(t => t.id === taskId);
+    if (!task) return;
+    const month = task.month || '';
+    const aKey = t => getTaskAssignee(client, quarterKey, t) || '';
+    const phases = getQuarterPhasesArr(client, quarterKey);
+    const phaseRank = pk => {
+      const i = phases.indexOf(pk);
+      return i === -1 ? 99 : i;
+    };
+    const dispKey = (t, idx) => t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx;
+    const monthList = tasks.map((t, idx) => ({
+      t,
+      idx
+    })).filter(x => (x.t.month || '') === month).sort((A, B) => dispKey(A.t, A.idx) - dispKey(B.t, B.idx)).map(x => x.t);
+    const pos = monthList.findIndex(t => t.id === taskId);
+    const swap = pos + dir;
+    if (pos < 0 || swap < 0 || swap >= monthList.length) return;
+    const tmp = monthList[pos];
+    monthList[pos] = monthList[swap];
+    monthList[swap] = tmp;
+    const orderMap = {};
+    monthList.forEach((t, i) => {
+      orderMap[t.id] = (i + 1) * 10;
+    });
+    const newTasks = tasks.map(t => orderMap[t.id] != null ? {
+      ...t,
+      order: orderMap[t.id]
+    } : t);
+    const updated = clients.map(c => c.id === clientId ? {
+      ...c,
+      quarterCustomTasks: {
+        ...(c.quarterCustomTasks || {}),
+        [quarterKey]: newTasks
+      }
+    } : c);
     setClients(updated);
     saveData({
       clients: updated
@@ -11094,6 +11174,7 @@ function App() {
       controlRate: getControlRate(),
       taskControlRate: t => getTaskControlRate(client, q.key, t),
       assigneeFilter: kwFilter,
+      onMovePrio: moveTaskPriority,
       baseAvailHours: baseAvailMap[q.key] || 0,
       workedHours: workedMap[q.key] || 0,
       packageHours: pkgPerQuarter,
