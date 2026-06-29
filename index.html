@@ -8671,7 +8671,7 @@ function App() {
           fontWeight: '700',
           color: 'var(--text)'
         }
-      }, "Totaal"), QUARTERS.map(qt => {
+      }, "Totaal ingepland"), QUARTERS.map(qt => {
         const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQAll(ph.key, qt.key), 0) + rapQAll(qt.key) + auditQAll(qt.key);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
@@ -8689,7 +8689,33 @@ function App() {
           fontWeight: '800',
           color: '#3b82f6'
         }
-      }, r1(grandTotal), " u")))));
+      }, r1(grandTotal), " u")), /*#__PURE__*/React.createElement("tr", null, /*#__PURE__*/React.createElement("td", {
+        style: {
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: '#0d9488'
+        }
+      }, "📦 SEO-pakketten totaal"), QUARTERS.map(qt => {
+        const pkgQ = activeClients.reduce((s, cl) => s + (parseFloat(cl.budget) || 0) * 3, 0);
+        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQAll(ph.key, qt.key), 0) + rapQAll(qt.key) + auditQAll(qt.key);
+        const over = planned > pkgQ;
+        return /*#__PURE__*/React.createElement("td", {
+          key: qt.key,
+          style: {
+            textAlign: 'center',
+            padding: '8px 10px',
+            fontWeight: '700',
+            color: over ? '#dc2626' : '#0d9488'
+          }
+        }, r1(pkgQ), " u");
+      }), /*#__PURE__*/React.createElement("td", {
+        style: {
+          textAlign: 'center',
+          padding: '8px 10px',
+          fontWeight: '700',
+          color: '#0d9488'
+        }
+      }, r1(activeClients.reduce((s, cl) => s + (parseFloat(cl.budget) || 0) * 3, 0) * QUARTERS.length), " u")))));
     })(), (() => {
       const WEEKS_PER_Q = 13;
       const weekly = parseFloat(settings.myWeeklyHours) || 0;
