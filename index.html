@@ -2143,7 +2143,65 @@ function QuarterCard({
         fontWeight: '600'
       }
     }, "+")));
-  }), carryover && carryover.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }), (parseFloat(rapportageHours) || 0) > 0 && /*#__PURE__*/React.createElement("div", {
+    style: {
+      borderTop: '1px solid var(--border)',
+      paddingTop: '10px'
+    }
+  }, /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'center',
+      gap: '6px',
+      marginBottom: '8px'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      fontSize: '12px',
+      fontWeight: '700',
+      color: '#0d9488',
+      flex: 1
+    }
+  }, "📄 Rapportages")), /*#__PURE__*/React.createElement("div", {
+    style: {
+      display: 'flex',
+      alignItems: 'flex-start',
+      gap: '8px',
+      padding: '8px',
+      borderRadius: '8px',
+      background: '#f0fdfa',
+      border: '1px solid #99f6e4',
+      fontSize: '13px',
+      lineHeight: '1.4'
+    }
+  }, /*#__PURE__*/React.createElement("span", {
+    style: {
+      flex: 1,
+      color: 'var(--text)'
+    }
+  }, "Maandelijkse rapportage"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flexShrink: 0,
+      fontSize: '10px',
+      padding: '2px 7px',
+      borderRadius: '8px',
+      background: '#dbeafe',
+      color: '#2563eb',
+      fontWeight: '600',
+      whiteSpace: 'nowrap'
+    }
+  }, "Quinten"), /*#__PURE__*/React.createElement("span", {
+    style: {
+      flexShrink: 0,
+      fontSize: '11px',
+      padding: '2px 6px',
+      borderRadius: '6px',
+      background: '#ccfbf1',
+      color: '#0d9488',
+      fontWeight: '700',
+      whiteSpace: 'nowrap'
+    }
+  }, Math.round((parseFloat(rapportageHours) || 0) * 10) / 10, "u"))), carryover && carryover.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: '2px dashed #f59e0b',
       paddingTop: '10px',
