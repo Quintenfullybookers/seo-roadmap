@@ -2107,9 +2107,11 @@ function QuarterCard({
             flexDirection: 'column',
             gap: '6px',
             padding: '8px',
+            paddingLeft: '10px',
             borderRadius: '8px',
             background: checked ? '#f0fdf4' : 'var(--white)',
             border: '1px solid var(--border)',
+            borderLeft: `4px solid ${ph && ph.color ? ph.color : 'var(--border)'}`,
             fontSize: '13px',
             lineHeight: '1.4'
           }
