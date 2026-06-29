@@ -413,12 +413,31 @@ const ASSIGNEES = [{
   color: '#ea580c',
   bg: '#ffedd5'
 }, {
-  key: 'sayfur_tan',
-  label: 'Sayfur / Tan',
+  key: 'sayfur',
+  label: 'Sayfur',
   color: '#0d9488',
   bg: '#ccfbf1'
+}, {
+  key: 'tan',
+  label: 'Tan',
+  color: '#15803d',
+  bg: '#dcfce7'
+}, {
+  key: 'peace',
+  label: 'Peace',
+  color: '#db2777',
+  bg: '#fce7f3'
 }];
-const getAssigneeInfo = key => ASSIGNEES.find(a => a.key === key) || null;
+// legacy: oude gecombineerde uitvoerder blijft tonen tot 'ie opnieuw gekozen wordt
+const LEGACY_ASSIGNEES = {
+  sayfur_tan: {
+    key: 'sayfur_tan',
+    label: 'Sayfur / Tan',
+    color: '#0d9488',
+    bg: '#ccfbf1'
+  }
+};
+const getAssigneeInfo = key => ASSIGNEES.find(a => a.key === key) || LEGACY_ASSIGNEES[key] || null;
 
 // PROJECT MANAGERS
 const PROJECT_MANAGERS = [{
@@ -1589,7 +1608,8 @@ function QuarterCard({
   onMoveTaskToQuarter,
   onAddTask,
   onUpdateTask,
-  onDeleteTask
+  onDeleteTask,
+  onToggleControl
 }) {
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
@@ -1611,6 +1631,7 @@ function QuarterCard({
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
+  const controlSt = client.quarterTaskControl || {};
   const pkgHours = Math.round((packageHours || 0) * 10) / 10;
   const workedQ = Math.round((workedHours || 0) * 10) / 10;
   const reserveHours = Math.round((carriedInHours || 0) * 10) / 10;
@@ -1890,6 +1911,123 @@ function QuarterCard({
       transition: 'width 0.3s'
     }
   }))), (() => {
+    const all = (client.quarterCustomTasks || {})[q.key] || [];
+    const toCheck = all.filter(t => {
+      const ak = getTaskAssignee(client, q.key, t);
+      const done = !!st[`${q.key}::${t.id}`];
+      const ctrl = !!controlSt[`${q.key}::${t.id}`];
+      return ak && ak !== 'quinten' && done && !ctrl;
+    });
+    if (toCheck.length === 0) return null;
+    const totH = toCheck.reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        border: '1.5px solid #2563eb',
+        borderRadius: '10px',
+        padding: '10px 12px',
+        background: '#eff6ff'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: '6px',
+        marginBottom: '8px'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '13px',
+        fontWeight: '700',
+        color: '#1d4ed8',
+        flex: 1
+      }
+    }, "🔍 Te controleren door mij"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '11px',
+        fontWeight: '700',
+        color: '#1d4ed8',
+        whiteSpace: 'nowrap'
+      }
+    }, toCheck.length, " ", toCheck.length === 1 ? 'taak' : 'taken', totH > 0 ? ` · ${r1(totH)} u` : '')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        flexDirection: 'column',
+        gap: '6px'
+      }
+    }, toCheck.map(t => {
+      const ak = getTaskAssignee(client, q.key, t);
+      const asg = getAssigneeInfo(ak);
+      const ph = getPhaseInfo(t.phaseKey);
+      return /*#__PURE__*/React.createElement("div", {
+        key: t.id,
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '7px 9px',
+          borderRadius: '8px',
+          background: 'var(--white)',
+          border: '1px solid #bfdbfe',
+          fontSize: '13px'
+        }
+      }, isAdmin && /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        checked: false,
+        onChange: () => onToggleControl(client.id, q.key, t.id),
+        title: "Markeer als gecontroleerd",
+        style: {
+          cursor: 'pointer',
+          flexShrink: 0,
+          accentColor: '#2563eb'
+        }
+      }), ph && /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: ph.bg,
+          color: ph.color,
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, ph.icon, " ", ph.label), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          color: 'var(--text)'
+        }
+      }, t.label), asg && /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: asg.bg,
+          color: asg.color,
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, asg.label), t.month && /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          color: 'var(--text-light)',
+          whiteSpace: 'nowrap'
+        }
+      }, monthLabel(t.month)), parseFloat(t.hours) > 0 && /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          background: '#dbeafe',
+          color: '#1d4ed8',
+          fontWeight: '700',
+          whiteSpace: 'nowrap'
+        }
+      }, r1(parseFloat(t.hours)), "u"));
+    })));
+  })(), (() => {
     const allTasks = (client.quarterCustomTasks || {})[q.key] || [];
     const phaseRank = pk => {
       const i = activePhases.indexOf(pk);
@@ -1960,7 +2098,9 @@ function QuarterCard({
         }
       }, "Nog geen taken in deze maand."), mtasks.map(t => {
         const checked = !!st[`${q.key}::${t.id}`];
+        const controlled = !!controlSt[`${q.key}::${t.id}`];
         const asgKey = getTaskAssignee(client, q.key, t);
+        const needsControl = !!asgKey && asgKey !== 'quinten';
         const asg = getAssigneeInfo(asgKey);
         const ph = getPhaseInfo(t.phaseKey);
         const isEditing = editing === t.id;
@@ -2000,12 +2140,35 @@ function QuarterCard({
           checked: checked,
           disabled: !isAdmin,
           onChange: () => onToggleTask(client.id, q.key, t.id),
+          title: needsControl ? 'Uitgevoerd' : 'Klaar',
           style: {
             marginTop: '2px',
             cursor: isAdmin ? 'pointer' : 'default',
             flexShrink: 0
           }
-        }), ph && /*#__PURE__*/React.createElement("span", {
+        }), needsControl && /*#__PURE__*/React.createElement("span", {
+          title: controlled ? 'Gecontroleerd door jou' : 'Nog te controleren door jou',
+          style: {
+            display: 'inline-flex',
+            alignItems: 'center',
+            gap: '1px',
+            marginTop: '1px',
+            flexShrink: 0
+          }
+        }, /*#__PURE__*/React.createElement("input", {
+          type: "checkbox",
+          checked: controlled,
+          disabled: !isAdmin,
+          onChange: () => onToggleControl(client.id, q.key, t.id),
+          style: {
+            cursor: isAdmin ? 'pointer' : 'default',
+            accentColor: '#2563eb'
+          }
+        }), /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: '11px'
+          }
+        }, "🔍")), ph && /*#__PURE__*/React.createElement("span", {
           title: ph.label,
           style: {
             flexShrink: 0,
@@ -2089,7 +2252,9 @@ function QuarterCard({
         }, "— wie —"), ASSIGNEES.map(a => /*#__PURE__*/React.createElement("option", {
           key: a.key,
           value: a.key
-        }, a.label))), !isAdmin && asg && /*#__PURE__*/React.createElement("span", {
+        }, a.label)), asgKey && !ASSIGNEES.some(a => a.key === asgKey) && /*#__PURE__*/React.createElement("option", {
+          value: asgKey
+        }, "Sayfur / Tan (oud)")), !isAdmin && asg && /*#__PURE__*/React.createElement("span", {
           style: {
             flexShrink: 0,
             fontSize: '10px',
@@ -5272,6 +5437,26 @@ function App() {
       return {
         ...c,
         quarterTaskState: st
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+
+  // Controle door mij (tweede stap: uitgevoerd door ander -> gecontroleerd door Quinten)
+  const toggleQuarterTaskControl = (clientId, quarterKey, taskId) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const ct = {
+        ...(c.quarterTaskControl || {})
+      };
+      const k = `${quarterKey}::${taskId}`;
+      ct[k] = !ct[k];
+      return {
+        ...c,
+        quarterTaskControl: ct
       };
     });
     setClients(updated);
@@ -11906,6 +12091,7 @@ function App() {
       onTogglePhase: toggleClientQuarterPhase,
       onMovePhase: moveClientQuarterPhase,
       onToggleTask: toggleQuarterTask,
+      onToggleControl: toggleQuarterTaskControl,
       onSetAssignee: setQuarterTaskAssignee,
       onSetHours: setQuarterTaskHours,
       onSetMonth: setQuarterTaskMonth,
