@@ -1483,6 +1483,7 @@ function QuarterCard({
   rapportageMonths,
   rapportageRate,
   auditHours,
+  auditRate,
   controlHours,
   controlRate,
   taskControlRate,
@@ -2028,9 +2029,10 @@ function QuarterCard({
       const rapHere = Array.isArray(rapportageMonths) && rapportageMonths.includes(mk);
       const rapH = rapHere ? parseFloat(rapportageRate) || 0 : 0;
       const ctrlMonthH = taskControlRate ? mtasks.reduce((s, t) => s + (parseFloat(taskControlRate(t)) || 0), 0) : 0;
-      const ctrlHere = ctrlMonthH > 0;
-      const cnt = mtasks.length + (rapHere ? 1 : 0) + (ctrlHere ? 1 : 0);
-      const hrs = mHours + rapH + ctrlMonthH;
+      const auditHere = (parseFloat(auditHours) || 0) > 0 && mk !== '';
+      const auditH = auditHere ? parseFloat(auditRate) || 0 : 0;
+      const cnt = mtasks.length + (rapHere ? 1 : 0) + (auditHere ? 1 : 0);
+      const hrs = mHours + rapH + ctrlMonthH + auditH;
       const collapsed = !!collapsedMonths[mk];
       const k = mkey(mk);
       const defPhase = newPhase[k] || activePhases[0] || PHASE_OPTIONS[0] && PHASE_OPTIONS[0].key || '';
@@ -2096,8 +2098,10 @@ function QuarterCard({
         const asg = getAssigneeInfo(asgKey);
         const ph = getPhaseInfo(t.phaseKey);
         const isEditing = editing === t.id;
-        return /*#__PURE__*/React.createElement("div", {
-          key: t.id,
+        const ctrlH = taskControlRate ? parseFloat(taskControlRate(t)) || 0 : 0;
+        return /*#__PURE__*/React.createElement(React.Fragment, {
+          key: t.id
+        }, /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             flexDirection: 'column',
@@ -2138,35 +2142,13 @@ function QuarterCard({
           checked: checked,
           disabled: !isAdmin,
           onChange: () => onToggleTask(client.id, q.key, t.id),
-          title: needsControl ? 'Uitgevoerd' : 'Klaar',
+          title: "Uitgevoerd",
           style: {
             marginTop: '2px',
             cursor: isAdmin ? 'pointer' : 'default',
             flexShrink: 0
           }
-        }), needsControl && /*#__PURE__*/React.createElement("span", {
-          title: controlled ? 'Gecontroleerd door jou' : 'Nog te controleren door jou',
-          style: {
-            display: 'inline-flex',
-            alignItems: 'center',
-            gap: '1px',
-            marginTop: '1px',
-            flexShrink: 0
-          }
-        }, /*#__PURE__*/React.createElement("input", {
-          type: "checkbox",
-          checked: controlled,
-          disabled: !isAdmin,
-          onChange: () => onToggleControl(client.id, q.key, t.id),
-          style: {
-            cursor: isAdmin ? 'pointer' : 'default',
-            accentColor: '#2563eb'
-          }
-        }), /*#__PURE__*/React.createElement("span", {
-          style: {
-            fontSize: '11px'
-          }
-        }, "🔍")), isEditing ? /*#__PURE__*/React.createElement("input", {
+        }), isEditing ? /*#__PURE__*/React.createElement("input", {
           autoFocus: true,
           value: editVal,
           onChange: e => setEditVal(e.target.value),
@@ -2323,58 +2305,59 @@ function QuarterCard({
             fontWeight: '600',
             whiteSpace: 'nowrap'
           }
-        }, t.hours, "u")));
-      }), ctrlHere && /*#__PURE__*/React.createElement("div", {
-        style: {
-          display: 'flex',
-          alignItems: 'center',
-          gap: '8px',
-          padding: '8px',
-          borderRadius: '8px',
-          background: '#eff6ff',
-          border: '1px solid #bfdbfe',
-          fontSize: '13px',
-          lineHeight: '1.4'
-        }
-      }, /*#__PURE__*/React.createElement("span", {
-        style: {
-          flexShrink: 0,
-          fontSize: '10px',
-          padding: '2px 7px',
-          borderRadius: '8px',
-          background: '#dbeafe',
-          color: '#1d4ed8',
-          fontWeight: '600',
-          whiteSpace: 'nowrap'
-        }
-      }, "🔍 Controle"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          flex: 1,
-          color: 'var(--text)'
-        }
-      }, "Controle van werk door anderen"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          flexShrink: 0,
-          fontSize: '10px',
-          padding: '2px 7px',
-          borderRadius: '8px',
-          background: '#dbeafe',
-          color: '#2563eb',
-          fontWeight: '600',
-          whiteSpace: 'nowrap'
-        }
-      }, "Quinten"), /*#__PURE__*/React.createElement("span", {
-        style: {
-          flexShrink: 0,
-          fontSize: '11px',
-          padding: '2px 6px',
-          borderRadius: '6px',
-          background: '#dbeafe',
-          color: '#1d4ed8',
-          fontWeight: '700',
-          whiteSpace: 'nowrap'
-        }
-      }, r1(ctrlMonthH), "u")), rapHere && /*#__PURE__*/React.createElement("div", {
+        }, t.hours, "u"))), ctrlH > 0 && /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '6px 8px',
+            marginLeft: isAdmin ? '26px' : '24px',
+            borderRadius: '8px',
+            background: '#eff6ff',
+            border: '1px solid #bfdbfe',
+            fontSize: '12px',
+            lineHeight: '1.3'
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            flexShrink: 0,
+            fontSize: '10px',
+            padding: '2px 7px',
+            borderRadius: '8px',
+            background: '#dbeafe',
+            color: '#1d4ed8',
+            fontWeight: '600',
+            whiteSpace: 'nowrap'
+          }
+        }, "🔍 Controle"), /*#__PURE__*/React.createElement("span", {
+          style: {
+            flex: 1,
+            color: 'var(--text-light)'
+          }
+        }, "Controle van werk"), /*#__PURE__*/React.createElement("span", {
+          style: {
+            flexShrink: 0,
+            fontSize: '10px',
+            padding: '2px 7px',
+            borderRadius: '8px',
+            background: '#dbeafe',
+            color: '#2563eb',
+            fontWeight: '600',
+            whiteSpace: 'nowrap'
+          }
+        }, "Quinten"), /*#__PURE__*/React.createElement("span", {
+          style: {
+            flexShrink: 0,
+            fontSize: '11px',
+            padding: '2px 6px',
+            borderRadius: '6px',
+            background: '#dbeafe',
+            color: '#1d4ed8',
+            fontWeight: '700',
+            whiteSpace: 'nowrap'
+          }
+        }, r1(ctrlH), "u")));
+      }), rapHere && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           alignItems: 'center',
@@ -2424,7 +2407,57 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(rapH), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
+      }, r1(rapH), "u")), auditHere && /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          padding: '8px',
+          borderRadius: '8px',
+          background: '#f5f3ff',
+          border: '1px solid #ddd6fe',
+          fontSize: '13px',
+          lineHeight: '1.4'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: '#ede9fe',
+          color: '#7c3aed',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, "🔍 Audit"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flex: 1,
+          color: 'var(--text)'
+        }
+      }, "Maandelijkse audit"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '10px',
+          padding: '2px 7px',
+          borderRadius: '8px',
+          background: '#dbeafe',
+          color: '#2563eb',
+          fontWeight: '600',
+          whiteSpace: 'nowrap'
+        }
+      }, "Quinten"), /*#__PURE__*/React.createElement("span", {
+        style: {
+          flexShrink: 0,
+          fontSize: '11px',
+          padding: '2px 6px',
+          borderRadius: '6px',
+          background: '#ede9fe',
+          color: '#7c3aed',
+          fontWeight: '700',
+          whiteSpace: 'nowrap'
+        }
+      }, r1(auditH), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: '6px',
@@ -2508,65 +2541,7 @@ function QuarterCard({
         }
       }, "+"))));
     });
-  })(), (parseFloat(auditHours) || 0) > 0 && /*#__PURE__*/React.createElement("div", {
-    style: {
-      borderTop: '1px solid var(--border)',
-      paddingTop: '10px'
-    }
-  }, /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'center',
-      gap: '6px',
-      marginBottom: '8px'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      fontSize: '12px',
-      fontWeight: '700',
-      color: '#7c3aed',
-      flex: 1
-    }
-  }, "🔍 Audit")), /*#__PURE__*/React.createElement("div", {
-    style: {
-      display: 'flex',
-      alignItems: 'flex-start',
-      gap: '8px',
-      padding: '8px',
-      borderRadius: '8px',
-      background: '#f5f3ff',
-      border: '1px solid #ddd6fe',
-      fontSize: '13px',
-      lineHeight: '1.4'
-    }
-  }, /*#__PURE__*/React.createElement("span", {
-    style: {
-      flex: 1,
-      color: 'var(--text)'
-    }
-  }, "Maandelijkse audit (0,5 u × 3 mnd)"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flexShrink: 0,
-      fontSize: '10px',
-      padding: '2px 7px',
-      borderRadius: '8px',
-      background: '#dbeafe',
-      color: '#2563eb',
-      fontWeight: '600',
-      whiteSpace: 'nowrap'
-    }
-  }, "Quinten"), /*#__PURE__*/React.createElement("span", {
-    style: {
-      flexShrink: 0,
-      fontSize: '11px',
-      padding: '2px 6px',
-      borderRadius: '6px',
-      background: '#ede9fe',
-      color: '#7c3aed',
-      fontWeight: '700',
-      whiteSpace: 'nowrap'
-    }
-  }, Math.round((parseFloat(auditHours) || 0) * 10) / 10, "u"))), carryover && carryover.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })(), carryover && carryover.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: '2px dashed #f59e0b',
       paddingTop: '10px',
@@ -10930,6 +10905,7 @@ function App() {
       rapportageMonths: getRapportageMonthsForQuarter(client, q.key),
       rapportageRate: RAPPORTAGE_HRS_PER_Q,
       auditHours: getAuditHours(client),
+      auditRate: AUDIT_HRS_PER_MONTH,
       controlHours: getControlHoursForQuarter(client, q.key),
       controlRate: getControlRate(),
       taskControlRate: t => getTaskControlRate(client, q.key, t),
