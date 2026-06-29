@@ -1584,6 +1584,7 @@ function QuarterCard({
   onToggleTask,
   onSetAssignee,
   onSetHours,
+  onSetMonth,
   onMoveTaskToQuarter,
   onAddTask,
   onUpdateTask,
@@ -1591,10 +1592,19 @@ function QuarterCard({
 }) {
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
+  const [newMonth, setNewMonth] = useState({});
   const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState('');
   const [showPhasePicker, setShowPhasePicker] = useState(false);
   const [dragOver, setDragOver] = useState(false);
+  const MONTH_ABBR = ['jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
+  const qMonths = (() => {
+    const mm = /^(\d{4})-Q([1-4])$/.exec(q.key);
+    if (!mm) return ['1e', '2e', '3e'];
+    const start = (parseInt(mm[2]) - 1) * 3;
+    return [0, 1, 2].map(o => MONTH_ABBR[start + o]);
+  })();
+  const monthLabel = mk => mk === '' || mk == null ? 'Hele kwartaal' : qMonths[parseInt(mk) - 1] || 'maand ' + mk;
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
@@ -1921,163 +1931,221 @@ function QuarterCard({
         color: 'var(--text-light)',
         fontStyle: 'italic'
       }
-    }, "Nog geen acties."), tasks.map(t => {
-      const checked = !!st[`${q.key}::${t.id}`];
-      const asgKey = getTaskAssignee(client, q.key, t);
-      const asg = getAssigneeInfo(asgKey);
-      const isEditing = editing === t.id;
-      return /*#__PURE__*/React.createElement("div", {
-        key: t.id,
-        style: {
-          display: 'flex',
-          alignItems: 'flex-start',
-          gap: '8px',
-          padding: '8px',
-          borderRadius: '8px',
-          background: checked ? '#f0fdf4' : 'var(--bg,#f8fafc)',
-          fontSize: '13px',
-          lineHeight: '1.4'
-        }
-      }, isAdmin && /*#__PURE__*/React.createElement("span", {
-        draggable: true,
-        onDragStart: e => {
-          e.dataTransfer.setData('text/plain', JSON.stringify({
-            fromQ: q.key,
-            taskId: t.id
-          }));
-          e.dataTransfer.effectAllowed = 'move';
-        },
-        title: "Sleep naar ander kwartaal",
-        style: {
-          cursor: 'grab',
-          color: 'var(--text-light)',
-          fontSize: '13px',
-          marginTop: '1px',
-          flexShrink: 0,
-          userSelect: 'none'
-        }
-      }, "⠿"), /*#__PURE__*/React.createElement("input", {
-        type: "checkbox",
-        checked: checked,
-        disabled: !isAdmin,
-        onChange: () => onToggleTask(client.id, q.key, t.id),
-        style: {
-          marginTop: '2px',
-          cursor: isAdmin ? 'pointer' : 'default',
-          flexShrink: 0
-        }
-      }), isEditing ? /*#__PURE__*/React.createElement("input", {
-        autoFocus: true,
-        value: editVal,
-        onChange: e => setEditVal(e.target.value),
-        onKeyDown: e => {
-          if (e.key === 'Enter') {
-            onUpdateTask(client.id, q.key, t.id, editVal);
-            setEditing(null);
+    }, "Nog geen acties."), (() => {
+      const order = ['1', '2', '3', ''];
+      const hasRealMonth = tasks.some(t => ['1', '2', '3'].includes(t.month || ''));
+      return order.map(mk => {
+        const mtasks = tasks.filter(t => (t.month || '') === mk);
+        if (mtasks.length === 0) return null;
+        return /*#__PURE__*/React.createElement("div", {
+          key: mk || 'geen',
+          style: {
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '6px'
           }
-          if (e.key === 'Escape') setEditing(null);
-        },
-        onBlur: () => {
-          onUpdateTask(client.id, q.key, t.id, editVal);
-          setEditing(null);
-        },
-        style: {
-          flex: 1,
-          fontSize: '13px',
-          padding: '2px 6px',
-          borderRadius: '6px',
-          border: '1px solid var(--border)'
-        }
-      }) : /*#__PURE__*/React.createElement("span", {
-        style: {
-          flex: 1,
-          color: checked ? '#166534' : 'var(--text)',
-          textDecoration: checked ? 'line-through' : 'none'
-        }
-      }, t.label), isAdmin && /*#__PURE__*/React.createElement("select", {
-        value: asgKey || '',
-        onChange: e => onSetAssignee(client.id, q.key, t.id, e.target.value),
-        style: {
-          flexShrink: 0,
-          fontSize: '10px',
-          padding: '2px 5px',
-          borderRadius: '8px',
-          border: `1px solid ${asg ? asg.color : 'var(--border)'}`,
-          background: asg ? asg.bg : 'var(--white)',
-          color: asg ? asg.color : 'var(--text-light)',
-          fontWeight: '600',
-          cursor: 'pointer',
-          maxWidth: '100px'
-        }
-      }, /*#__PURE__*/React.createElement("option", {
-        value: ""
-      }, "— wie —"), ASSIGNEES.map(a => /*#__PURE__*/React.createElement("option", {
-        key: a.key,
-        value: a.key
-      }, a.label))), !isAdmin && asg && /*#__PURE__*/React.createElement("span", {
-        style: {
-          flexShrink: 0,
-          fontSize: '10px',
-          padding: '2px 7px',
-          borderRadius: '8px',
-          background: asg.bg,
-          color: asg.color,
-          fontWeight: '600',
-          whiteSpace: 'nowrap'
-        }
-      }, asg.label), isAdmin ? /*#__PURE__*/React.createElement("input", {
-        type: "number",
-        min: "0",
-        step: "0.5",
-        value: t.hours === undefined || t.hours === '' ? '' : t.hours,
-        onChange: e => onSetHours(client.id, q.key, t.id, e.target.value),
-        placeholder: "u",
-        title: "Uren",
-        style: {
-          flexShrink: 0,
-          width: '42px',
-          fontSize: '11px',
-          padding: '2px 4px',
-          borderRadius: '6px',
-          border: '1px solid var(--border)',
-          textAlign: 'center'
-        }
-      }) : parseFloat(t.hours) > 0 && /*#__PURE__*/React.createElement("span", {
-        style: {
-          flexShrink: 0,
-          fontSize: '10px',
-          padding: '2px 6px',
-          borderRadius: '6px',
-          background: '#eff6ff',
-          color: '#1d4ed8',
-          fontWeight: '600',
-          whiteSpace: 'nowrap'
-        }
-      }, t.hours, "u"), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
-        onClick: () => {
-          setEditing(t.id);
-          setEditVal(t.label);
-        },
-        title: "Hernoemen",
-        style: {
-          cursor: 'pointer',
-          fontSize: '12px',
-          flexShrink: 0,
-          opacity: 0.6
-        }
-      }, "✏️"), isAdmin && /*#__PURE__*/React.createElement("span", {
-        onClick: () => {
-          if (confirm('Taak verwijderen?')) onDeleteTask(client.id, q.key, t.id);
-        },
-        title: "Verwijderen",
-        style: {
-          cursor: 'pointer',
-          fontSize: '14px',
-          flexShrink: 0,
-          color: '#dc2626'
-        }
-      }, "×"));
-    })), isAdmin && /*#__PURE__*/React.createElement("div", {
+        }, hasRealMonth && /*#__PURE__*/React.createElement("div", {
+          style: {
+            fontSize: '10px',
+            fontWeight: '700',
+            color: 'var(--text-light)',
+            textTransform: 'uppercase',
+            letterSpacing: '0.04em',
+            marginTop: '2px'
+          }
+        }, "📅 ", mk === '' ? 'Hele kwartaal' : monthLabel(mk)), mtasks.map(t => {
+          const checked = !!st[`${q.key}::${t.id}`];
+          const asgKey = getTaskAssignee(client, q.key, t);
+          const asg = getAssigneeInfo(asgKey);
+          const isEditing = editing === t.id;
+          return /*#__PURE__*/React.createElement("div", {
+            key: t.id,
+            style: {
+              display: 'flex',
+              alignItems: 'flex-start',
+              gap: '8px',
+              padding: '8px',
+              borderRadius: '8px',
+              background: checked ? '#f0fdf4' : 'var(--bg,#f8fafc)',
+              fontSize: '13px',
+              lineHeight: '1.4'
+            }
+          }, isAdmin && /*#__PURE__*/React.createElement("span", {
+            draggable: true,
+            onDragStart: e => {
+              e.dataTransfer.setData('text/plain', JSON.stringify({
+                fromQ: q.key,
+                taskId: t.id
+              }));
+              e.dataTransfer.effectAllowed = 'move';
+            },
+            title: "Sleep naar ander kwartaal",
+            style: {
+              cursor: 'grab',
+              color: 'var(--text-light)',
+              fontSize: '13px',
+              marginTop: '1px',
+              flexShrink: 0,
+              userSelect: 'none'
+            }
+          }, "⠿"), /*#__PURE__*/React.createElement("input", {
+            type: "checkbox",
+            checked: checked,
+            disabled: !isAdmin,
+            onChange: () => onToggleTask(client.id, q.key, t.id),
+            style: {
+              marginTop: '2px',
+              cursor: isAdmin ? 'pointer' : 'default',
+              flexShrink: 0
+            }
+          }), isEditing ? /*#__PURE__*/React.createElement("input", {
+            autoFocus: true,
+            value: editVal,
+            onChange: e => setEditVal(e.target.value),
+            onKeyDown: e => {
+              if (e.key === 'Enter') {
+                onUpdateTask(client.id, q.key, t.id, editVal);
+                setEditing(null);
+              }
+              if (e.key === 'Escape') setEditing(null);
+            },
+            onBlur: () => {
+              onUpdateTask(client.id, q.key, t.id, editVal);
+              setEditing(null);
+            },
+            style: {
+              flex: 1,
+              fontSize: '13px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              border: '1px solid var(--border)'
+            }
+          }) : /*#__PURE__*/React.createElement("span", {
+            style: {
+              flex: 1,
+              color: checked ? '#166534' : 'var(--text)',
+              textDecoration: checked ? 'line-through' : 'none'
+            }
+          }, t.label), isAdmin && /*#__PURE__*/React.createElement("select", {
+            value: t.month || '',
+            onChange: e => onSetMonth(client.id, q.key, t.id, e.target.value),
+            title: "Maand",
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 4px',
+              borderRadius: '8px',
+              border: '1px solid var(--border)',
+              background: 'var(--white)',
+              color: 'var(--text-light)',
+              fontWeight: '600',
+              cursor: 'pointer'
+            }
+          }, /*#__PURE__*/React.createElement("option", {
+            value: ""
+          }, "mnd"), /*#__PURE__*/React.createElement("option", {
+            value: "1"
+          }, qMonths[0]), /*#__PURE__*/React.createElement("option", {
+            value: "2"
+          }, qMonths[1]), /*#__PURE__*/React.createElement("option", {
+            value: "3"
+          }, qMonths[2])), !isAdmin && t.month && /*#__PURE__*/React.createElement("span", {
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              background: '#f1f5f9',
+              color: '#475569',
+              fontWeight: '600',
+              whiteSpace: 'nowrap'
+            }
+          }, monthLabel(t.month)), isAdmin && /*#__PURE__*/React.createElement("select", {
+            value: asgKey || '',
+            onChange: e => onSetAssignee(client.id, q.key, t.id, e.target.value),
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 5px',
+              borderRadius: '8px',
+              border: `1px solid ${asg ? asg.color : 'var(--border)'}`,
+              background: asg ? asg.bg : 'var(--white)',
+              color: asg ? asg.color : 'var(--text-light)',
+              fontWeight: '600',
+              cursor: 'pointer',
+              maxWidth: '100px'
+            }
+          }, /*#__PURE__*/React.createElement("option", {
+            value: ""
+          }, "— wie —"), ASSIGNEES.map(a => /*#__PURE__*/React.createElement("option", {
+            key: a.key,
+            value: a.key
+          }, a.label))), !isAdmin && asg && /*#__PURE__*/React.createElement("span", {
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 7px',
+              borderRadius: '8px',
+              background: asg.bg,
+              color: asg.color,
+              fontWeight: '600',
+              whiteSpace: 'nowrap'
+            }
+          }, asg.label), isAdmin ? /*#__PURE__*/React.createElement("input", {
+            type: "number",
+            min: "0",
+            step: "0.5",
+            value: t.hours === undefined || t.hours === '' ? '' : t.hours,
+            onChange: e => onSetHours(client.id, q.key, t.id, e.target.value),
+            placeholder: "u",
+            title: "Uren",
+            style: {
+              flexShrink: 0,
+              width: '42px',
+              fontSize: '11px',
+              padding: '2px 4px',
+              borderRadius: '6px',
+              border: '1px solid var(--border)',
+              textAlign: 'center'
+            }
+          }) : parseFloat(t.hours) > 0 && /*#__PURE__*/React.createElement("span", {
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 6px',
+              borderRadius: '6px',
+              background: '#eff6ff',
+              color: '#1d4ed8',
+              fontWeight: '600',
+              whiteSpace: 'nowrap'
+            }
+          }, t.hours, "u"), isAdmin && !isEditing && /*#__PURE__*/React.createElement("span", {
+            onClick: () => {
+              setEditing(t.id);
+              setEditVal(t.label);
+            },
+            title: "Hernoemen",
+            style: {
+              cursor: 'pointer',
+              fontSize: '12px',
+              flexShrink: 0,
+              opacity: 0.6
+            }
+          }, "✏️"), isAdmin && /*#__PURE__*/React.createElement("span", {
+            onClick: () => {
+              if (confirm('Taak verwijderen?')) onDeleteTask(client.id, q.key, t.id);
+            },
+            title: "Verwijderen",
+            style: {
+              cursor: 'pointer',
+              fontSize: '14px',
+              flexShrink: 0,
+              color: '#dc2626'
+            }
+          }, "×"));
+        }));
+      });
+    })()), isAdmin && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: '6px',
@@ -2091,7 +2159,7 @@ function QuarterCard({
       }),
       onKeyDown: e => {
         if (e.key === 'Enter') {
-          onAddTask(client.id, q.key, pk, newTask[pk], newAssignee[pk]);
+          onAddTask(client.id, q.key, pk, newTask[pk], newAssignee[pk], newMonth[pk]);
           setNewTask({
             ...newTask,
             [pk]: ''
@@ -2107,6 +2175,28 @@ function QuarterCard({
         border: '1px solid var(--border)'
       }
     }), /*#__PURE__*/React.createElement("select", {
+      value: newMonth[pk] || '',
+      onChange: e => setNewMonth({
+        ...newMonth,
+        [pk]: e.target.value
+      }),
+      title: "Maand",
+      style: {
+        fontSize: '11px',
+        padding: '6px',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("option", {
+      value: ""
+    }, "mnd"), /*#__PURE__*/React.createElement("option", {
+      value: "1"
+    }, qMonths[0]), /*#__PURE__*/React.createElement("option", {
+      value: "2"
+    }, qMonths[1]), /*#__PURE__*/React.createElement("option", {
+      value: "3"
+    }, qMonths[2])), /*#__PURE__*/React.createElement("select", {
       value: newAssignee[pk] || '',
       onChange: e => setNewAssignee({
         ...newAssignee,
@@ -2126,7 +2216,7 @@ function QuarterCard({
       value: a.key
     }, a.label))), /*#__PURE__*/React.createElement("button", {
       onClick: () => {
-        onAddTask(client.id, q.key, pk, newTask[pk], newAssignee[pk]);
+        onAddTask(client.id, q.key, pk, newTask[pk], newAssignee[pk], newMonth[pk]);
         setNewTask({
           ...newTask,
           [pk]: ''
@@ -5150,7 +5240,7 @@ function App() {
     const override = (client.quarterTaskAssignee || {})[`${quarterKey}::${task.id}`];
     return override || task.assignee || null;
   };
-  const addQuarterCustomTask = (clientId, quarterKey, phaseKey, label, assignee) => {
+  const addQuarterCustomTask = (clientId, quarterKey, phaseKey, label, assignee, month) => {
     const val = (label || '').trim();
     if (!val) return;
     const updated = clients.map(c => {
@@ -5163,9 +5253,30 @@ function App() {
         id: 'cq' + Date.now() + Math.floor(Math.random() * 1000),
         label: val,
         assignee: assignee || '',
-        phaseKey
+        phaseKey,
+        month: month || ''
       });
       qct[quarterKey] = arr;
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+  const setQuarterTaskMonth = (clientId, quarterKey, taskId, month) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        month: month || ''
+      } : t);
       return {
         ...c,
         quarterCustomTasks: qct
@@ -8746,7 +8857,14 @@ function App() {
         textAlign: 'left',
         padding: 0
       }
-    }, client.name)), QUARTERS.map(q => {
+    }, client.name), /*#__PURE__*/React.createElement("div", {
+      style: {
+        fontSize: '11px',
+        color: '#0d9488',
+        fontWeight: '600',
+        marginTop: '3px'
+      }
+    }, "📦 ", Math.round((parseFloat(client.budget) || 0) * 3 * 10) / 10, " u/kwartaal")), QUARTERS.map(q => {
       const phases = getQuarterPhasesArr(client, q.key);
       const prog = getQuarterProgress(client, q.key);
       return /*#__PURE__*/React.createElement("td", {
@@ -11590,6 +11708,7 @@ function App() {
       onToggleTask: toggleQuarterTask,
       onSetAssignee: setQuarterTaskAssignee,
       onSetHours: setQuarterTaskHours,
+      onSetMonth: setQuarterTaskMonth,
       onMoveTaskToQuarter: moveTaskToQuarter,
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
