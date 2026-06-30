@@ -2818,6 +2818,7 @@ function App() {
   const [activeStep, setActiveStep] = useState(1);
   const [kwFilter, setKwFilter] = useState('all');
   const [prioFilter, setPrioFilter] = useState([]);
+  const [kwSort, setKwSort] = useState('priority');
   const [prioMenuFor, setPrioMenuFor] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [tasks, setTasks] = useState({});
@@ -8637,6 +8638,9 @@ function App() {
   // KWARTAALOVERZICHT VIEW (alle klanten x kwartalen)
   if (activeView === 'kwartaaloverzicht') {
     const allActiveClients = clients.filter(c => !c.archived).slice().sort((a, b) => {
+      if (kwSort === 'name') return (a.name || '').localeCompare(b.name || '', 'nl', {
+        sensitivity: 'base'
+      });
       const ra = getClientPriorityRank(a),
         rb = getClientPriorityRank(b);
       if (ra !== rb) return ra - rb;
@@ -8802,7 +8806,45 @@ function App() {
           fontWeight: '500'
         }
       }, cnt));
-    })), activeClients.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        width: '1px',
+        height: '22px',
+        background: 'var(--border)',
+        margin: '0 4px'
+      }
+    }), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '13px',
+        fontWeight: '600',
+        color: 'var(--text-light)',
+        marginRight: '2px'
+      }
+    }, "Sorteren:"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setKwSort('priority'),
+      style: {
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: '1px solid ' + (kwSort === 'priority' ? '#2563eb' : 'var(--border)'),
+        background: kwSort === 'priority' ? '#2563eb' : 'var(--white)',
+        color: kwSort === 'priority' ? '#fff' : 'var(--text-light)'
+      }
+    }, "Prioriteit"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setKwSort('name'),
+      style: {
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: '1px solid ' + (kwSort === 'name' ? '#2563eb' : 'var(--border)'),
+        background: kwSort === 'name' ? '#2563eb' : 'var(--white)',
+        color: kwSort === 'name' ? '#fff' : 'var(--text-light)'
+      }
+    }, "Naam (A–Z)")), activeClients.length === 0 ? /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '64px 24px',
