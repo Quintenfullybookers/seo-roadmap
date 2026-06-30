@@ -396,6 +396,42 @@ const DEFAULT_PHASE_TEMPLATES = {
   linkbuilding: []
 };
 
+// PRIORITEIT (per klant, in kwartaaloverzicht)
+const PRIORITY_LEVELS = [{
+  key: 'kritiek',
+  label: 'Kritiek',
+  rank: 1,
+  bg: '#FCEBEB',
+  color: '#A32D2D'
+}, {
+  key: 'hoog',
+  label: 'Hoog',
+  rank: 2,
+  bg: '#FAECE7',
+  color: '#993C1D'
+}, {
+  key: 'midden',
+  label: 'Midden',
+  rank: 3,
+  bg: '#FAEEDA',
+  color: '#854F0B'
+}, {
+  key: 'laag',
+  label: 'Laag',
+  rank: 4,
+  bg: '#E6F1FB',
+  color: '#0C447C'
+}, {
+  key: 'geen',
+  label: 'Geen',
+  rank: 5,
+  bg: '#F1EFE8',
+  color: '#5F5E5A'
+}];
+const getPriorityInfo = key => PRIORITY_LEVELS.find(p => p.key === key) || PRIORITY_LEVELS[4];
+const getClientPriorityKey = client => client && client.priority ? client.priority : 'geen';
+const getClientPriorityRank = client => getPriorityInfo(getClientPriorityKey(client)).rank;
+
 // UITVOERDERS (wie doet de taak)
 const ASSIGNEES = [{
   key: 'quinten',
@@ -2781,6 +2817,8 @@ function App() {
   const [showCelebration, setShowCelebration] = useState(false);
   const [activeStep, setActiveStep] = useState(1);
   const [kwFilter, setKwFilter] = useState('all');
+  const [prioFilter, setPrioFilter] = useState([]);
+  const [prioMenuFor, setPrioMenuFor] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
   const [tasks, setTasks] = useState({});
   const [irrelevantTasks, setIrrelevantTasks] = useState({});
@@ -5905,6 +5943,16 @@ function App() {
       clients: updated
     });
   };
+  const setClientPriority = (clientId, priorityKey) => {
+    const updated = clients.map(c => c.id === clientId ? {
+      ...c,
+      priority: priorityKey
+    } : c);
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
 
   // Controle door mij: vast aantal uren per taak die door een ander wordt uitgevoerd
   const getControlRate = () => {
@@ -8588,9 +8636,16 @@ function App() {
 
   // KWARTAALOVERZICHT VIEW (alle klanten x kwartalen)
   if (activeView === 'kwartaaloverzicht') {
-    const activeClients = clients.filter(c => !c.archived).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', {
-      sensitivity: 'base'
-    }));
+    const allActiveClients = clients.filter(c => !c.archived).slice().sort((a, b) => {
+      const ra = getClientPriorityRank(a),
+        rb = getClientPriorityRank(b);
+      if (ra !== rb) return ra - rb;
+      return (a.name || '').localeCompare(b.name || '', 'nl', {
+        sensitivity: 'base'
+      });
+    });
+    const activeClients = prioFilter.length > 0 ? allActiveClients.filter(c => prioFilter.includes(getClientPriorityKey(c))) : allActiveClients;
+    const togglePrioFilter = k => setPrioFilter(prev => prev.includes(k) ? prev.filter(x => x !== k) : [...prev, k]);
     const currentQ = getCurrentQuarterKey();
     return /*#__PURE__*/React.createElement("div", {
       className: `app ${!isAdmin ? 'viewer-mode' : ''}`
@@ -8687,7 +8742,67 @@ function App() {
       className: "title"
     }, "🗓️ Kwartaaloverzicht"), /*#__PURE__*/React.createElement("p", {
       className: "subtitle"
-    }, "Fase & voortgang per klant, per kwartaal")), activeClients.length === 0 ? /*#__PURE__*/React.createElement("div", {
+    }, "Fase & voortgang per klant, per kwartaal")), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        flexWrap: 'wrap',
+        gap: '8px',
+        marginBottom: '20px'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontSize: '13px',
+        fontWeight: '600',
+        color: 'var(--text-light)',
+        marginRight: '2px'
+      }
+    }, "Filter op prioriteit:"), /*#__PURE__*/React.createElement("button", {
+      onClick: () => setPrioFilter([]),
+      style: {
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: '1px solid ' + (prioFilter.length === 0 ? '#2563eb' : 'var(--border)'),
+        background: prioFilter.length === 0 ? '#2563eb' : 'var(--white)',
+        color: prioFilter.length === 0 ? '#fff' : 'var(--text-light)'
+      }
+    }, "Alle"), PRIORITY_LEVELS.map(p => {
+      const on = prioFilter.includes(p.key);
+      const cnt = allActiveClients.filter(c => getClientPriorityKey(c) === p.key).length;
+      return /*#__PURE__*/React.createElement("button", {
+        key: p.key,
+        onClick: () => togglePrioFilter(p.key),
+        style: {
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: '600',
+          padding: '6px 14px',
+          borderRadius: '20px',
+          border: '1px solid ' + (on ? p.color : 'var(--border)'),
+          background: on ? p.bg : 'var(--white)',
+          color: on ? p.color : 'var(--text-light)',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '6px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: '9px',
+          height: '9px',
+          borderRadius: '50%',
+          background: p.color,
+          display: 'inline-block'
+        }
+      }), p.label, /*#__PURE__*/React.createElement("span", {
+        style: {
+          opacity: 0.7,
+          fontWeight: '500'
+        }
+      }, cnt));
+    })), activeClients.length === 0 ? /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'center',
         padding: '64px 24px',
@@ -8703,7 +8818,20 @@ function App() {
         fontSize: '18px',
         fontWeight: '600'
       }
-    }, "Nog geen actieve klanten")) : /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
+    }, prioFilter.length > 0 ? 'Geen klanten met deze prioriteit' : 'Nog geen actieve klanten'), prioFilter.length > 0 && /*#__PURE__*/React.createElement("button", {
+      onClick: () => setPrioFilter([]),
+      style: {
+        marginTop: '12px',
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 14px',
+        borderRadius: '8px',
+        border: '1px solid var(--border)',
+        background: 'var(--white)',
+        color: 'var(--text)'
+      }
+    }, "Filter wissen")) : /*#__PURE__*/React.createElement(React.Fragment, null, (() => {
       const WEEKS_PER_Q = 13;
       const weekly = parseFloat(settings.myWeeklyHours) || 0;
       const onbWeekly = parseFloat(settings.onboardingHours) || 0;
@@ -9638,7 +9766,90 @@ function App() {
         fontWeight: '600',
         marginTop: '3px'
       }
-    }, "📦 ", Math.round((parseFloat(client.budget) || 0) * 3 * 10) / 10, " u/kwartaal")), QUARTERS.map(q => {
+    }, "📦 ", Math.round((parseFloat(client.budget) || 0) * 3 * 10) / 10, " u/kwartaal"), (() => {
+      const pk = getClientPriorityKey(client);
+      const pi = getPriorityInfo(pk);
+      const open = prioMenuFor === client.id;
+      return /*#__PURE__*/React.createElement("div", {
+        style: {
+          position: 'relative',
+          marginTop: '6px'
+        }
+      }, /*#__PURE__*/React.createElement("button", {
+        onClick: () => setPrioMenuFor(open ? null : client.id),
+        title: "Prioriteit instellen",
+        style: {
+          cursor: 'pointer',
+          display: 'inline-flex',
+          alignItems: 'center',
+          gap: '5px',
+          fontSize: '11px',
+          fontWeight: '600',
+          padding: '3px 9px',
+          borderRadius: '20px',
+          border: '1px solid ' + pi.color + '33',
+          background: pi.bg,
+          color: pi.color
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: '8px',
+          height: '8px',
+          borderRadius: '50%',
+          background: pi.color,
+          display: 'inline-block'
+        }
+      }), pi.label, /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontSize: '9px',
+          opacity: 0.7
+        }
+      }, "▾")), open && /*#__PURE__*/React.createElement("div", {
+        style: {
+          marginTop: '4px',
+          background: 'var(--white)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: '4px',
+          width: '150px'
+        }
+      }, PRIORITY_LEVELS.map(p => /*#__PURE__*/React.createElement("button", {
+        key: p.key,
+        onClick: () => {
+          setClientPriority(client.id, p.key);
+          setPrioMenuFor(null);
+        },
+        style: {
+          cursor: 'pointer',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          width: '100%',
+          textAlign: 'left',
+          fontSize: '12px',
+          fontWeight: '600',
+          padding: '6px 9px',
+          borderRadius: '7px',
+          border: 'none',
+          background: p.key === pk ? p.bg : 'transparent',
+          color: p.key === pk ? p.color : 'var(--text)'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: '9px',
+          height: '9px',
+          borderRadius: '50%',
+          background: p.color,
+          display: 'inline-block',
+          flexShrink: 0
+        }
+      }), p.label, p.key === pk && /*#__PURE__*/React.createElement("span", {
+        style: {
+          marginLeft: 'auto',
+          fontSize: '11px'
+        }
+      }, "✓")))));
+    })()), QUARTERS.map(q => {
       const phases = getQuarterPhasesArr(client, q.key);
       const prog = getQuarterProgress(client, q.key);
       const qMN = ['', 'jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
