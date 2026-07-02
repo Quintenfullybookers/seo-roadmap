@@ -6015,6 +6015,57 @@ function App() {
   const deleteBoardCard = id => {
     persistBoard(boardCards.filter(c => c.id !== id));
   };
+  // Board-kaart als taak in kwartaalplanning (huidig kwartaal) van de gekoppelde klant zetten
+  const pushBoardCardToQuarter = card => {
+    if (!card || !card.project) return;
+    const client = clients.find(c => String(c.id) === String(card.project));
+    if (!client) {
+      setToast({
+        type: 'error',
+        message: 'Geen gekoppeld project'
+      });
+      return;
+    }
+    const qk = getCurrentQuarterKey();
+    const existingPhases = getQuarterPhasesArr(client, qk);
+    const phaseKey = existingPhases && existingPhases[0] || PHASE_OPTIONS[0].key;
+    const task = {
+      id: 'cq' + Date.now() + Math.floor(Math.random() * 1000),
+      label: card.text,
+      assignee: '',
+      phaseKey: phaseKey,
+      month: '',
+      fromBoard: card.id
+    };
+    const updatedClients = clients.map(c => {
+      if (String(c.id) !== String(card.project)) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[qk] = [...(qct[qk] || []), task];
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    const updatedCards = boardCards.map(c => c.id === card.id ? {
+      ...c,
+      pushed: qk
+    } : c);
+    setClients(updatedClients);
+    setBoardCards(updatedCards);
+    try {
+      localStorage.setItem('tfb_boardCards', JSON.stringify(updatedCards));
+    } catch (e) {}
+    saveData({
+      clients: updatedClients,
+      boardCards: updatedCards
+    });
+    setToast({
+      type: 'success',
+      message: '✓ Toegevoegd aan kwartaalplanning'
+    });
+  };
 
   // Controle door mij: vast aantal uren per taak die door een ander wordt uitgevoerd
   const getControlRate = () => {
@@ -9016,7 +9067,32 @@ function App() {
               whiteSpace: 'nowrap'
             }
           }, sl);
-        }))));
+        }), card.project && (card.pushed ? /*#__PURE__*/React.createElement("span", {
+          title: "Staat in de kwartaalplanning",
+          style: {
+            fontSize: '10px',
+            fontWeight: '600',
+            color: '#0d9488',
+            background: '#ccfbf1',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            whiteSpace: 'nowrap'
+          }
+        }, "✓ Kwartaalplanning") : /*#__PURE__*/React.createElement("button", {
+          onClick: () => pushBoardCardToQuarter(card),
+          title: "Toevoegen aan kwartaalplanning van dit kwartaal",
+          style: {
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            border: '1px solid #99f6e4',
+            background: '#f0fdfa',
+            color: '#0d9488',
+            whiteSpace: 'nowrap'
+          }
+        }, "→ Kwartaalplanning")))));
       })), /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
@@ -11739,7 +11815,32 @@ function App() {
               whiteSpace: 'nowrap'
             }
           }, sl);
-        })));
+        }), card.project && (card.pushed ? /*#__PURE__*/React.createElement("span", {
+          title: "Staat in de kwartaalplanning",
+          style: {
+            fontSize: '10px',
+            fontWeight: '600',
+            color: '#0d9488',
+            background: '#ccfbf1',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            whiteSpace: 'nowrap'
+          }
+        }, "✓ Kwartaalplanning") : /*#__PURE__*/React.createElement("button", {
+          onClick: () => pushBoardCardToQuarter(card),
+          title: "Toevoegen aan kwartaalplanning van dit kwartaal",
+          style: {
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '12px',
+            border: '1px solid #99f6e4',
+            background: '#f0fdfa',
+            color: '#0d9488',
+            whiteSpace: 'nowrap'
+          }
+        }, "→ Kwartaalplanning"))));
       })), /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
