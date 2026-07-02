@@ -5961,13 +5961,13 @@ function App() {
     });
   };
   // Takenbord: losse werkzaamheden (kort/lang/gedaan), versleepbaar, met optioneel project
-  const addBoardCard = (column, text) => {
+  const addBoardCard = (column, text, project) => {
     const val = (text || '').trim();
     if (!val) return;
     const card = {
       id: 'bc' + Date.now() + Math.floor(Math.random() * 1000),
       text: val,
-      project: '',
+      project: project || '',
       column: column,
       createdAt: Date.now()
     };
@@ -11418,7 +11418,14 @@ function App() {
     className: "nav-icon"
   }, "🗓️"), /*#__PURE__*/React.createElement("span", {
     className: "nav-text"
-  }, "Kwartaalplanning")), STEPS.map(step => /*#__PURE__*/React.createElement("div", {
+  }, "Kwartaalplanning")), /*#__PURE__*/React.createElement("div", {
+    className: `nav-item ${activeStep === 'takenbord-klant' ? 'active' : ''}`,
+    onClick: () => setActiveStep('takenbord-klant')
+  }, /*#__PURE__*/React.createElement("span", {
+    className: "nav-icon"
+  }, "🗂️"), /*#__PURE__*/React.createElement("span", {
+    className: "nav-text"
+  }, "Takenbord")), STEPS.map(step => /*#__PURE__*/React.createElement("div", {
     key: step.id,
     className: `nav-item ${activeStep === step.id ? 'active' : ''}`,
     onClick: () => setActiveStep(step.id)
@@ -11534,11 +11541,246 @@ function App() {
     className: "title"
   }, "🔍 SEO Audits"), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "Geschiedenis van audits en samenvattingen voor ", currentClient.name)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
+  }, "Geschiedenis van audits en samenvattingen voor ", currentClient.name)) : activeStep === 'takenbord-klant' ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
+    className: "title"
+  }, "🗂️ Takenbord"), /*#__PURE__*/React.createElement("p", {
+    className: "subtitle"
+  }, "Losse werkzaamheden voor ", currentClient.name)) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("h1", {
     className: "title"
   }, currentStep?.icon, " ", currentStep?.name), /*#__PURE__*/React.createElement("p", {
     className: "subtitle"
-  }, "Voortgang: ", stats.completed, " / ", stats.total, " taken (", progress, "%)"))), activeStep === 'kwartaal' && (() => {
+  }, "Voortgang: ", stats.completed, " / ", stats.total, " taken (", progress, "%)"))), activeStep === 'takenbord-klant' && (() => {
+    const client = clients.find(c => c.id === selectedClient);
+    if (!client) return null;
+    const boardCols = [{
+      key: 'kort',
+      label: 'To Do — Korte termijn',
+      accent: '#f59e0b'
+    }, {
+      key: 'lang',
+      label: 'To Do — Lange termijn',
+      accent: '#6366f1'
+    }, {
+      key: 'done',
+      label: 'Gedaan',
+      accent: '#10b981'
+    }];
+    const mine = boardCards.filter(c => String(c.project) === String(client.id));
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        maxWidth: '1400px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        background: '#eef2ff',
+        border: '1px solid #c7d2fe',
+        borderRadius: '12px',
+        padding: '12px 16px',
+        marginBottom: '20px',
+        fontSize: '13px',
+        color: '#3730a3'
+      }
+    }, "Losse taken die alleen bij ", /*#__PURE__*/React.createElement("strong", null, client.name), " horen. Sleep een kaartje naar Gedaan. Deze kaarten staan ook op het algemene Takenbord."), /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        gap: '16px',
+        alignItems: 'flex-start',
+        overflowX: 'auto',
+        paddingBottom: '24px'
+      }
+    }, boardCols.map(col => {
+      const cards = mine.filter(c => c.column === col.key);
+      return /*#__PURE__*/React.createElement("div", {
+        key: col.key,
+        onDragOver: e => {
+          e.preventDefault();
+          setBoardDragCol('k_' + col.key);
+        },
+        onDragLeave: () => setBoardDragCol(prev => prev === 'k_' + col.key ? null : prev),
+        onDrop: e => {
+          e.preventDefault();
+          const id = e.dataTransfer.getData('text/board');
+          if (id) moveBoardCard(id, col.key);
+          setBoardDragCol(null);
+        },
+        style: {
+          flex: '1 1 0',
+          minWidth: '290px',
+          background: boardDragCol === 'k_' + col.key ? '#eef2ff' : 'var(--bg,#f1f5f9)',
+          border: '1px solid ' + (boardDragCol === 'k_' + col.key ? '#818cf8' : 'var(--border)'),
+          borderRadius: '14px',
+          padding: '12px'
+        }
+      }, /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '12px',
+          paddingLeft: '4px'
+        }
+      }, /*#__PURE__*/React.createElement("span", {
+        style: {
+          width: '10px',
+          height: '10px',
+          borderRadius: '50%',
+          background: col.accent,
+          flexShrink: 0
+        }
+      }), /*#__PURE__*/React.createElement("span", {
+        style: {
+          fontWeight: '700',
+          fontSize: '15px',
+          color: 'var(--text)'
+        }
+      }, col.label), /*#__PURE__*/React.createElement("span", {
+        style: {
+          marginLeft: 'auto',
+          fontSize: '12px',
+          fontWeight: '600',
+          color: 'var(--text-light)',
+          background: 'var(--white)',
+          border: '1px solid var(--border)',
+          borderRadius: '10px',
+          padding: '1px 8px'
+        }
+      }, cards.length)), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '8px',
+          marginBottom: '10px',
+          minHeight: '20px'
+        }
+      }, cards.length === 0 && /*#__PURE__*/React.createElement("div", {
+        style: {
+          fontSize: '12px',
+          color: 'var(--text-lighter,#cbd5e1)',
+          textAlign: 'center',
+          padding: '14px 0'
+        }
+      }, "Sleep hier een kaartje heen"), cards.map(card => {
+        const done = card.column === 'done';
+        return /*#__PURE__*/React.createElement("div", {
+          key: card.id,
+          draggable: true,
+          onDragStart: e => e.dataTransfer.setData('text/board', card.id),
+          style: {
+            background: 'var(--white)',
+            border: '1px solid var(--border)',
+            borderLeft: '4px solid ' + col.accent,
+            borderRadius: '10px',
+            padding: '10px 12px',
+            cursor: 'grab',
+            boxShadow: 'var(--shadow-sm)'
+          }
+        }, /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'flex-start',
+            gap: '8px'
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: '14px',
+            color: done ? 'var(--text-light)' : 'var(--text)',
+            textDecoration: done ? 'line-through' : 'none',
+            flex: 1,
+            lineHeight: '1.35'
+          }
+        }, card.text), /*#__PURE__*/React.createElement("button", {
+          onClick: () => deleteBoardCard(card.id),
+          title: "Verwijderen",
+          style: {
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-lighter,#cbd5e1)',
+            fontSize: '15px',
+            lineHeight: 1,
+            flexShrink: 0,
+            padding: 0
+          }
+        }, "×")), /*#__PURE__*/React.createElement("div", {
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px',
+            marginTop: '8px',
+            flexWrap: 'wrap',
+            justifyContent: 'flex-end'
+          }
+        }, boardCols.filter(x => x.key !== col.key).map(x => {
+          const sl = x.key === 'done' ? '✓ Gedaan' : x.key === 'kort' ? 'Kort' : 'Lang';
+          return /*#__PURE__*/React.createElement("button", {
+            key: x.key,
+            onClick: () => moveBoardCard(card.id, x.key),
+            title: 'Verplaats naar ' + x.label,
+            style: {
+              cursor: 'pointer',
+              fontSize: '10px',
+              fontWeight: '600',
+              padding: '2px 8px',
+              borderRadius: '12px',
+              border: '1px solid ' + x.accent + '55',
+              background: 'var(--white)',
+              color: x.accent,
+              whiteSpace: 'nowrap'
+            }
+          }, sl);
+        })));
+      })), /*#__PURE__*/React.createElement("div", {
+        style: {
+          display: 'flex',
+          gap: '6px'
+        }
+      }, /*#__PURE__*/React.createElement("input", {
+        value: newBoardText['k_' + col.key] || '',
+        onChange: e => setNewBoardText(prev => ({
+          ...prev,
+          ['k_' + col.key]: e.target.value
+        })),
+        onKeyDown: e => {
+          if (e.key === 'Enter') {
+            addBoardCard(col.key, newBoardText['k_' + col.key], String(client.id));
+            setNewBoardText(prev => ({
+              ...prev,
+              ['k_' + col.key]: ''
+            }));
+          }
+        },
+        placeholder: "+ Nieuwe taak...",
+        style: {
+          flex: 1,
+          fontSize: '13px',
+          padding: '8px 10px',
+          borderRadius: '8px',
+          border: '1px solid var(--border)',
+          background: 'var(--white)',
+          color: 'var(--text)'
+        }
+      }), /*#__PURE__*/React.createElement("button", {
+        onClick: () => {
+          addBoardCard(col.key, newBoardText['k_' + col.key], String(client.id));
+          setNewBoardText(prev => ({
+            ...prev,
+            ['k_' + col.key]: ''
+          }));
+        },
+        style: {
+          cursor: 'pointer',
+          fontSize: '13px',
+          fontWeight: '600',
+          padding: '8px 14px',
+          borderRadius: '8px',
+          border: 'none',
+          background: col.accent,
+          color: '#fff',
+          whiteSpace: 'nowrap'
+        }
+      }, "Toevoegen")));
+    })));
+  })(), activeStep === 'kwartaal' && (() => {
     const client = clients.find(c => c.id === selectedClient);
     if (!client) return null;
     const currentQ = getCurrentQuarterKey();
