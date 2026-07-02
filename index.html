@@ -3237,7 +3237,13 @@ function App() {
         setTimeTracking(data.timeTracking || {});
         setTodos(data.todos || {});
         setRapportages(data.rapportages || {});
-        setBoardCards(data.boardCards || []);
+        setBoardCards(Array.isArray(data.boardCards) ? data.boardCards : (() => {
+          try {
+            return JSON.parse(localStorage.getItem('tfb_boardCards') || '[]');
+          } catch (e) {
+            return [];
+          }
+        })());
         if (data.settings) setSettings(s => ({
           ...s,
           ...data.settings
@@ -3262,7 +3268,13 @@ function App() {
           setTimeTracking(data.timeTracking || {});
           setTodos(data.todos || {});
           setRapportages(data.rapportages || {});
-          setBoardCards(data.boardCards || []);
+          setBoardCards(Array.isArray(data.boardCards) ? data.boardCards : (() => {
+            try {
+              return JSON.parse(localStorage.getItem('tfb_boardCards') || '[]');
+            } catch (e) {
+              return [];
+            }
+          })());
           if (data.settings) setSettings(s => ({
             ...s,
             ...data.settings
@@ -3335,7 +3347,13 @@ function App() {
         setTimeTracking(data.timeTracking || {});
         setTodos(data.todos || {});
         setRapportages(data.rapportages || {});
-        setBoardCards(data.boardCards || []);
+        setBoardCards(Array.isArray(data.boardCards) ? data.boardCards : (() => {
+          try {
+            return JSON.parse(localStorage.getItem('tfb_boardCards') || '[]');
+          } catch (e) {
+            return [];
+          }
+        })());
         if (data.settings) setSettings(s => ({
           ...s,
           ...data.settings
@@ -5961,6 +5979,15 @@ function App() {
     });
   };
   // Takenbord: losse werkzaamheden (kort/lang/gedaan), versleepbaar, met optioneel project
+  const persistBoard = updated => {
+    setBoardCards(updated);
+    try {
+      localStorage.setItem('tfb_boardCards', JSON.stringify(updated));
+    } catch (e) {}
+    saveData({
+      boardCards: updated
+    });
+  };
   const addBoardCard = (column, text, project) => {
     const val = (text || '').trim();
     if (!val) return;
@@ -5971,38 +5998,22 @@ function App() {
       column: column,
       createdAt: Date.now()
     };
-    const updated = [...boardCards, card];
-    setBoardCards(updated);
-    saveData({
-      boardCards: updated
-    });
+    persistBoard([...boardCards, card]);
   };
   const updateBoardCard = (id, updates) => {
-    const updated = boardCards.map(c => c.id === id ? {
+    persistBoard(boardCards.map(c => c.id === id ? {
       ...c,
       ...updates
-    } : c);
-    setBoardCards(updated);
-    saveData({
-      boardCards: updated
-    });
+    } : c));
   };
   const moveBoardCard = (id, toColumn) => {
-    const updated = boardCards.map(c => c.id === id ? {
+    persistBoard(boardCards.map(c => c.id === id ? {
       ...c,
       column: toColumn
-    } : c);
-    setBoardCards(updated);
-    saveData({
-      boardCards: updated
-    });
+    } : c));
   };
   const deleteBoardCard = id => {
-    const updated = boardCards.filter(c => c.id !== id);
-    setBoardCards(updated);
-    saveData({
-      boardCards: updated
-    });
+    persistBoard(boardCards.filter(c => c.id !== id));
   };
 
   // Controle door mij: vast aantal uren per taak die door een ander wordt uitgevoerd
