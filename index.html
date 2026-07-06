@@ -1549,7 +1549,8 @@ function QuarterCard({
   onUpdateTask,
   onDeleteTask,
   onToggleControl,
-  onMovePrio
+  onMovePrio,
+  onToggleScheduled
 }) {
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
@@ -1920,6 +1921,44 @@ function QuarterCard({
       transition: 'width 0.3s'
     }
   }))), (() => {
+    const allQT = (client.quarterCustomTasks || {})[q.key] || [];
+    const totQ = allQT.length;
+    if (totQ === 0) return null;
+    const schedQ = allQT.filter(t => t.scheduled).length;
+    const pctS = Math.round(schedQ / totQ * 100);
+    return /*#__PURE__*/React.createElement("div", {
+      style: {
+        marginTop: '10px'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        display: 'flex',
+        justifyContent: 'space-between',
+        fontSize: '11px',
+        color: 'var(--text-light)',
+        marginBottom: '4px'
+      }
+    }, /*#__PURE__*/React.createElement("span", null, "Ingepland"), /*#__PURE__*/React.createElement("span", {
+      style: {
+        fontWeight: '700',
+        color: schedQ === totQ ? '#166534' : 'var(--text)'
+      }
+    }, schedQ, " van ", totQ, schedQ === totQ ? ' ✓' : '')), /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: '6px',
+        background: 'var(--ios-gray-6,#eee)',
+        borderRadius: '3px',
+        overflow: 'hidden'
+      }
+    }, /*#__PURE__*/React.createElement("div", {
+      style: {
+        height: '100%',
+        width: `${pctS}%`,
+        background: '#16a34a',
+        transition: 'width 0.3s'
+      }
+    })));
+  })(), (() => {
     const all = (client.quarterCustomTasks || {})[q.key] || [];
     const toCheck = all.filter(t => {
       const ak = getTaskAssignee(client, q.key, t);
@@ -2252,7 +2291,37 @@ function QuarterCard({
             textDecoration: checked ? 'line-through' : 'none',
             fontWeight: '500'
           }
-        }, t.label), isAdmin && mtasks.length > 1 && /*#__PURE__*/React.createElement("span", {
+        }, t.label, t.fromBoard && /*#__PURE__*/React.createElement("span", {
+          title: "Toegevoegd vanaf het Takenbord",
+          style: {
+            marginLeft: '6px',
+            fontSize: '10px',
+            fontWeight: '600',
+            color: '#4338ca',
+            background: '#eef2ff',
+            border: '1px solid #c7d2fe',
+            padding: '1px 7px',
+            borderRadius: '10px',
+            whiteSpace: 'nowrap',
+            textDecoration: 'none',
+            verticalAlign: 'middle'
+          }
+        }, "🗂️ Takenbord")), isAdmin && /*#__PURE__*/React.createElement("span", {
+          onClick: () => onToggleScheduled && onToggleScheduled(client.id, q.key, t.id),
+          title: t.scheduled ? 'Ingepland — klik om te wissen' : 'Nog niet ingepland — klik om te markeren',
+          style: {
+            cursor: 'pointer',
+            flexShrink: 0,
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            whiteSpace: 'nowrap',
+            border: t.scheduled ? '1px solid #86efac' : '1px dashed var(--border)',
+            background: t.scheduled ? '#dcfce7' : 'transparent',
+            color: t.scheduled ? '#166534' : 'var(--text-lighter,#9ca3af)'
+          }
+        }, t.scheduled ? '✓ Ingepland' : 'Inplannen'), isAdmin && mtasks.length > 1 && /*#__PURE__*/React.createElement("span", {
           style: {
             display: 'inline-flex',
             flexDirection: 'column',
@@ -5838,6 +5907,27 @@ function App() {
         ...(c.quarterCustomTasks || {})
       };
       qct[quarterKey] = (qct[quarterKey] || []).filter(t => t.id !== taskId);
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+  // Handmatig markeren of een taak al is ingepland
+  const toggleTaskScheduled = (clientId, quarterKey, taskId) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        scheduled: !t.scheduled
+      } : t);
       return {
         ...c,
         quarterCustomTasks: qct
@@ -12512,6 +12602,7 @@ function App() {
       onMoveTaskToMonth: moveTaskToMonth,
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
+      onToggleScheduled: toggleTaskScheduled,
       onDeleteTask: deleteQuarterCustomTask
     }))));
   })(), activeStep === 'audits' && (() => {
