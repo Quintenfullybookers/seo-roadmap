@@ -356,6 +356,12 @@ const PHASE_OPTIONS = [{
   icon: '🔗',
   color: '#d97706',
   bg: '#fef3c7'
+}, {
+  key: 'takenbord',
+  label: 'Takenbord',
+  icon: '🗂️',
+  color: '#4338ca',
+  bg: '#eef2ff'
 }];
 
 // KWARTALEN (Q2 t/m Q4 2026)
@@ -1550,7 +1556,8 @@ function QuarterCard({
   onDeleteTask,
   onToggleControl,
   onMovePrio,
-  onToggleScheduled
+  onToggleScheduled,
+  onSetPhase
 }) {
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
@@ -2381,7 +2388,7 @@ function QuarterCard({
             flexWrap: 'wrap',
             paddingLeft: isAdmin ? '26px' : '24px'
           }
-        }, ph && /*#__PURE__*/React.createElement("span", {
+        }, ph && !isAdmin && /*#__PURE__*/React.createElement("span", {
           title: ph.label,
           style: {
             flexShrink: 0,
@@ -2394,6 +2401,25 @@ function QuarterCard({
             whiteSpace: 'nowrap'
           }
         }, ph.icon, " ", ph.label), isAdmin && /*#__PURE__*/React.createElement("select", {
+          value: t.phaseKey || '',
+          onChange: e => onSetPhase && onSetPhase(client.id, q.key, t.id, e.target.value),
+          title: "Categorie aanpassen",
+          style: {
+            flexShrink: 0,
+            fontSize: '10px',
+            padding: '2px 4px',
+            borderRadius: '8px',
+            border: '1px solid ' + (ph && ph.color ? ph.color + '55' : 'var(--border)'),
+            background: ph ? ph.bg : 'var(--white)',
+            color: ph ? ph.color : 'var(--text)',
+            fontWeight: '600',
+            maxWidth: '140px',
+            cursor: 'pointer'
+          }
+        }, PHASE_OPTIONS.map(p => /*#__PURE__*/React.createElement("option", {
+          key: p.key,
+          value: p.key
+        }, p.icon, " ", p.label))), isAdmin && /*#__PURE__*/React.createElement("select", {
           value: t.month || '',
           onChange: e => onSetMonth(client.id, q.key, t.id, e.target.value),
           title: "Maand",
@@ -5960,6 +5986,28 @@ function App() {
     });
   };
 
+  // Categorie (fase) van een taak aanpassen
+  const setQuarterTaskPhase = (clientId, quarterKey, taskId, phaseKey) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        phaseKey: phaseKey
+      } : t);
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+
   // Mijn werkuren per week (capaciteit) opslaan
   const setMyWeeklyHours = val => {
     const h = val === '' ? '' : Math.max(0, parseFloat(val) || 0);
@@ -6118,7 +6166,7 @@ function App() {
     }
     const qk = getCurrentQuarterKey();
     const existingPhases = getQuarterPhasesArr(client, qk);
-    const phaseKey = existingPhases && existingPhases[0] || PHASE_OPTIONS[0].key;
+    const phaseKey = 'takenbord';
     const task = {
       id: 'cq' + Date.now() + Math.floor(Math.random() * 1000),
       label: card.text,
@@ -12603,6 +12651,7 @@ function App() {
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
       onToggleScheduled: toggleTaskScheduled,
+      onSetPhase: setQuarterTaskPhase,
       onDeleteTask: deleteQuarterCustomTask
     }))));
   })(), activeStep === 'audits' && (() => {
