@@ -275,6 +275,7 @@ body{font-family:-apple-system,BlinkMacSystemFont,'SF Pro Display','SF Pro Text'
 <script crossorigin src="https://unpkg.com/react-dom@18.2.0/umd/react-dom.production.min.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 </head>
 <body>
@@ -292,12 +293,7 @@ const VIEWER_FIREBASE_CONFIG = {
   authDomain: "seo-roadmap.firebaseapp.com"
 };
 
-// ADMIN WACHTWOORD
-const ADMIN_PASSWORD_HASH = "a84515cf99c918065bba422fb57eaa5fa39f4cf4dc38eea10212eee7435e8094";
-const sha256Hex = async str => {
-  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
-  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
-};
+// ADMIN LOGIN via Firebase Authentication (e-mail + wachtwoord)
 
 // SEO JOKES
 const SEO_JOKES = ["Why did the SEO expert cross the road? To get to the top of the SERPs on the other side! 🚶‍♂️", "SEO is easy. It's just like riding a bike. Except the bike is on fire, and you're on fire, everything is on fire. 🔥", "My SEO is so good, I rank for keywords I didn't even optimize for! 📈", "Why do SEO experts love the gym? They're always working on their core web vitals! 💪", "I tried to rank for 'world's best SEO' but Google said 'citation needed'. 😅", "What's an SEO specialist's favorite drink? Link juice! 🍹", "Why don't black hat SEOs go to heaven? Too many 301 redirects! 😈", "My keywords are like my jokes - nobody searches for them. 🤷‍♂️", "What's an SEO's favorite music genre? Alt-text rock! 🎸", "Why was the SEO expert always calm? Because they had great organic reach! 🧘‍♂️", "How do SEO experts party? They throw a canonical party - no duplicates allowed! 🎉", "Why did the SEO break up with JavaScript? Too many rendering issues! 💔", "What do you call an SEO expert's dog? A search engine retriever! 🐕", "Why do SEOs love coffee? It helps with their morning crawl! ☕", "What's an SEO's favorite sport? Link building! 🏗️", "Why was the website cold? It had too many broken links! 🥶", "How does Google keep fit? With PageRank exercises! 🏃‍♂️", "What did the H1 say to the H2? You're not my type! 😂", "Why do SEOs hate the beach? Too much duplicate content in the sand! 🏖️", "What's an SEO's favorite movie? The Link King! 🦁", "Why did the SEO go to therapy? To work on their meta issues! 🛋️", "How do you comfort a sad SEO? Give them a backlink hug! 🤗", "What's an SEO's favorite game? Hide and seek - with Google! 🔍", "Why do SEOs make terrible comedians? Their jokes never rank! 🎤", "What do you call a lazy SEO? A no-follow specialist! 😴", "Why was the SEO expert always hungry? They kept eating up keywords! 🍕", "What's an SEO's favorite dance? The Google shuffle! 💃", "Why don't SEOs like the dark? They can't see the light mode! 🌙", "How do SEOs celebrate success? With a search party! 🎊", "What's an SEO's favorite vegetable? Organic carrots! 🥕", "Why did the SEO fail at poker? Too transparent - no hidden text! 🃏", "What do you call an SEO in winter? A cold crawler! ❄️", "Why are SEOs bad at relationships? They're always looking for better ranking! 💔", "What's an SEO's favorite TV show? Game of Rankings! 📺", "Why do SEOs love birthdays? More backlinks every year! 🎂", "How do SEOs stay cool? With plenty of cache! 🧊", "What's an SEO's worst nightmare? A Google penalty! 😱", "Why did the SEO go to the doctor? Bad case of crawl errors! 🏥", "What do you call an honest SEO? White hat and proud! 🎩", "Why are SEOs good at parties? They know how to engage users! 🥳"];
@@ -1199,21 +1195,38 @@ function AdminLoginModal({
   onLogin,
   onCancel
 }) {
+  const [email, setEmail] = useState(() => {
+    try {
+      return localStorage.getItem('tfb_admin_email') || '';
+    } catch (e) {
+      return '';
+    }
+  });
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
   const handleSubmit = async () => {
-    let ok = false;
+    if (busy) return;
+    if (!email.trim() || !password) {
+      setError('Vul e-mailadres en wachtwoord in');
+      setTimeout(() => setError(''), 4000);
+      return;
+    }
+    setBusy(true);
     try {
-      ok = (await sha256Hex(password)) === ADMIN_PASSWORD_HASH;
-    } catch (e) {
-      ok = false;
-    }
-    if (ok) {
+      await firebase.auth().signInWithEmailAndPassword(email.trim(), password);
+      try {
+        localStorage.setItem('tfb_admin_email', email.trim());
+      } catch (e) {}
       onLogin();
-    } else {
-      setError('Incorrect wachtwoord');
-      setTimeout(() => setError(''), 3000);
+    } catch (e) {
+      const code = e && e.code || '';
+      let msg = 'Inloggen mislukt';
+      if (code.indexOf('invalid-credential') !== -1 || code.indexOf('wrong-password') !== -1 || code.indexOf('user-not-found') !== -1 || code.indexOf('invalid-email') !== -1) msg = 'Onjuist e-mailadres of wachtwoord';else if (code.indexOf('too-many-requests') !== -1) msg = 'Te veel pogingen — probeer het later opnieuw';else if (code.indexOf('network') !== -1) msg = 'Netwerkfout — controleer je verbinding';else if (code.indexOf('operation-not-allowed') !== -1) msg = 'E-mail login staat nog niet aan in Firebase';
+      setError(msg);
+      setTimeout(() => setError(''), 5000);
     }
+    setBusy(false);
   };
   return /*#__PURE__*/React.createElement("div", {
     className: "modal-overlay",
@@ -1223,13 +1236,13 @@ function AdminLoginModal({
     onClick: e => e.stopPropagation()
   }, /*#__PURE__*/React.createElement("h2", {
     className: "modal-title"
-  }, "🔐 Admin Login"), /*#__PURE__*/React.createElement("p", {
+  }, "\uD83D\uDD10 Admin Login"), /*#__PURE__*/React.createElement("p", {
     style: {
       marginBottom: '24px',
       color: 'var(--text-light)',
       fontSize: '14px'
     }
-  }, "Voer het admin wachtwoord in om edit rechten te krijgen."), error && /*#__PURE__*/React.createElement("div", {
+  }, "Log in met je admin-account om edit rechten te krijgen."), error && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'var(--red-bg)',
       color: 'var(--red)',
@@ -1242,6 +1255,17 @@ function AdminLoginModal({
     className: "input-group"
   }, /*#__PURE__*/React.createElement("label", {
     className: "input-label"
+  }, "E-mailadres"), /*#__PURE__*/React.createElement("input", {
+    type: "email",
+    className: "modal-input",
+    value: email,
+    onChange: e => setEmail(e.target.value),
+    autoFocus: !email,
+    placeholder: "jij@bedrijf.nl"
+  })), /*#__PURE__*/React.createElement("div", {
+    className: "input-group"
+  }, /*#__PURE__*/React.createElement("label", {
+    className: "input-label"
   }, "Wachtwoord"), /*#__PURE__*/React.createElement("input", {
     type: "password",
     className: "modal-input",
@@ -1250,14 +1274,15 @@ function AdminLoginModal({
     onKeyPress: e => {
       if (e.key === 'Enter') handleSubmit();
     },
-    autoFocus: true,
-    placeholder: "••••••••"
+    autoFocus: !!email,
+    placeholder: "\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022"
   })), /*#__PURE__*/React.createElement("div", {
     className: "modal-buttons"
   }, /*#__PURE__*/React.createElement("button", {
     className: "btn btn-primary",
-    onClick: handleSubmit
-  }, "Inloggen"), /*#__PURE__*/React.createElement("button", {
+    onClick: handleSubmit,
+    disabled: busy
+  }, busy ? 'Bezig...' : 'Inloggen'), /*#__PURE__*/React.createElement("button", {
     className: "btn btn-secondary",
     onClick: onCancel
   }, "Annuleren"))));
@@ -3011,13 +3036,7 @@ function App() {
   const [expandedBreakdown, setExpandedBreakdown] = useState(null);
   const [expandedMonth, setExpandedMonth] = useState(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(() => {
-    try {
-      return localStorage.getItem('tfb_admin') === '1';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [isAdmin, setIsAdmin] = useState(false);
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [newClient, setNewClient] = useState({
     name: '',
@@ -3529,12 +3548,30 @@ function App() {
   };
 
   // ADMIN LOGIN
+  useEffect(() => {
+    let unsub = null;
+    try {
+      if (firebase.apps.length) {
+        unsub = firebase.auth().onAuthStateChanged(u => setIsAdmin(!!u));
+      }
+    } catch (e) {}
+    return () => {
+      if (unsub) unsub();
+    };
+  }, [db]);
+  const handleLogout = async () => {
+    try {
+      await firebase.auth().signOut();
+    } catch (e) {}
+    setIsAdmin(false);
+    setToast({
+      type: 'success',
+      message: 'Uitgelogd \u2014 viewer modus'
+    });
+  };
   const handleAdminLogin = () => {
     setIsAdmin(true);
     setShowAdminLogin(false);
-    try {
-      localStorage.setItem('tfb_admin', '1');
-    } catch (e) {}
     setToast({
       type: 'success',
       message: '✓ Admin mode!'
@@ -7664,7 +7701,10 @@ function App() {
     })()), !isAdmin && /*#__PURE__*/React.createElement("button", {
       className: "admin-login-btn",
       onClick: () => setShowAdminLogin(true)
-    }, "🔐 Admin Login"), showAdminLogin && /*#__PURE__*/React.createElement(AdminLoginModal, {
+    }, "🔐 Admin Login"), isAdmin && /*#__PURE__*/React.createElement("button", {
+      className: "admin-login-btn",
+      onClick: handleLogout
+    }, "🔓 Uitloggen"), showAdminLogin && /*#__PURE__*/React.createElement(AdminLoginModal, {
       onLogin: handleAdminLogin,
       onCancel: () => setShowAdminLogin(false)
     }), isAdmin && showModal && /*#__PURE__*/React.createElement("div", {
@@ -14667,7 +14707,10 @@ function App() {
   })())))), !isAdmin && /*#__PURE__*/React.createElement("button", {
     className: "admin-login-btn",
     onClick: () => setShowAdminLogin(true)
-  }, "🔐 Admin Login"), showAdminLogin && /*#__PURE__*/React.createElement(AdminLoginModal, {
+  }, "🔐 Admin Login"), isAdmin && /*#__PURE__*/React.createElement("button", {
+      className: "admin-login-btn",
+      onClick: handleLogout
+    }, "🔓 Uitloggen"), showAdminLogin && /*#__PURE__*/React.createElement(AdminLoginModal, {
     onLogin: handleAdminLogin,
     onCancel: () => setShowAdminLogin(false)
   }), isAdmin && showModal && /*#__PURE__*/React.createElement("div", {
