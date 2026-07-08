@@ -293,7 +293,11 @@ const VIEWER_FIREBASE_CONFIG = {
 };
 
 // ADMIN WACHTWOORD
-const ADMIN_PASSWORD = "D0rsrq!W%2CAtqq*";
+const ADMIN_PASSWORD_HASH = "a84515cf99c918065bba422fb57eaa5fa39f4cf4dc38eea10212eee7435e8094";
+const sha256Hex = async str => {
+  const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(str));
+  return Array.from(new Uint8Array(buf)).map(b => b.toString(16).padStart(2, '0')).join('');
+};
 
 // SEO JOKES
 const SEO_JOKES = ["Why did the SEO expert cross the road? To get to the top of the SERPs on the other side! 🚶‍♂️", "SEO is easy. It's just like riding a bike. Except the bike is on fire, and you're on fire, everything is on fire. 🔥", "My SEO is so good, I rank for keywords I didn't even optimize for! 📈", "Why do SEO experts love the gym? They're always working on their core web vitals! 💪", "I tried to rank for 'world's best SEO' but Google said 'citation needed'. 😅", "What's an SEO specialist's favorite drink? Link juice! 🍹", "Why don't black hat SEOs go to heaven? Too many 301 redirects! 😈", "My keywords are like my jokes - nobody searches for them. 🤷‍♂️", "What's an SEO's favorite music genre? Alt-text rock! 🎸", "Why was the SEO expert always calm? Because they had great organic reach! 🧘‍♂️", "How do SEO experts party? They throw a canonical party - no duplicates allowed! 🎉", "Why did the SEO break up with JavaScript? Too many rendering issues! 💔", "What do you call an SEO expert's dog? A search engine retriever! 🐕", "Why do SEOs love coffee? It helps with their morning crawl! ☕", "What's an SEO's favorite sport? Link building! 🏗️", "Why was the website cold? It had too many broken links! 🥶", "How does Google keep fit? With PageRank exercises! 🏃‍♂️", "What did the H1 say to the H2? You're not my type! 😂", "Why do SEOs hate the beach? Too much duplicate content in the sand! 🏖️", "What's an SEO's favorite movie? The Link King! 🦁", "Why did the SEO go to therapy? To work on their meta issues! 🛋️", "How do you comfort a sad SEO? Give them a backlink hug! 🤗", "What's an SEO's favorite game? Hide and seek - with Google! 🔍", "Why do SEOs make terrible comedians? Their jokes never rank! 🎤", "What do you call a lazy SEO? A no-follow specialist! 😴", "Why was the SEO expert always hungry? They kept eating up keywords! 🍕", "What's an SEO's favorite dance? The Google shuffle! 💃", "Why don't SEOs like the dark? They can't see the light mode! 🌙", "How do SEOs celebrate success? With a search party! 🎊", "What's an SEO's favorite vegetable? Organic carrots! 🥕", "Why did the SEO fail at poker? Too transparent - no hidden text! 🃏", "What do you call an SEO in winter? A cold crawler! ❄️", "Why are SEOs bad at relationships? They're always looking for better ranking! 💔", "What's an SEO's favorite TV show? Game of Rankings! 📺", "Why do SEOs love birthdays? More backlinks every year! 🎂", "How do SEOs stay cool? With plenty of cache! 🧊", "What's an SEO's worst nightmare? A Google penalty! 😱", "Why did the SEO go to the doctor? Bad case of crawl errors! 🏥", "What do you call an honest SEO? White hat and proud! 🎩", "Why are SEOs good at parties? They know how to engage users! 🥳"];
@@ -1197,8 +1201,14 @@ function AdminLoginModal({
 }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
-  const handleSubmit = () => {
-    if (password === ADMIN_PASSWORD) {
+  const handleSubmit = async () => {
+    let ok = false;
+    try {
+      ok = (await sha256Hex(password)) === ADMIN_PASSWORD_HASH;
+    } catch (e) {
+      ok = false;
+    }
+    if (ok) {
       onLogin();
     } else {
       setError('Incorrect wachtwoord');
