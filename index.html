@@ -2170,7 +2170,8 @@ function QuarterCard({
     const mkey = mk => mk === '' ? 'q' : mk;
     return buckets.map(mk => {
       const aKey = t => getTaskAssignee(client, q.key, t) || '';
-      const dispKey = (t, idx) => t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx;
+      const doneOf = t => !!((client.quarterTaskState || {})[`${q.key}::${t.id}`]);
+      const dispKey = (t, idx) => (doneOf(t) ? 10000000 : 0) + (t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx);
       const mtasks = allTasks.map((t, idx) => ({
         t,
         idx
@@ -5974,7 +5975,8 @@ function App() {
       const i = phases.indexOf(pk);
       return i === -1 ? 99 : i;
     };
-    const dispKey = (t, idx) => t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx;
+    const doneOf = t => !!((client.quarterTaskState || {})[`${quarterKey}::${t.id}`]);
+    const dispKey = (t, idx) => (doneOf(t) ? 10000000 : 0) + (t.order != null ? t.order : 100000 + (aKey(t) === 'quinten' ? 0 : 1) * 1000 + phaseRank(t.phaseKey) * 10 + idx);
     const monthList = tasks.map((t, idx) => ({
       t,
       idx
