@@ -3001,7 +3001,13 @@ function App() {
   const [expandedBreakdown, setExpandedBreakdown] = useState(null);
   const [expandedMonth, setExpandedMonth] = useState(null);
   const [showAdminLogin, setShowAdminLogin] = useState(false);
-  const [isAdmin, setIsAdmin] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(() => {
+    try {
+      return localStorage.getItem('tfb_admin') === '1';
+    } catch (e) {
+      return false;
+    }
+  });
   const [darkMode, setDarkMode] = useState(localStorage.getItem('darkMode') === 'true');
   const [newClient, setNewClient] = useState({
     name: '',
@@ -3516,6 +3522,9 @@ function App() {
   const handleAdminLogin = () => {
     setIsAdmin(true);
     setShowAdminLogin(false);
+    try {
+      localStorage.setItem('tfb_admin', '1');
+    } catch (e) {}
     setToast({
       type: 'success',
       message: '✓ Admin mode!'
