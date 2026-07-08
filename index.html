@@ -1557,8 +1557,30 @@ function QuarterCard({
   onToggleControl,
   onMovePrio,
   onToggleScheduled,
+  onToggleAutoSched,
   onSetPhase
 }) {
+  const autoSchedChip = sk => {
+    if (!isAdmin) return null;
+    const sched = !!((client.quarterAutoScheduled || {})[sk]);
+    return /*#__PURE__*/React.createElement("span", {
+      onClick: () => onToggleAutoSched && onToggleAutoSched(client.id, sk),
+      title: sched ? 'Ingepland — klik om te wissen' : 'Nog niet ingepland — klik om te markeren',
+      style: {
+        cursor: 'pointer',
+        flexShrink: 0,
+        fontSize: '10px',
+        fontWeight: '600',
+        padding: '2px 8px',
+        borderRadius: '10px',
+        whiteSpace: 'nowrap',
+        border: sched ? '1px solid #86efac' : '1px dashed var(--border)',
+        background: sched ? '#dcfce7' : 'transparent',
+        color: sched ? '#166534' : 'var(--text-lighter,#9ca3af)'
+      }
+    }, sched ? '✓ Ingepland' : 'Inplannen');
+  };
+
   const [newTask, setNewTask] = useState({});
   const [newAssignee, setNewAssignee] = useState({});
   const [newMonth, setNewMonth] = useState({});
@@ -2555,7 +2577,7 @@ function QuarterCard({
             color: controlled ? '#166534' : 'var(--text-light)',
             fontWeight: controlled ? '600' : 'normal'
           }
-        }, controlled ? '✓ Gecontroleerd' : 'Controle van werk'), /*#__PURE__*/React.createElement("span", {
+        }, controlled ? '✓ Gecontroleerd' : 'Controle van werk'), autoSchedChip(q.key + '::ctrl::' + t.id), /*#__PURE__*/React.createElement("span", {
           style: {
             flexShrink: 0,
             fontSize: '10px',
@@ -2657,7 +2679,7 @@ function QuarterCard({
           flex: 1,
           color: 'var(--text)'
         }
-      }, "Maandelijkse rapportage"), /*#__PURE__*/React.createElement("span", {
+      }, "Maandelijkse rapportage"), autoSchedChip(q.key + '::rap::' + mk), /*#__PURE__*/React.createElement("span", {
         style: {
           flexShrink: 0,
           fontSize: '10px',
@@ -2707,7 +2729,7 @@ function QuarterCard({
           flex: 1,
           color: 'var(--text)'
         }
-      }, "Maandelijkse audit"), /*#__PURE__*/React.createElement("span", {
+      }, "Maandelijkse audit"), autoSchedChip(q.key + '::audit::' + mk), /*#__PURE__*/React.createElement("span", {
         style: {
           flexShrink: 0,
           fontSize: '10px',
@@ -5967,6 +5989,24 @@ function App() {
     });
   };
   // Handmatig markeren of een taak al is ingepland
+  // Handmatig markeren of een automatische regel (audit/rapportage/controle) is ingepland
+  const toggleAutoScheduled = (clientId, key) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const m = {
+        ...(c.quarterAutoScheduled || {})
+      };
+      m[key] = !m[key];
+      return {
+        ...c,
+        quarterAutoScheduled: m
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
   const toggleTaskScheduled = (clientId, quarterKey, taskId) => {
     const updated = clients.map(c => {
       if (c.id !== clientId) return c;
@@ -12674,6 +12714,7 @@ function App() {
       onAddTask: addQuarterCustomTask,
       onUpdateTask: updateQuarterCustomTask,
       onToggleScheduled: toggleTaskScheduled,
+      onToggleAutoSched: toggleAutoScheduled,
       onSetPhase: setQuarterTaskPhase,
       onDeleteTask: deleteQuarterCustomTask
     }))));
