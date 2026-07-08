@@ -1621,6 +1621,7 @@ function QuarterCard({
   const [newMonth, setNewMonth] = useState({});
   const [newPhase, setNewPhase] = useState({});
   const [collapsedMonths, setCollapsedMonths] = useState({});
+  const [doneOpen, setDoneOpen] = useState({});
   const [editing, setEditing] = useState(null);
   const [editVal, setEditVal] = useState('');
   const [showPhasePicker, setShowPhasePicker] = useState(false);
@@ -2188,6 +2189,8 @@ function QuarterCard({
       const hrs = mHours + rapH + ctrlMonthH + extraMonthH + auditH;
       const collapsed = !!collapsedMonths[mk];
       const k = mkey(mk);
+      const doneTasks = mtasks.filter(t => doneOf(t));
+      const dOpen = !!doneOpen[k];
       const defPhase = newPhase[k] || activePhases[0] || PHASE_OPTIONS[0] && PHASE_OPTIONS[0].key || '';
       return /*#__PURE__*/React.createElement("div", {
         key: mk || 'geen',
@@ -2268,6 +2271,39 @@ function QuarterCard({
         }
       }, "Nog geen taken in deze maand."), mtasks.map((t, ti) => {
         const checked = !!st[`${q.key}::${t.id}`];
+        const isFirstDone = checked && (ti === 0 || !doneOf(mtasks[ti - 1]));
+        const doneHeader = isFirstDone ? /*#__PURE__*/React.createElement("div", {
+          onClick: () => setDoneOpen({
+            ...doneOpen,
+            [k]: !dOpen
+          }),
+          style: {
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '7px 8px',
+            marginTop: '4px',
+            borderTop: '1px dashed var(--border)',
+            cursor: 'pointer',
+            userSelect: 'none'
+          }
+        }, /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: '11px',
+            fontWeight: '700',
+            color: '#16a34a',
+            flex: 1
+          }
+        }, "\u2713 Afgerond (", doneTasks.length, ")"), /*#__PURE__*/React.createElement("span", {
+          style: {
+            fontSize: '11px',
+            color: 'var(--text-light)',
+            fontWeight: '600'
+          }
+        }, dOpen ? 'verbergen \u25B4' : 'tonen \u25BE')) : null;
+        if (checked && !dOpen) return doneHeader ? /*#__PURE__*/React.createElement(React.Fragment, {
+          key: t.id
+        }, doneHeader) : null;
         const controlled = !!controlSt[`${q.key}::${t.id}`];
         const asgKey = getTaskAssignee(client, q.key, t);
         const needsControl = !!asgKey && asgKey !== 'quinten';
@@ -2278,7 +2314,7 @@ function QuarterCard({
         const extraH = taskExtraLink ? parseFloat(taskExtraLink(t)) || 0 : 0;
         return /*#__PURE__*/React.createElement(React.Fragment, {
           key: t.id
-        }, /*#__PURE__*/React.createElement("div", {
+        }, doneHeader, /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             flexDirection: 'column',
