@@ -1593,6 +1593,7 @@ function QuarterCard({
   onMovePrio,
   onToggleScheduled,
   onToggleAutoSched,
+  onToggleAutoDone,
   onSetPhase
 }) {
   const autoSchedChip = sk => {
@@ -2773,19 +2774,35 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(rapH), "u")), auditHere && /*#__PURE__*/React.createElement("div", {
+      }, r1(rapH), "u")), auditHere && (() => {
+        const aDoneKey = q.key + '::audit::' + mk;
+        const aDone = !!((client.quarterAutoDone || {})[aDoneKey]);
+        return /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
           padding: '8px',
           borderRadius: '8px',
-          background: '#f5f3ff',
-          border: '1px solid #ddd6fe',
+          background: aDone ? 'var(--white)' : '#f5f3ff',
+          border: '1px solid ' + (aDone ? 'var(--border)' : '#ddd6fe'),
+          opacity: aDone ? 0.78 : 1,
           fontSize: '13px',
           lineHeight: '1.4'
         }
-      }, /*#__PURE__*/React.createElement("span", {
+      }, isAdmin && /*#__PURE__*/React.createElement("input", {
+        type: "checkbox",
+        checked: aDone,
+        onChange: () => onToggleAutoDone && onToggleAutoDone(client.id, aDoneKey),
+        title: aDone ? 'Audit gedaan — klik om te wissen' : 'Markeer audit als gedaan',
+        style: {
+          width: '16px',
+          height: '16px',
+          cursor: 'pointer',
+          accentColor: '#7c3aed',
+          flexShrink: 0
+        }
+      }), /*#__PURE__*/React.createElement("span", {
         style: {
           flexShrink: 0,
           fontSize: '10px',
@@ -2799,7 +2816,8 @@ function QuarterCard({
       }, "🔍 Audit"), /*#__PURE__*/React.createElement("span", {
         style: {
           flex: 1,
-          color: 'var(--text)'
+          color: aDone ? 'var(--text-light)' : 'var(--text)',
+          textDecoration: aDone ? 'line-through' : 'none'
         }
       }, "Maandelijkse audit"), autoSchedChip(q.key + '::audit::' + mk), /*#__PURE__*/React.createElement("span", {
         style: {
@@ -2823,7 +2841,8 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(auditH), "u")), isAdmin && /*#__PURE__*/React.createElement("div", {
+      }, r1(auditH), "u"));
+      })(), isAdmin && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
           gap: '6px',
@@ -6084,6 +6103,24 @@ function App() {
   };
   // Handmatig markeren of een taak al is ingepland
   // Handmatig markeren of een automatische regel (audit/rapportage/controle) is ingepland
+  // Afvinken van automatische regels (audit) per maand
+  const toggleAutoDone = (clientId, key) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const m = {
+        ...(c.quarterAutoDone || {})
+      };
+      m[key] = !m[key];
+      return {
+        ...c,
+        quarterAutoDone: m
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
   const toggleAutoScheduled = (clientId, key) => {
     const updated = clients.map(c => {
       if (c.id !== clientId) return c;
@@ -12559,6 +12596,7 @@ function App() {
       onUpdateTask: updateQuarterCustomTask,
       onToggleScheduled: toggleTaskScheduled,
       onToggleAutoSched: toggleAutoScheduled,
+      onToggleAutoDone: toggleAutoDone,
       onSetPhase: setQuarterTaskPhase,
       onDeleteTask: deleteQuarterCustomTask
     }))));
