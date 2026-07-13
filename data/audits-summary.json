@@ -1,5 +1,16 @@
 [
   {
+    "id": "audit-cabiner-2026-07-13",
+    "klant": "Cabiner",
+    "klant_type": "hotel",
+    "url": "https://www.cabiner.com/",
+    "datum": "2026-07-13",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/208",
+    "issue_number": 208,
+    "samenvatting": "Quinten, je clicks zijn met 1.233 gedaald naar 8.354 (-12,9%) en je gemiddelde positie zakte van 8.8 naar 9.2, wat directe aandacht vraagt. De grootste quick win zit in je about-pagina die op #1 rankt voor \"cabiner\" maar door een lege meta description slechts 1,39% CTR haalt in plaats van 3,5%, waarmee je 107 clicks laat liggen. Daarnaast heb je twee sterke lokale kansen met \"cabiner drentsche aa\" (137 impressies, pos 4.6) en \"cabiner sallandse heuvelrug\" (105 impressies, pos 5.6) die met dedicated landingspagina's minimaal 60 extra clicks per maand opleveren. Ook de taal-mismatch tussen je nl-NL lang-tag en Engelse content drukt je rankings omlaag, wat bij een consistente keuze 400-800 extra clicks kan betekenen. Start met het toevoegen van die meta description en het aanmaken van de twee lokale landingspagina's, dat pakt de daling direct aan met minimale investering.",
+    "aantal_taken": 5
+  },
+  {
     "id": "audit-ambassador-city-centre-hotel-2026-07-06",
     "klant": "Ambassador City Centre Hotel",
     "klant_type": "hotel",
