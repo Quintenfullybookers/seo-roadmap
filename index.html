@@ -437,6 +437,7 @@ const PRIORITY_LEVELS = [{
 const getPriorityInfo = key => PRIORITY_LEVELS.find(p => p.key === key) || PRIORITY_LEVELS[4];
 const getClientPriorityKey = client => client && client.priority ? client.priority : 'geen';
 const getClientPriorityRank = client => getPriorityInfo(getClientPriorityKey(client)).rank;
+const isAuditHidden = (client, quarterKey, rel) => !!((client && client.quarterAutoHidden || {})[quarterKey + '::audit::' + rel]);
 
 // UITVOERDERS (wie doet de taak)
 const ASSIGNEES = [{
@@ -1594,6 +1595,8 @@ function QuarterCard({
   onToggleScheduled,
   onToggleAutoSched,
   onToggleAutoDone,
+  onHideAudit,
+  onDeleteRapportage,
   onSetPhase
 }) {
   const autoSchedChip = sk => {
@@ -1636,6 +1639,12 @@ function QuarterCard({
     return [0, 1, 2].map(o => MONTH_ABBR[start + o]);
   })();
   const monthLabel = mk => mk === '' || mk == null ? 'Hele kwartaal' : qMonths[parseInt(mk) - 1] || 'maand ' + mk;
+  const qMonthKeys = (() => {
+    const mm = /^(\d{4})-Q([1-4])$/.exec(q.key);
+    if (!mm) return ['', '', ''];
+    const start = (parseInt(mm[2]) - 1) * 3 + 1;
+    return [0, 1, 2].map(o => mm[1] + '-' + String(start + o).padStart(2, '0'));
+  })();
   const activePhases = getQuarterPhasesArr(client, q.key);
   const prog = getQuarterProgress(client, q.key);
   const st = client.quarterTaskState || {};
@@ -2184,7 +2193,7 @@ function QuarterCard({
       const rapH = rapHere ? parseFloat(rapportageRate) || 0 : 0;
       const ctrlMonthH = taskControlRate ? mtasks.reduce((s, t) => s + (parseFloat(taskControlRate(t)) || 0), 0) : 0;
       const extraMonthH = taskExtraLink ? mtasks.reduce((s, t) => s + (parseFloat(taskExtraLink(t)) || 0), 0) : 0;
-      const auditHere = (parseFloat(auditHours) || 0) > 0 && mk !== '' && showOwnExtras;
+      const auditHere = (parseFloat(auditHours) || 0) > 0 && mk !== '' && showOwnExtras && !isAuditHidden(client, q.key, mk);
       const auditH = auditHere ? parseFloat(auditRate) || 0 : 0;
       const cnt = mtasks.length + (rapHere ? 1 : 0) + (auditHere ? 1 : 0);
       const hrs = mHours + rapH + ctrlMonthH + extraMonthH + auditH;
@@ -2792,7 +2801,22 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(rapH), "u")), auditHere && (() => {
+      }, r1(rapH), "u"), isAdmin && /*#__PURE__*/React.createElement("button", {
+        onClick: () => {
+          if (window.confirm('Rapportage voor deze maand verwijderen?')) onDeleteRapportage && onDeleteRapportage(String(client.id) + '-' + (qMonthKeys[parseInt(mk) - 1] || ''));
+        },
+        title: "Rapportage voor deze maand verwijderen",
+        style: {
+          border: 'none',
+          background: 'none',
+          cursor: 'pointer',
+          color: 'var(--text-lighter,#cbd5e1)',
+          fontSize: '15px',
+          lineHeight: 1,
+          flexShrink: 0,
+          padding: 0
+        }
+      }, "\xD7")), auditHere && (() => {
         const aDoneKey = q.key + '::audit::' + mk;
         const aDone = !!((client.quarterAutoDone || {})[aDoneKey]);
         return /*#__PURE__*/React.createElement("div", {
@@ -2859,7 +2883,22 @@ function QuarterCard({
           fontWeight: '700',
           whiteSpace: 'nowrap'
         }
-      }, r1(auditH), "u"));
+      }, r1(auditH), "u"), isAdmin && /*#__PURE__*/React.createElement("button", {
+        onClick: () => {
+          if (window.confirm('Audit voor deze maand verwijderen?')) onHideAudit && onHideAudit(client.id, q.key, mk);
+        },
+        title: "Audit voor deze maand verwijderen",
+        style: {
+          border: 'none',
+          background: 'none',
+          cursor: 'pointer',
+          color: 'var(--text-lighter,#cbd5e1)',
+          fontSize: '15px',
+          lineHeight: 1,
+          flexShrink: 0,
+          padding: 0
+        }
+      }, "\xD7"));
       })(), isAdmin && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
@@ -6122,6 +6161,24 @@ function App() {
   // Handmatig markeren of een taak al is ingepland
   // Handmatig markeren of een automatische regel (audit/rapportage/controle) is ingepland
   // Afvinken van automatische regels (audit) per maand
+  // Audit voor een specifieke maand verwijderen uit de kwartaalplanning
+  const hideAuditMonth = (clientId, quarterKey, rel) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const m = {
+        ...(c.quarterAutoHidden || {})
+      };
+      m[quarterKey + '::audit::' + rel] = true;
+      return {
+        ...c,
+        quarterAutoHidden: m
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
   const toggleAutoDone = (clientId, key) => {
     const updated = clients.map(c => {
       if (c.id !== clientId) return c;
@@ -6307,12 +6364,22 @@ function App() {
   // Audit: standaard 0,5 u per klant per maand = 1,5 u per kwartaal, per klant uit te zetten
   const AUDIT_HRS_PER_MONTH = 0.5;
   const isAuditOn = client => client && client.auditEnabled !== false;
-  const getAuditHours = client => isAuditOn(client) ? AUDIT_HRS_PER_MONTH * 3 : 0;
+  const getAuditHours = (client, quarterKey) => isAuditOn(client) ? ['1', '2', '3'].filter(rel => !isAuditHidden(client, quarterKey, rel)).length * AUDIT_HRS_PER_MONTH : 0;
   const toggleAudit = clientId => {
-    const updated = clients.map(c => c.id === clientId ? {
-      ...c,
-      auditEnabled: !(c.auditEnabled !== false)
-    } : c);
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const m = {
+        ...(c.quarterAutoHidden || {})
+      };
+      Object.keys(m).forEach(k2 => {
+        if (k2.indexOf('::audit::') !== -1) delete m[k2];
+      });
+      return {
+        ...c,
+        auditEnabled: !(c.auditEnabled !== false),
+        quarterAutoHidden: m
+      };
+    });
     setClients(updated);
     saveData({
       clients: updated
@@ -9510,7 +9577,7 @@ function App() {
       const ctrlH = (cl, qk, rel) => ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (t.month || '') === rel).reduce((s, t) => s + getTaskControlRate(cl, qk, t), 0);
       const extraH = (cl, qk, rel) => ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (t.month || '') === rel).reduce((s, t) => s + getTaskExtraLinkHours(cl, qk, t), 0);
       const rapH = (cl, mk) => isRapportageOn(cl) && rapportages[`${String(cl.id)}-${mk}`] ? RAPPORTAGE_HRS_PER_Q : 0;
-      const audH = cl => (parseFloat(getAuditHours(cl)) || 0) > 0 ? AUDIT_HRS_PER_MONTH : 0;
+      const audH = (cl, qk, rel) => isAuditOn(cl) && !isAuditHidden(cl, qk, rel) ? AUDIT_HRS_PER_MONTH : 0;
       const totalAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m.qk, m.rel) + ctrlH(cl, m.qk, m.rel) + extraH(cl, m.qk, m.rel) + rapH(cl, m.key) + audH(cl), 0);
       const mineAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m.qk, m.rel, 'quinten') + ctrlH(cl, m.qk, m.rel) + extraH(cl, m.qk, m.rel) + rapH(cl, m.key) + audH(cl), 0);
       const grand = months.reduce((s, m) => s + totalAll(m), 0);
@@ -9631,7 +9698,7 @@ function App() {
     })(), (() => {
       const sumPhaseQAll = (pk, qk) => activeClients.reduce((tot, cl) => tot + ((cl.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0), 0);
       const rapQAll = qk => activeClients.reduce((s, cl) => s + getRapportageHoursForQuarter(cl, qk), 0);
-      const auditQAll = qk => activeClients.reduce((s, cl) => s + getAuditHours(cl), 0);
+      const auditQAll = qk => activeClients.reduce((s, cl) => s + getAuditHours(cl, qk), 0);
       const controlQAll = qk => activeClients.reduce((s, cl) => s + getControlHoursForQuarter(cl, qk), 0);
       const extraQAll = qk => activeClients.reduce((s, cl) => s + getExtraLinkHoursForQuarter(cl, qk), 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -9941,7 +10008,7 @@ function App() {
       // Ingepland voor mij = taken toegewezen aan Quinten + rapportage-uren (1u per actieve klant)
       const plannedQ = qk => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '') === 'quinten').reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        return tot + taskH + getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk);
+        return tot + taskH + getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk);
       }, 0);
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -10204,7 +10271,7 @@ function App() {
     })(), (() => {
       const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        const rap = ak === 'quinten' ? getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk) : 0;
+        const rap = ak === 'quinten' ? getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk) : 0;
         return tot + taskH + rap;
       }, 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -10522,7 +10589,7 @@ function App() {
         const tks = ((client.quarterCustomTasks || {})[q.key] || []).filter(t => (t.month || '') === rel);
         let h = tks.reduce((s, t) => s + (parseFloat(t.hours) || 0) + getTaskControlRate(client, q.key, t) + getTaskExtraLinkHours(client, q.key, t), 0);
         if (isRapportageOn(client) && rapportages[`${String(client.id)}-${mk}`]) h += RAPPORTAGE_HRS_PER_Q;
-        if ((parseFloat(getAuditHours(client)) || 0) > 0) h += AUDIT_HRS_PER_MONTH;
+        if (isAuditOn(client) && !isAuditHidden(client, q.key, rel)) h += AUDIT_HRS_PER_MONTH;
         return {
           label: qMN[parseInt(mk.split('-')[1])],
           h
@@ -12026,7 +12093,7 @@ function App() {
       workedMap[qt.key] = worked;
       baseAvailMap[qt.key] = base;
       hoursCarryMap[qt.key] = _hoursCarriedIn;
-      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHoursForQuarter(client, qt.key) + getAuditHours(client) + getControlHoursForQuarter(client, qt.key) + getExtraLinkHoursForQuarter(client, qt.key);
+      const planned = ((client.quarterCustomTasks || {})[qt.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + getRapportageHoursForQuarter(client, qt.key) + getAuditHours(client, qt.key) + getControlHoursForQuarter(client, qt.key) + getExtraLinkHoursForQuarter(client, qt.key);
       const effective = base + _hoursCarriedIn;
       _hoursCarriedIn = Math.max(0, effective - planned);
     });
@@ -12138,7 +12205,11 @@ function App() {
       }, a.label);
     })), (() => {
       const sumPhaseQ = (pk, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-      const auditQ = getAuditHours(client);
+      const auditByQ = {};
+      QUARTERS.forEach(qt => {
+        auditByQ[qt.key] = getAuditHours(client, qt.key);
+      });
+      const auditTotalQ = QUARTERS.reduce((s, qt) => s + auditByQ[qt.key], 0);
       const r1 = n => Math.round(n * 10) / 10;
       // alleen fases tonen die ergens uren hebben
       const phasesWithHours = PHASE_OPTIONS.filter(ph => QUARTERS.some(qt => sumPhaseQ(ph.key, qt.key) > 0));
@@ -12148,7 +12219,7 @@ function App() {
       });
       const rapTotal = QUARTERS.reduce((s, qt) => s + rapByQ[qt.key], 0);
       const showRap = rapTotal > 0;
-      const showAudit = auditQ > 0;
+      const showAudit = auditTotalQ > 0;
       const controlByQ = {};
       QUARTERS.forEach(qt => {
         controlByQ[qt.key] = getControlHoursForQuarter(client, qt.key);
@@ -12162,7 +12233,7 @@ function App() {
       const extraTotal = QUARTERS.reduce((s, qt) => s + extraByQ[qt.key], 0);
       const showExtra = extraTotal > 0;
       const hasPackage = (parseFloat(client.budget) || 0) * 3 > 0;
-      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + rapTotal + (showAudit ? auditQ * QUARTERS.length : 0) + controlTotal + extraTotal;
+      const grandTotal = PHASE_OPTIONS.reduce((s, ph) => s + QUARTERS.reduce((s2, qt) => s2 + sumPhaseQ(ph.key, qt.key), 0), 0) + rapTotal + auditTotalQ + controlTotal + extraTotal;
       if (phasesWithHours.length === 0 && !showRap && !showAudit && !showControl && !showExtra && !hasPackage) return null;
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -12307,14 +12378,14 @@ function App() {
           textAlign: 'center',
           padding: '8px 10px'
         }
-      }, r1(auditQ), " u")), /*#__PURE__*/React.createElement("td", {
+      }, r1(auditByQ[qt.key]), " u")), /*#__PURE__*/React.createElement("td", {
         style: {
           textAlign: 'center',
           padding: '8px 10px',
           fontWeight: '700',
           color: '#7c3aed'
         }
-      }, r1(auditQ * QUARTERS.length), " u")), showControl && /*#__PURE__*/React.createElement("tr", {
+      }, r1(auditTotalQ), " u")), showControl && /*#__PURE__*/React.createElement("tr", {
         style: {
           borderBottom: '1px solid var(--border)'
         }
@@ -12391,7 +12462,7 @@ function App() {
           color: 'var(--text)'
         }
       }, "Totaal ingepland"), QUARTERS.map(qt => {
-        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0) + (extraByQ[qt.key] || 0);
+        const colTotal = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (auditByQ[qt.key] || 0) + (controlByQ[qt.key] || 0) + (extraByQ[qt.key] || 0);
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
           style: {
@@ -12416,7 +12487,7 @@ function App() {
         }
       }, "📦 Beschikbaar (pakket)"), QUARTERS.map(qt => {
         const avail = getQuarterAvailableHours(client, qt.key);
-        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (showAudit ? auditQ : 0) + (controlByQ[qt.key] || 0) + (extraByQ[qt.key] || 0);
+        const planned = PHASE_OPTIONS.reduce((s, ph) => s + sumPhaseQ(ph.key, qt.key), 0) + (rapByQ[qt.key] || 0) + (auditByQ[qt.key] || 0) + (controlByQ[qt.key] || 0) + (extraByQ[qt.key] || 0);
         const over = planned > avail;
         return /*#__PURE__*/React.createElement("td", {
           key: qt.key,
@@ -12436,7 +12507,7 @@ function App() {
         }
       }, r1(QUARTERS.reduce((s, qt) => s + getQuarterAvailableHours(client, qt.key), 0)), " u")))));
     })(), (() => {
-      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHoursForQuarter(client, qk) + getAuditHours(client) + getControlHoursForQuarter(client, qk) + getExtraLinkHoursForQuarter(client, qk) : 0);
+      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHoursForQuarter(client, qk) + getAuditHours(client, qk) + getControlHoursForQuarter(client, qk) + getExtraLinkHoursForQuarter(client, qk) : 0);
       const r1 = n => Math.round(n * 10) / 10;
       const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQ(a.key, qt.key) > 0));
       const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQ(a.key, qt.key), 0), 0);
@@ -12581,7 +12652,7 @@ function App() {
       rapportageHours: getRapportageHoursForQuarter(client, q.key),
       rapportageMonths: getRapportageMonthsForQuarter(client, q.key),
       rapportageRate: RAPPORTAGE_HRS_PER_Q,
-      auditHours: getAuditHours(client),
+      auditHours: getAuditHours(client, q.key),
       auditRate: AUDIT_HRS_PER_MONTH,
       controlHours: getControlHoursForQuarter(client, q.key),
       extraLinkHours: getExtraLinkHoursForQuarter(client, q.key),
@@ -12615,6 +12686,8 @@ function App() {
       onToggleScheduled: toggleTaskScheduled,
       onToggleAutoSched: toggleAutoScheduled,
       onToggleAutoDone: toggleAutoDone,
+      onHideAudit: hideAuditMonth,
+      onDeleteRapportage: deleteRapportage,
       onSetPhase: setQuarterTaskPhase,
       onDeleteTask: deleteQuarterCustomTask
     }))));
