@@ -2672,7 +2672,10 @@ function QuarterCard({
             fontWeight: '700',
             whiteSpace: 'nowrap'
           }
-        }, r1(ctrlH), "u")), extraH > 0 && /*#__PURE__*/React.createElement("div", {
+        }, r1(ctrlH), "u")), extraH > 0 && (() => {
+          const xDoneKey = q.key + '::extra::' + t.id + '::done';
+          const xDone = !!((client.quarterAutoDone || {})[xDoneKey]);
+          return /*#__PURE__*/React.createElement("div", {
           style: {
             display: 'flex',
             alignItems: 'center',
@@ -2680,12 +2683,25 @@ function QuarterCard({
             padding: '6px 8px',
             marginLeft: isAdmin ? '26px' : '24px',
             borderRadius: '8px',
-            background: '#fffbeb',
-            border: '1px solid #fde68a',
+            background: xDone ? 'var(--white)' : '#fffbeb',
+            border: '1px solid ' + (xDone ? 'var(--border)' : '#fde68a'),
+            opacity: xDone ? 0.78 : 1,
             fontSize: '12px',
             lineHeight: '1.3'
           }
-        }, /*#__PURE__*/React.createElement("span", {
+        }, isAdmin && /*#__PURE__*/React.createElement("input", {
+          type: "checkbox",
+          checked: xDone,
+          onChange: () => onToggleAutoDone && onToggleAutoDone(client.id, xDoneKey),
+          title: xDone ? 'Gedaan — klik om te wissen' : 'Markeer als gedaan',
+          style: {
+            width: '14px',
+            height: '14px',
+            cursor: 'pointer',
+            accentColor: '#b45309',
+            flexShrink: 0
+          }
+        }), /*#__PURE__*/React.createElement("span", {
           style: {
             flexShrink: 0,
             fontSize: '10px',
@@ -2699,7 +2715,8 @@ function QuarterCard({
         }, "🔗 Extra linkbuilding"), /*#__PURE__*/React.createElement("span", {
           style: {
             flex: 1,
-            color: 'var(--text-light)'
+            color: 'var(--text-light)',
+            textDecoration: xDone ? 'line-through' : 'none'
           }
         }, "inplannen"), autoSchedChip(q.key + '::extra::' + t.id), /*#__PURE__*/React.createElement("span", {
           style: {
@@ -2723,7 +2740,8 @@ function QuarterCard({
             fontWeight: '700',
             whiteSpace: 'nowrap'
           }
-        }, r1(extraH), "u")));
+        }, r1(extraH), "u"));
+        })());
       }), rapHere && /*#__PURE__*/React.createElement("div", {
         style: {
           display: 'flex',
