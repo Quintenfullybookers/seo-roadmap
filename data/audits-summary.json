@@ -1,5 +1,16 @@
 [
   {
+    "id": "audit-ambassador-city-centre-hotel-2026-07-15",
+    "klant": "Ambassador City Centre Hotel",
+    "klant_type": "hotel",
+    "url": "https://www.ambassadorcitycentrehotel.nl/",
+    "datum": "2026-07-15",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/209",
+    "issue_number": 209,
+    "samenvatting": "Quinten, jullie groei van 856 naar 976 clicks (+14%) en positieverbetering naar 7.5 is mooi, maar komt niet van jullie acties – jullie verloren tegelijk 365 keywords waaronder de cruciale \"hotel haarlem\" die 108 clicks per maand opleverde. Vorige maand waren er duidelijke aanbevelingen gedaan voor branded CTR (van 10% naar 40%), subpagina's met 0 impressions en meta descriptions, maar niks is opgepakt: jullie branded CTR staat nog steeds op 11.68% waardoor jullie maandelijks 191 clicks missen, en de kamers/arrangementen pagina's blijven onzichtbaar voor Google. De grootste pijnpunten nu zijn het terugwinnen van \"hotel haarlem\" (3521 impressions op positie 5.9 maar slechts 0.43% CTR) en het stoppen van jullie keywordverlies terwijl concurrent mlinhaarlem.nl met 2264 traffic jullie marktaandeel inpikt. Start direct met het herschrijven van de meta description voor \"hotel haarlem\", voeg de Open Graph image toe voor branded queries, en fix de indexatie van jullie subpagina's – samen levert dat binnen 6 weken +587 clicks per maand op.",
+    "aantal_taken": 5
+  },
+  {
     "id": "audit-cabiner-2026-07-13",
     "klant": "Cabiner",
     "klant_type": "hotel",
