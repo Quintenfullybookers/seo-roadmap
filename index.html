@@ -3106,6 +3106,8 @@ function App() {
   const [activeStep, setActiveStep] = useState(1);
   const [kwFilter, setKwFilter] = useState('all');
   const [prioFilter, setPrioFilter] = useState([]);
+  const [moMonth, setMoMonth] = useState(null);
+  const [moFilter, setMoFilter] = useState('alle');
   const [kwSort, setKwSort] = useState('priority');
   const [prioMenuFor, setPrioMenuFor] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -6796,6 +6798,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
@@ -8769,6 +8781,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
@@ -9002,6 +9024,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
@@ -9312,6 +9344,306 @@ function App() {
       }, "Toevoegen")));
     }))));
   }
+  if (activeView === 'maandoverzicht') {
+    const h = React.createElement;
+    const MONTH_FULL = ['januari', 'februari', 'maart', 'april', 'mei', 'juni', 'juli', 'augustus', 'september', 'oktober', 'november', 'december'];
+    const months = [];
+    QUARTERS.forEach(qt => {
+      getQuarterMonths(qt.key).forEach((mkey, i) => {
+        months.push({
+          key: mkey,
+          qk: qt.key,
+          rel: String(i + 1),
+          label: MONTH_FULL[parseInt(mkey.split('-')[1], 10) - 1]
+        });
+      });
+    });
+    const now = new Date();
+    const curKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const selKey = moMonth || (months.some(m => m.key === curKey) ? curKey : months[0].key);
+    const sel = months.find(m => m.key === selKey) || months[0];
+    const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
+    const weekly = parseFloat(settings.myWeeklyHours) || 0;
+    const nettoQ = weekly * 13 * 0.8 - (parseFloat(settings.onboardingHours) || 0) * 13 - (parseFloat(settings.freeHoursPerYear) || 0) / 4;
+    const nettoM = Math.max(nettoQ / 3, 0);
+    const buildItems = cl => {
+      const items = [];
+      const st = cl.quarterTaskState || {};
+      const ctl = cl.quarterTaskControl || {};
+      const auto = cl.quarterAutoScheduled || {};
+      const autoDone = cl.quarterAutoDone || {};
+      (((cl.quarterCustomTasks || {})[sel.qk]) || []).filter(t => (t.month || '') === sel.rel).forEach(t => {
+        const ak = getTaskAssignee(cl, sel.qk, t) || '';
+        const done = !!st[sel.qk + '::' + t.id];
+        items.push({
+          label: t.label,
+          hours: parseFloat(t.hours) || 0,
+          mine: ak === 'quinten' || ak === '',
+          assignee: ak,
+          status: done ? 'af' : t.scheduled ? 'in' : 'todo'
+        });
+        const ch = getTaskControlRate(cl, sel.qk, t);
+        if (ch > 0) items.push({
+          label: 'Controle: ' + t.label,
+          hours: ch,
+          mine: true,
+          assignee: 'quinten',
+          status: ctl[sel.qk + '::' + t.id] ? 'af' : auto[sel.qk + '::ctrl::' + t.id] ? 'in' : 'todo'
+        });
+        const xh = getTaskExtraLinkHours(cl, sel.qk, t);
+        if (xh > 0) items.push({
+          label: 'Extra linkbuilding: ' + t.label,
+          hours: xh,
+          mine: true,
+          assignee: 'quinten',
+          status: autoDone[sel.qk + '::extra::' + t.id + '::done'] ? 'af' : auto[sel.qk + '::extra::' + t.id] ? 'in' : 'todo'
+        });
+      });
+      const rapKey = String(cl.id) + '-' + sel.key;
+      if (isRapportageOn(cl) && rapportages[rapKey]) {
+        items.push({
+          label: 'Maandelijkse rapportage',
+          hours: RAPPORTAGE_HRS_PER_Q,
+          mine: true,
+          assignee: 'quinten',
+          status: rapportages[rapKey] && rapportages[rapKey].completed ? 'af' : auto[sel.qk + '::rap::' + sel.rel] ? 'in' : 'todo'
+        });
+      }
+      if (isAuditOn(cl) && !isAuditHidden(cl, sel.qk, sel.rel)) {
+        items.push({
+          label: 'Maandelijkse audit',
+          hours: AUDIT_HRS_PER_MONTH,
+          mine: true,
+          assignee: 'quinten',
+          status: autoDone[sel.qk + '::audit::' + sel.rel] ? 'af' : auto[sel.qk + '::audit::' + sel.rel] ? 'in' : 'todo'
+        });
+      }
+      return items;
+    };
+    const activeClientsMo = clients.filter(cl => !cl.archived).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', {
+      sensitivity: 'base'
+    }));
+    const perClient = activeClientsMo.map(cl => ({
+      cl,
+      items: buildItems(cl)
+    })).filter(x => x.items.length > 0);
+    let afH = 0, inH = 0, todoH = 0, afN = 0, inN = 0, todoN = 0;
+    perClient.forEach(x => x.items.forEach(it => {
+      if (!it.mine) return;
+      if (it.status === 'af') { afH += it.hours; afN++; } else if (it.status === 'in') { inH += it.hours; inN++; } else { todoH += it.hours; todoN++; }
+    }));
+    const vrij = nettoM - afH - inH;
+    const pct = v => nettoM > 0 ? Math.min(Math.max(v / nettoM * 100, 0), 100) : 0;
+    const stMeta = {
+      todo: { lbl: 'nog inplannen', bg: '#FAEEDA', fg: '#854F0B', dot: '#EF9F27', rank: 0 },
+      in: { lbl: 'ingepland', bg: '#E6F1FB', fg: '#0C447C', dot: '#378ADD', rank: 1 },
+      af: { lbl: 'afgerond', bg: '#f1f5f9', fg: '#64748b', dot: '#94a3b8', rank: 2 }
+    };
+    const filterBtn = (key, lbl) => h("button", {
+      key: key,
+      onClick: () => setMoFilter(key),
+      style: {
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 14px',
+        borderRadius: '20px',
+        border: '1px solid ' + (moFilter === key ? '#2563eb' : 'var(--border)'),
+        background: moFilter === key ? '#2563eb' : 'var(--white)',
+        color: moFilter === key ? '#fff' : 'var(--text-light)'
+      }
+    }, lbl);
+    return h("div", {
+      className: `app ${!isAdmin ? 'viewer-mode' : ''}`
+    }, /*#__PURE__*/React.createElement("aside", {
+      className: "sidebar"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "logo"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: "logo-text"
+    }, "THE FULLY BOOKERS"), /*#__PURE__*/React.createElement("div", {
+      className: "logo-subtitle"
+    }, "SEO Roadmap")), /*#__PURE__*/React.createElement("div", {
+      className: "sync-status"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: `sync-dot sync-${syncStatus}`
+    }), /*#__PURE__*/React.createElement("span", {
+      className: "sync-text"
+    }, syncStatus === 'connected' && '✓ Verbonden', syncStatus === 'connecting' && '⚠️ Verbinden...', syncStatus === 'error' && '❌ Fout'), syncStatus === 'connected' && /*#__PURE__*/React.createElement("button", {
+      className: "reload-btn",
+      onClick: reloadFromFirebase
+    }, "🔄")), /*#__PURE__*/React.createElement("div", {
+      className: "mode-indicator"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: `mode-badge ${isAdmin ? 'admin' : 'viewer'}`
+    }, isAdmin ? '🔓 Admin' : '👁️ Viewer'), /*#__PURE__*/React.createElement("button", {
+      className: "dark-toggle",
+      onClick: toggleDarkMode
+    }, darkMode ? '☀️' : '🌙')), isAdmin && /*#__PURE__*/React.createElement("div", {
+      className: "save-status"
+    }, /*#__PURE__*/React.createElement("div", {
+      className: `save-status-dot ${saveStatus}`
+    }), /*#__PURE__*/React.createElement("span", null, saveStatus === 'saving' && 'Opslaan...', saveStatus === 'success' && 'Opgeslagen', saveStatus === 'error' && 'Fout')), /*#__PURE__*/React.createElement("nav", null, /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'dashboard' ? 'active' : ''}`,
+      onClick: () => setActiveView('dashboard'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "📊"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Dashboard"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-count"
+    }, clients.filter(c => !c.archived).length)), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'kwartaaloverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('kwartaaloverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "🗓️"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
+      onClick: () => setActiveView('takenbord'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "🗂️"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Takenbord")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'rapportages-overzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('rapportages-overzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "📋"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Rapportages")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'linkbuilding' ? 'active' : ''}`,
+      onClick: () => setActiveView('linkbuilding'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "🔗"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Linkbuilding")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'archief' ? 'active' : ''}`,
+      onClick: () => setActiveView('archief'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "📦"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Archief"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-count"
+    }, clients.filter(c => c.archived).length))), isAdmin && /*#__PURE__*/React.createElement("button", {
+      className: "export-btn",
+      onClick: exportData
+    }, "💾 Export Data")), h("main", {
+      className: "main"
+    }, h("header", {
+      className: "header"
+    }, h("h1", {
+      className: "title"
+    }, "\uD83D\uDCC5 Maandoverzicht"), h("p", {
+      className: "subtitle"
+    }, "Alle taken per klant, met status en jouw agenda-ruimte")), h("div", {
+      style: { display: 'flex', flexWrap: 'wrap', gap: '6px', marginBottom: '18px' }
+    }, months.map(m => h("button", {
+      key: m.key,
+      onClick: () => setMoMonth(m.key),
+      style: {
+        cursor: 'pointer',
+        fontSize: '13px',
+        fontWeight: '600',
+        padding: '6px 13px',
+        borderRadius: '20px',
+        border: '1px solid ' + (m.key === selKey ? '#2563eb' : 'var(--border)'),
+        background: m.key === selKey ? '#2563eb' : 'var(--white)',
+        color: m.key === selKey ? '#fff' : m.key === curKey ? '#2563eb' : 'var(--text-light)'
+      }
+    }, m.label.slice(0, 3) + (m.key === curKey ? ' \u2022 nu' : '')))), h("div", {
+      style: {
+        background: 'var(--white)',
+        border: '1px solid var(--border)',
+        borderRadius: '12px',
+        padding: '16px 18px',
+        marginBottom: '18px',
+        boxShadow: 'var(--shadow-sm)'
+      }
+    }, h("div", {
+      style: { display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', flexWrap: 'wrap', gap: '8px', marginBottom: '8px' }
+    }, h("div", {
+      style: { fontWeight: '700', fontSize: '15px', color: 'var(--text)' }
+    }, sel.label.charAt(0).toUpperCase() + sel.label.slice(1), " \u00B7 mijn agenda"), h("div", {
+      style: { fontWeight: '800', fontSize: '17px', color: vrij < 0 ? '#dc2626' : '#059669' }
+    }, vrij < 0 ? fmt(Math.abs(vrij)) + " u overboekt" : "nog " + fmt(vrij) + " u vrij")), h("div", {
+      style: { display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden', background: 'var(--ios-gray-6,#eef2f7)' }
+    }, h("div", { style: { width: pct(afH) + '%', background: '#94a3b8' } }), h("div", { style: { width: pct(inH) + '%', background: '#378ADD' } }), h("div", { style: { width: pct(todoH) + '%', background: '#EF9F27' } })), h("div", {
+      style: { display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-light)', marginTop: '8px' }
+    }, h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#94a3b8', marginRight: '5px' } }), "afgerond ", fmt(afH), " u (", afN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#378ADD', marginRight: '5px' } }), "ingepland ", fmt(inH), " u (", inN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#EF9F27', marginRight: '5px' } }), "nog inplannen ", fmt(todoH), " u (", todoN, ")"), h("span", { style: { marginLeft: 'auto' } }, "netto capaciteit ", fmt(nettoM), " u/maand"))), h("div", {
+      style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }
+    }, h("span", {
+      style: { fontSize: '13px', fontWeight: '600', color: 'var(--text-light)' }
+    }, "Toon:"), filterBtn('alle', 'Alle taken'), filterBtn('mijn', 'Alleen mijn'), filterBtn('inplannen', 'Nog inplannen')), perClient.length === 0 ? h("div", {
+      style: { textAlign: 'center', padding: '48px 24px', color: 'var(--text-light)' }
+    }, "Geen taken in deze maand") : h("div", {
+      style: { display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '900px' }
+    }, perClient.map(x => {
+      const vis = x.items.filter(it => moFilter === 'mijn' ? it.mine : moFilter === 'inplannen' ? it.status === 'todo' : true).slice().sort((a, b) => stMeta[a.status].rank - stMeta[b.status].rank);
+      if (vis.length === 0) return null;
+      const cTodo = x.items.filter(it => it.status === 'todo').reduce((s, it) => s + it.hours, 0);
+      return h("div", {
+        key: x.cl.id,
+        style: { background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }
+      }, h("div", {
+        style: { display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }
+      }, h("button", {
+        onClick: () => { setSelectedClient(x.cl.id); setActiveView('roadmap'); setActiveStep('kwartaal'); },
+        style: { border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#3b82f6', padding: 0, textAlign: 'left' }
+      }, x.cl.name), cTodo > 0 && h("span", {
+        style: { fontSize: '11px', fontWeight: '600', color: '#854F0B', background: '#FAEEDA', padding: '1px 8px', borderRadius: '10px' }
+      }, "nog ", fmt(cTodo), " u inplannen")), vis.map((it, i) => {
+        const m2 = stMeta[it.status];
+        const asg = it.assignee ? getAssigneeInfo(it.assignee) : null;
+        return h("div", {
+          key: i,
+          style: { display: 'flex', alignItems: 'center', gap: '8px', padding: '6px 0', borderTop: '1px solid var(--border)', fontSize: '12px', opacity: it.status === 'af' ? 0.65 : 1 }
+        }, h("span", {
+          style: { width: '9px', height: '9px', borderRadius: '50%', background: m2.dot, flexShrink: 0 }
+        }), h("span", {
+          style: { flex: 1, color: it.status === 'af' ? 'var(--text-light)' : 'var(--text)', textDecoration: it.status === 'af' ? 'line-through' : 'none' }
+        }, it.label), asg && h("span", {
+          style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '1px 7px', borderRadius: '8px', background: asg.bg || 'var(--bg,#f1f5f9)', color: asg.color || 'var(--text-light)' }
+        }, asg.label), h("span", {
+          style: { flexShrink: 0, color: 'var(--text-light)', fontWeight: '600', minWidth: '38px', textAlign: 'right' }
+        }, fmt(it.hours), " u"), h("span", {
+          style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', background: m2.bg, color: m2.fg, minWidth: '86px', textAlign: 'center' }
+        }, m2.lbl));
+      }));
+    }))));
+  }
   if (activeView === 'kwartaaloverzicht') {
     const allActiveClients = clients.filter(c => !c.archived).slice().sort((a, b) => {
       if (kwSort === 'name') return (a.name || '').localeCompare(b.name || '', 'nl', {
@@ -9380,6 +9712,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
@@ -10726,6 +11068,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
@@ -11246,6 +11598,16 @@ function App() {
     }, "🗓️"), /*#__PURE__*/React.createElement("span", {
       className: "nav-text"
     }, "Kwartaaloverzicht")), /*#__PURE__*/React.createElement("div", {
+      className: `nav-item ${activeView === 'maandoverzicht' ? 'active' : ''}`,
+      onClick: () => setActiveView('maandoverzicht'),
+      style: {
+        cursor: 'pointer'
+      }
+    }, /*#__PURE__*/React.createElement("span", {
+      className: "nav-icon"
+    }, "\uD83D\uDCC5"), /*#__PURE__*/React.createElement("span", {
+      className: "nav-text"
+    }, "Maandoverzicht")), /*#__PURE__*/React.createElement("div", {
       className: `nav-item ${activeView === 'takenbord' ? 'active' : ''}`,
       onClick: () => setActiveView('takenbord'),
       style: {
