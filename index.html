@@ -2418,7 +2418,20 @@ function QuarterCard({
             textDecoration: 'none',
             verticalAlign: 'middle'
           }
-        }, "🗂️ Takenbord")), isAdmin && /*#__PURE__*/React.createElement("span", {
+        }, "🗂️ Takenbord")), t.planMonth && /*#__PURE__*/React.createElement("span", {
+          title: "Wordt in een andere maand ingepland",
+          style: {
+            flexShrink: 0,
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '2px 8px',
+            borderRadius: '10px',
+            background: '#eef2ff',
+            border: '1px solid #c7d2fe',
+            color: '#4338ca',
+            whiteSpace: 'nowrap'
+          }
+        }, "wordt in ", MONTH_ABBR[parseInt((t.planMonth || '').split('-')[1] || '0', 10) - 1] || t.planMonth, " ingepland"), isAdmin && /*#__PURE__*/React.createElement("span", {
           onClick: () => onToggleScheduled && onToggleScheduled(client.id, q.key, t.id),
           title: t.scheduled ? 'Ingepland — klik om te wissen' : 'Nog niet ingepland — klik om te markeren',
           style: {
@@ -6258,6 +6271,27 @@ function App() {
   };
 
   // Categorie (fase) van een taak aanpassen
+  // Label: taak blijft in eigen maand, maar wordt in een andere maand ingepland
+  const setTaskPlanMonth = (clientId, quarterKey, taskId, planMonth) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        planMonth: planMonth || ''
+      } : t);
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
   const setQuarterTaskPhase = (clientId, quarterKey, taskId, phaseKey) => {
     const updated = clients.map(c => {
       if (c.id !== clientId) return c;
@@ -9380,7 +9414,9 @@ function App() {
           hours: parseFloat(t.hours) || 0,
           mine: ak === 'quinten' || ak === '',
           assignee: ak,
-          status: done ? 'af' : t.scheduled ? 'in' : 'todo'
+          status: done ? 'af' : t.scheduled ? 'in' : 'todo',
+          kind: 'taak',
+          taskId: t.id
         });
         const ch = getTaskControlRate(cl, sel.qk, t);
         if (ch > 0) items.push({
@@ -9388,7 +9424,9 @@ function App() {
           hours: ch,
           mine: true,
           assignee: 'quinten',
-          status: ctl[sel.qk + '::' + t.id] ? 'af' : auto[sel.qk + '::ctrl::' + t.id] ? 'in' : 'todo'
+          status: ctl[sel.qk + '::' + t.id] ? 'af' : auto[sel.qk + '::ctrl::' + t.id] ? 'in' : 'todo',
+          kind: 'auto',
+          schedKey: sel.qk + '::ctrl::' + t.id
         });
         const xh = getTaskExtraLinkHours(cl, sel.qk, t);
         if (xh > 0) items.push({
@@ -9396,7 +9434,9 @@ function App() {
           hours: xh,
           mine: true,
           assignee: 'quinten',
-          status: autoDone[sel.qk + '::extra::' + t.id + '::done'] ? 'af' : auto[sel.qk + '::extra::' + t.id] ? 'in' : 'todo'
+          status: autoDone[sel.qk + '::extra::' + t.id + '::done'] ? 'af' : auto[sel.qk + '::extra::' + t.id] ? 'in' : 'todo',
+          kind: 'auto',
+          schedKey: sel.qk + '::extra::' + t.id
         });
       });
       const rapKey = String(cl.id) + '-' + sel.key;
@@ -9406,7 +9446,9 @@ function App() {
           hours: RAPPORTAGE_HRS_PER_Q,
           mine: true,
           assignee: 'quinten',
-          status: rapportages[rapKey] && rapportages[rapKey].completed ? 'af' : auto[sel.qk + '::rap::' + sel.rel] ? 'in' : 'todo'
+          status: rapportages[rapKey] && rapportages[rapKey].completed ? 'af' : auto[sel.qk + '::rap::' + sel.rel] ? 'in' : 'todo',
+          kind: 'auto',
+          schedKey: sel.qk + '::rap::' + sel.rel
         });
       }
       if (isAuditOn(cl) && !isAuditHidden(cl, sel.qk, sel.rel)) {
@@ -9415,7 +9457,9 @@ function App() {
           hours: AUDIT_HRS_PER_MONTH,
           mine: true,
           assignee: 'quinten',
-          status: autoDone[sel.qk + '::audit::' + sel.rel] ? 'af' : auto[sel.qk + '::audit::' + sel.rel] ? 'in' : 'todo'
+          status: autoDone[sel.qk + '::audit::' + sel.rel] ? 'af' : auto[sel.qk + '::audit::' + sel.rel] ? 'in' : 'todo',
+          kind: 'auto',
+          schedKey: sel.qk + '::audit::' + sel.rel
         });
       }
       return items;
@@ -9638,9 +9682,25 @@ function App() {
           style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '1px 7px', borderRadius: '8px', background: asg.bg || 'var(--bg,#f1f5f9)', color: asg.color || 'var(--text-light)' }
         }, asg.label), h("span", {
           style: { flexShrink: 0, color: 'var(--text-light)', fontWeight: '600', minWidth: '38px', textAlign: 'right' }
-        }, fmt(it.hours), " u"), h("span", {
+        }, fmt(it.hours), " u"), it.kind === 'taak' && it.planMonth && it.planMonth !== sel.key && h("span", {
+          style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', background: '#eef2ff', border: '1px solid #c7d2fe', color: '#4338ca', whiteSpace: 'nowrap' }
+        }, "wordt in ", (months.find(mm => mm.key === it.planMonth) || { label: it.planMonth }).label.slice(0, 3), " ingepland"), isAdmin && it.kind === 'taak' && h("select", {
+          value: it.planMonth && it.planMonth !== sel.key ? it.planMonth : sel.key,
+          onChange: e => {
+            const v = e.target.value;
+            setTaskPlanMonth(x.cl.id, sel.qk, it.taskId, v === sel.key ? '' : v);
+          },
+          title: "In welke maand wordt dit ingepland?",
+          style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '2px 6px', borderRadius: '8px', border: '1px solid var(--border)', background: 'var(--white)', color: 'var(--text-light)', cursor: 'pointer', WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }
+        }, months.map(mm => h("option", { key: mm.key, value: mm.key }, mm.key === sel.key ? 'deze mnd' : mm.label.slice(0, 3)))), it.status === 'af' || !isAdmin ? h("span", {
           style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', background: m2.bg, color: m2.fg, minWidth: '86px', textAlign: 'center' }
-        }, m2.lbl));
+        }, m2.lbl) : h("button", {
+          onClick: () => {
+            if (it.kind === 'taak') toggleTaskScheduled(x.cl.id, sel.qk, it.taskId);else if (it.schedKey) toggleAutoScheduled(x.cl.id, it.schedKey);
+          },
+          title: it.status === 'in' ? 'Ingepland \u2014 klik om te wissen' : 'Klik om als ingepland te markeren',
+          style: { flexShrink: 0, cursor: 'pointer', fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', border: '1px solid ' + (it.status === 'in' ? '#93c5fd' : '#f3d9a4'), background: m2.bg, color: m2.fg, minWidth: '86px', textAlign: 'center' }
+        }, it.status === 'in' ? '\u2713 ingepland' : 'inplannen'));
       }));
     }))));
   }
@@ -9915,13 +9975,14 @@ function App() {
         qk: q.key,
         rel: String(i + 1)
       })));
-      const taskH = (cl, qk, rel, asg) => ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (t.month || '') === rel && (!asg || (getTaskAssignee(cl, qk, t) || '') === asg)).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-      const ctrlH = (cl, qk, rel) => ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (t.month || '') === rel).reduce((s, t) => s + getTaskControlRate(cl, qk, t), 0);
-      const extraH = (cl, qk, rel) => ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (t.month || '') === rel).reduce((s, t) => s + getTaskExtraLinkHours(cl, qk, t), 0);
+      const effMonthKey = (qk, t) => t.planMonth ? t.planMonth : (t.month || '') !== '' ? getQuarterMonths(qk)[parseInt(t.month, 10) - 1] || '' : '';
+      const taskH = (cl, m, asg) => QUARTERS.reduce((s, qq) => s + (((cl.quarterCustomTasks || {})[qq.key]) || []).filter(t => effMonthKey(qq.key, t) === m.key && (!asg || (getTaskAssignee(cl, qq.key, t) || '') === asg)).reduce((s2, t) => s2 + (parseFloat(t.hours) || 0), 0), 0);
+      const ctrlH = (cl, m) => QUARTERS.reduce((s, qq) => s + (((cl.quarterCustomTasks || {})[qq.key]) || []).filter(t => effMonthKey(qq.key, t) === m.key).reduce((s2, t) => s2 + getTaskControlRate(cl, qq.key, t), 0), 0);
+      const extraH = (cl, m) => QUARTERS.reduce((s, qq) => s + (((cl.quarterCustomTasks || {})[qq.key]) || []).filter(t => effMonthKey(qq.key, t) === m.key).reduce((s2, t) => s2 + getTaskExtraLinkHours(cl, qq.key, t), 0), 0);
       const rapH = (cl, mk) => isRapportageOn(cl) && rapportages[`${String(cl.id)}-${mk}`] ? RAPPORTAGE_HRS_PER_Q : 0;
       const audH = (cl, qk, rel) => isAuditOn(cl) && !isAuditHidden(cl, qk, rel) ? AUDIT_HRS_PER_MONTH : 0;
-      const totalAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m.qk, m.rel) + ctrlH(cl, m.qk, m.rel) + extraH(cl, m.qk, m.rel) + rapH(cl, m.key) + audH(cl), 0);
-      const mineAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m.qk, m.rel, 'quinten') + ctrlH(cl, m.qk, m.rel) + extraH(cl, m.qk, m.rel) + rapH(cl, m.key) + audH(cl), 0);
+      const totalAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m) + ctrlH(cl, m) + extraH(cl, m) + rapH(cl, m.key) + audH(cl, m.qk, m.rel), 0);
+      const mineAll = m => activeClients.reduce((s, cl) => s + taskH(cl, m, 'quinten') + ctrlH(cl, m) + extraH(cl, m) + rapH(cl, m.key) + audH(cl, m.qk, m.rel), 0);
       const grand = months.reduce((s, m) => s + totalAll(m), 0);
       if (grand <= 0) return null;
       const nowKey = (() => {
@@ -10928,8 +10989,14 @@ function App() {
       const monthHrs = [0, 1, 2].map(i => {
         const rel = String(i + 1);
         const mk = qMonthsCell[i];
-        const tks = ((client.quarterCustomTasks || {})[q.key] || []).filter(t => (t.month || '') === rel);
-        let h = tks.reduce((s, t) => s + (parseFloat(t.hours) || 0) + getTaskControlRate(client, q.key, t) + getTaskExtraLinkHours(client, q.key, t), 0);
+        let h = 0;
+        QUARTERS.forEach(qq => {
+          const qmks = getQuarterMonths(qq.key);
+          (((client.quarterCustomTasks || {})[qq.key]) || []).forEach(t => {
+            const em = t.planMonth ? t.planMonth : (t.month || '') !== '' ? qmks[parseInt(t.month, 10) - 1] || '' : '';
+            if (em === mk) h += (parseFloat(t.hours) || 0) + getTaskControlRate(client, qq.key, t) + getTaskExtraLinkHours(client, qq.key, t);
+          });
+        });
         if (isRapportageOn(client) && rapportages[`${String(client.id)}-${mk}`]) h += RAPPORTAGE_HRS_PER_Q;
         if (isAuditOn(client) && !isAuditHidden(client, q.key, rel)) h += AUDIT_HRS_PER_MONTH;
         return {
