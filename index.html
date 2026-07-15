@@ -3122,6 +3122,8 @@ function App() {
   const [moMonth, setMoMonth] = useState(null);
   const [moFilter, setMoFilter] = useState('alle');
   const [moCollapsed, setMoCollapsed] = useState({});
+  const [moSort, setMoSort] = useState('priority');
+  const [moCapOpen, setMoCapOpen] = useState(false);
   const [kwSort, setKwSort] = useState('priority');
   const [prioMenuFor, setPrioMenuFor] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -9488,9 +9490,16 @@ function App() {
       }
       return items;
     };
-    const activeClientsMo = clients.filter(cl => !cl.archived).slice().sort((a, b) => (a.name || '').localeCompare(b.name || '', 'nl', {
-      sensitivity: 'base'
-    }));
+    const activeClientsMo = clients.filter(cl => !cl.archived).slice().sort((a, b) => {
+      if (moSort === 'priority') {
+        const ra = getClientPriorityRank(a),
+          rb = getClientPriorityRank(b);
+        if (ra !== rb) return ra - rb;
+      }
+      return (a.name || '').localeCompare(b.name || '', 'nl', {
+        sensitivity: 'base'
+      });
+    });
     const perClient = activeClientsMo.map(cl => ({
       cl,
       items: buildItems(cl)
@@ -9682,11 +9691,54 @@ function App() {
       onClick: () => setMonthCapacity(sel.key, ''),
       title: "Terug naar standaard (" + fmt(nettoDefault) + " u)",
       style: { cursor: 'pointer', fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--white)', color: 'var(--text-light)' }
-    }, "standaard")))), h("div", {
+    }, "standaard"), isAdmin && h("button", {
+      onClick: () => setMoCapOpen(!moCapOpen),
+      title: "Capaciteit van alle maanden aanpassen",
+      style: { cursor: 'pointer', fontSize: '11px', fontWeight: '600', padding: '3px 10px', borderRadius: '12px', border: '1px solid #93c5fd', background: '#eff6ff', color: '#1d4ed8', marginLeft: '6px' }
+    }, moCapOpen ? "sluiten \u25B4" : "\u2699\uFE0F alle maanden")), moCapOpen && isAdmin && h("div", {
+      style: { marginTop: '12px', paddingTop: '12px', borderTop: '1px dashed var(--border)' }
+    }, h("div", {
+      style: { fontSize: '12px', color: 'var(--text-light)', marginBottom: '8px' }
+    }, "Netto capaciteit per maand \u2014 standaard ", fmt(nettoDefault), " u. Pas aan voor bijv. vakantie; blauw = eigen waarde, \u21BA zet terug."), h("div", {
+      style: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(96px, 1fr))', gap: '8px' }
+    }, months.map(mm => {
+      const ovRaw = (settings.monthCapacity || {})[mm.key];
+      const ov = parseFloat(ovRaw);
+      const has = !isNaN(ov);
+      return h("div", {
+        key: mm.key,
+        style: { background: has ? '#eff6ff' : 'var(--bg,#f8fafc)', border: '1px solid ' + (has ? '#93c5fd' : 'var(--border)'), borderRadius: '10px', padding: '8px' }
+      }, h("div", {
+        style: { display: 'flex', alignItems: 'center', gap: '4px', fontSize: '11px', fontWeight: '700', color: mm.key === curKey ? '#2563eb' : 'var(--text-light)', marginBottom: '5px' }
+      }, mm.label.slice(0, 3), mm.key === curKey && h("span", { style: { fontSize: '9px', fontWeight: '600' } }, "\u2022 nu"), has && h("button", {
+        onClick: () => setMonthCapacity(mm.key, ''),
+        title: "Terug naar standaard (" + fmt(nettoDefault) + " u)",
+        style: { marginLeft: 'auto', cursor: 'pointer', border: 'none', background: 'none', color: '#1d4ed8', fontSize: '12px', padding: 0, lineHeight: 1 }
+      }, "\u21BA")), h("div", {
+        style: { display: 'flex', alignItems: 'center', gap: '4px' }
+      }, h("input", {
+        type: "number",
+        step: "0.5",
+        min: "0",
+        value: has ? ov : Math.round(nettoDefault * 10) / 10,
+        onChange: e => setMonthCapacity(mm.key, e.target.value),
+        style: { width: '100%', fontSize: '12px', fontWeight: '600', padding: '3px 6px', borderRadius: '6px', border: '1px solid ' + (has ? '#93c5fd' : 'var(--border)'), background: 'var(--white)', color: 'var(--text)', textAlign: 'right' }
+      }), h("span", { style: { fontSize: '11px', color: 'var(--text-light)' } }, "u")));
+    }))))), h("div", {
       style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }
     }, h("span", {
       style: { fontSize: '13px', fontWeight: '600', color: 'var(--text-light)' }
-    }, "Toon:"), filterBtn('alle', 'Alle taken'), filterBtn('mijn', 'Alleen mijn'), filterBtn('inplannen', 'Nog inplannen')), perClient.length === 0 ? h("div", {
+    }, "Toon:"), filterBtn('alle', 'Alle taken'), filterBtn('mijn', 'Alleen mijn'), filterBtn('inplannen', 'Nog inplannen'), h("span", {
+      style: { width: '1px', height: '22px', background: 'var(--border)', margin: '0 4px' }
+    }), h("span", {
+      style: { fontSize: '13px', fontWeight: '600', color: 'var(--text-light)' }
+    }, "Sorteren:"), h("button", {
+      onClick: () => setMoSort('priority'),
+      style: { cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 14px', borderRadius: '20px', border: '1px solid ' + (moSort === 'priority' ? '#2563eb' : 'var(--border)'), background: moSort === 'priority' ? '#2563eb' : 'var(--white)', color: moSort === 'priority' ? '#fff' : 'var(--text-light)' }
+    }, "Prioriteit"), h("button", {
+      onClick: () => setMoSort('name'),
+      style: { cursor: 'pointer', fontSize: '13px', fontWeight: '600', padding: '6px 14px', borderRadius: '20px', border: '1px solid ' + (moSort === 'name' ? '#2563eb' : 'var(--border)'), background: moSort === 'name' ? '#2563eb' : 'var(--white)', color: moSort === 'name' ? '#fff' : 'var(--text-light)' }
+    }, "Naam (A\u2013Z)")), perClient.length === 0 ? h("div", {
       style: { textAlign: 'center', padding: '48px 24px', color: 'var(--text-light)' }
     }, "Geen taken in deze maand") : h("div", {
       style: { display: 'flex', flexDirection: 'column', gap: '12px', maxWidth: '900px' }
@@ -9711,7 +9763,16 @@ function App() {
       }, clCollapsed ? '\u25B8' : '\u25BE'), h("button", {
         onClick: () => { setSelectedClient(x.cl.id); setActiveView('roadmap'); setActiveStep('kwartaal'); },
         style: { border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#3b82f6', padding: 0, textAlign: 'left' }
-      }, x.cl.name), cTodo > 0 && h("span", {
+      }, x.cl.name), (() => {
+        const pk = getClientPriorityKey(x.cl);
+        if (pk === 'geen') return null;
+        const pi = getPriorityInfo(pk);
+        return h("span", {
+          style: { fontSize: '10px', fontWeight: '600', padding: '1px 8px', borderRadius: '10px', background: pi.bg, color: pi.color, display: 'inline-flex', alignItems: 'center', gap: '4px' }
+        }, h("span", {
+          style: { width: '7px', height: '7px', borderRadius: '50%', background: pi.color, display: 'inline-block' }
+        }), pi.label);
+      })(), cTodo > 0 && h("span", {
         style: { fontSize: '11px', fontWeight: '600', color: '#854F0B', background: '#FAEEDA', padding: '1px 8px', borderRadius: '10px' }
       }, "nog ", fmt(cTodo), " u inplannen"), clCollapsed && h("span", {
         style: { fontSize: '11px', color: 'var(--text-light)', marginLeft: 'auto' }
