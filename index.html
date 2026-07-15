@@ -3121,6 +3121,7 @@ function App() {
   const [prioFilter, setPrioFilter] = useState([]);
   const [moMonth, setMoMonth] = useState(null);
   const [moFilter, setMoFilter] = useState('alle');
+  const [moCollapsed, setMoCollapsed] = useState({});
   const [kwSort, setKwSort] = useState('priority');
   const [prioMenuFor, setPrioMenuFor] = useState(null);
   const [selectedClient, setSelectedClient] = useState(null);
@@ -6313,6 +6314,25 @@ function App() {
     });
   };
 
+  // Netto capaciteit per maand handmatig overschrijven ('' = terug naar standaard)
+  const setMonthCapacity = (monthKey, val) => {
+    const mc = {
+      ...(settings.monthCapacity || {})
+    };
+    if (val === '' || val == null) {
+      delete mc[monthKey];
+    } else {
+      mc[monthKey] = Math.max(0, parseFloat(val) || 0);
+    }
+    const ns = {
+      ...settings,
+      monthCapacity: mc
+    };
+    setSettings(ns);
+    saveData({
+      settings: ns
+    });
+  };
   // Mijn werkuren per week (capaciteit) opslaan
   const setMyWeeklyHours = val => {
     const h = val === '' ? '' : Math.max(0, parseFloat(val) || 0);
@@ -9399,7 +9419,11 @@ function App() {
     const fmt = n => String(Math.round(n * 10) / 10).replace('.', ',');
     const weekly = parseFloat(settings.myWeeklyHours) || 0;
     const nettoQ = weekly * 13 * 0.8 - (parseFloat(settings.onboardingHours) || 0) * 13 - (parseFloat(settings.freeHoursPerYear) || 0) / 4;
-    const nettoM = Math.max(nettoQ / 3, 0);
+    const nettoDefault = Math.max(nettoQ / 3, 0);
+    const nettoOverrideRaw = (settings.monthCapacity || {})[sel.key];
+    const nettoOverride = parseFloat(nettoOverrideRaw);
+    const hasOverride = !isNaN(nettoOverride);
+    const nettoM = hasOverride ? nettoOverride : nettoDefault;
     const buildItems = cl => {
       const items = [];
       const st = cl.quarterTaskState || {};
@@ -9646,7 +9670,19 @@ function App() {
       style: { display: 'flex', height: '10px', borderRadius: '5px', overflow: 'hidden', background: 'var(--ios-gray-6,#eef2f7)' }
     }, h("div", { style: { width: pct(afH) + '%', background: '#94a3b8' } }), h("div", { style: { width: pct(inH) + '%', background: '#378ADD' } }), h("div", { style: { width: pct(todoH) + '%', background: '#EF9F27' } })), h("div", {
       style: { display: 'flex', gap: '16px', flexWrap: 'wrap', fontSize: '12px', color: 'var(--text-light)', marginTop: '8px' }
-    }, h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#94a3b8', marginRight: '5px' } }), "afgerond ", fmt(afH), " u (", afN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#378ADD', marginRight: '5px' } }), "ingepland ", fmt(inH), " u (", inN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#EF9F27', marginRight: '5px' } }), "nog inplannen ", fmt(todoH), " u (", todoN, ")"), h("span", { style: { marginLeft: 'auto' } }, "netto capaciteit ", fmt(nettoM), " u/maand"))), h("div", {
+    }, h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#94a3b8', marginRight: '5px' } }), "afgerond ", fmt(afH), " u (", afN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#378ADD', marginRight: '5px' } }), "ingepland ", fmt(inH), " u (", inN, ")"), h("span", null, h("span", { style: { display: 'inline-block', width: '9px', height: '9px', borderRadius: '2px', background: '#EF9F27', marginRight: '5px' } }), "nog inplannen ", fmt(todoH), " u (", todoN, ")"), h("span", { style: { marginLeft: 'auto', display: 'inline-flex', alignItems: 'center', gap: '5px' } }, "netto capaciteit", isAdmin ? h("input", {
+      type: "number",
+      step: "0.5",
+      min: "0",
+      value: hasOverride ? nettoOverride : Math.round(nettoDefault * 10) / 10,
+      onChange: e => setMonthCapacity(sel.key, e.target.value),
+      title: "Netto capaciteit voor deze maand aanpassen",
+      style: { width: '60px', fontSize: '12px', fontWeight: '600', padding: '2px 6px', borderRadius: '6px', border: '1px solid ' + (hasOverride ? '#93c5fd' : 'var(--border)'), background: hasOverride ? '#eff6ff' : 'var(--white)', color: 'var(--text)', textAlign: 'right' }
+    }) : h("span", { style: { fontWeight: '600' } }, fmt(nettoM)), "u/maand", isAdmin && hasOverride && h("button", {
+      onClick: () => setMonthCapacity(sel.key, ''),
+      title: "Terug naar standaard (" + fmt(nettoDefault) + " u)",
+      style: { cursor: 'pointer', fontSize: '10px', fontWeight: '600', padding: '2px 8px', borderRadius: '10px', border: '1px solid var(--border)', background: 'var(--white)', color: 'var(--text-light)' }
+    }, "standaard")))), h("div", {
       style: { display: 'flex', alignItems: 'center', flexWrap: 'wrap', gap: '8px', marginBottom: '18px' }
     }, h("span", {
       style: { fontSize: '13px', fontWeight: '600', color: 'var(--text-light)' }
@@ -9658,17 +9694,28 @@ function App() {
       const vis = x.items.filter(it => moFilter === 'mijn' ? it.mine : moFilter === 'inplannen' ? it.status === 'todo' : true).slice().sort((a, b) => stMeta[a.status].rank - stMeta[b.status].rank);
       if (vis.length === 0) return null;
       const cTodo = x.items.filter(it => it.status === 'todo').reduce((s, it) => s + it.hours, 0);
+      const clCollapsed = !!moCollapsed[x.cl.id];
+      const visH = vis.reduce((s, it) => s + it.hours, 0);
       return h("div", {
         key: x.cl.id,
         style: { background: 'var(--white)', border: '1px solid var(--border)', borderRadius: '12px', padding: '12px 14px', boxShadow: 'var(--shadow-sm)' }
       }, h("div", {
-        style: { display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: '6px', flexWrap: 'wrap' }
+        style: { display: 'flex', alignItems: 'baseline', gap: '10px', marginBottom: clCollapsed ? 0 : '6px', flexWrap: 'wrap' }
       }, h("button", {
+        onClick: () => setMoCollapsed({
+          ...moCollapsed,
+          [x.cl.id]: !clCollapsed
+        }),
+        title: clCollapsed ? 'Uitklappen' : 'Inklappen',
+        style: { border: 'none', background: 'none', cursor: 'pointer', fontSize: '11px', color: 'var(--text-light)', padding: '0 2px', flexShrink: 0 }
+      }, clCollapsed ? '\u25B8' : '\u25BE'), h("button", {
         onClick: () => { setSelectedClient(x.cl.id); setActiveView('roadmap'); setActiveStep('kwartaal'); },
         style: { border: 'none', background: 'none', cursor: 'pointer', fontWeight: '700', fontSize: '14px', color: '#3b82f6', padding: 0, textAlign: 'left' }
       }, x.cl.name), cTodo > 0 && h("span", {
         style: { fontSize: '11px', fontWeight: '600', color: '#854F0B', background: '#FAEEDA', padding: '1px 8px', borderRadius: '10px' }
-      }, "nog ", fmt(cTodo), " u inplannen")), vis.map((it, i) => {
+      }, "nog ", fmt(cTodo), " u inplannen"), clCollapsed && h("span", {
+        style: { fontSize: '11px', color: 'var(--text-light)', marginLeft: 'auto' }
+      }, vis.length, " taken \u00B7 ", fmt(visH), " u")), !clCollapsed && vis.map((it, i) => {
         const m2 = stMeta[it.status];
         const asg = it.assignee ? getAssigneeInfo(it.assignee) : null;
         return h("div", {
@@ -9967,7 +10014,10 @@ function App() {
       const onbWeekly = parseFloat(settings.onboardingHours) || 0;
       const freePerYear = parseFloat(settings.freeHoursPerYear) || 0;
       const netPerQ = weekly * WEEKS_PER_Q * 0.80 - onbWeekly * WEEKS_PER_Q - freePerYear / 4;
-      const netPerMonth = netPerQ / 3;
+      const netFor = m => {
+        const ov = parseFloat((settings.monthCapacity || {})[m.key]);
+        return isNaN(ov) ? netPerQ / 3 : ov;
+      };
       const r1 = n => Math.round(n * 10) / 10;
       const mNames = ['', 'jan', 'feb', 'mrt', 'apr', 'mei', 'jun', 'jul', 'aug', 'sep', 'okt', 'nov', 'dec'];
       const months = QUARTERS.flatMap(q => getQuarterMonths(q.key).map((mk, i) => ({
@@ -10055,6 +10105,7 @@ function App() {
         const [y, mm] = m.key.split('-');
         const tot = totalAll(m),
           mine = mineAll(m);
+        const netPerMonth = netFor(m);
         const over = netPerMonth > 0 && mine > netPerMonth;
         const isCur = m.key === nowKey;
         return /*#__PURE__*/React.createElement("tr", {
@@ -10097,7 +10148,7 @@ function App() {
           color: 'var(--text-light)',
           marginTop: '8px'
         }
-      }, "Netto beschikbaar per maand = kwartaal-netto ÷ 3. Rood = mijn ingeplande uren boven mijn netto beschikbaar in die maand."));
+      }, "Netto beschikbaar per maand = kwartaal-netto ÷ 3, tenzij je in het Maandoverzicht een eigen capaciteit voor die maand hebt ingesteld. Rood = mijn ingeplande uren boven mijn netto beschikbaar in die maand."));
     })(), (() => {
       const sumPhaseQAll = (pk, qk) => activeClients.reduce((tot, cl) => tot + ((cl.quarterCustomTasks || {})[qk] || []).filter(t => t.phaseKey === pk).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0), 0);
       const rapQAll = qk => activeClients.reduce((s, cl) => s + getRapportageHoursForQuarter(cl, qk), 0);
