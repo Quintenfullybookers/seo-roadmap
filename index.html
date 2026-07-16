@@ -2403,7 +2403,21 @@ function QuarterCard({
             textDecoration: checked ? 'line-through' : 'none',
             fontWeight: '500'
           }
-        }, t.label, t.fromBoard && /*#__PURE__*/React.createElement("span", {
+        }, t.label, checked && (client.quarterTaskDoneAt || {})[`${q.key}::${t.id}`] && (() => {
+          const d = new Date((client.quarterTaskDoneAt || {})[`${q.key}::${t.id}`]);
+          return /*#__PURE__*/React.createElement("span", {
+            title: "Afgevinkt op " + d.getDate() + " " + MONTH_ABBR[d.getMonth()] + " " + d.getFullYear(),
+            style: {
+              marginLeft: '6px',
+              fontSize: '10px',
+              fontWeight: '600',
+              color: '#16a34a',
+              whiteSpace: 'nowrap',
+              textDecoration: 'none',
+              display: 'inline-block'
+            }
+          }, "\u2713 ", d.getDate(), " ", MONTH_ABBR[d.getMonth()]);
+        })(), t.fromBoard && /*#__PURE__*/React.createElement("span", {
           title: "Toegevoegd vanaf het Takenbord",
           style: {
             marginLeft: '6px',
@@ -5981,11 +5995,20 @@ function App() {
       const st = {
         ...(c.quarterTaskState || {})
       };
+      const da = {
+        ...(c.quarterTaskDoneAt || {})
+      };
       const k = `${quarterKey}::${taskId}`;
       st[k] = !st[k];
+      if (st[k]) {
+        da[k] = Date.now();
+      } else {
+        delete da[k];
+      }
       return {
         ...c,
-        quarterTaskState: st
+        quarterTaskState: st,
+        quarterTaskDoneAt: da
       };
     });
     setClients(updated);
