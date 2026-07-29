@@ -1,5 +1,16 @@
 [
   {
+    "id": "audit-pavarotti-2026-07-29",
+    "klant": "Pavarotti",
+    "klant_type": "restaurant",
+    "url": "https://www.pavarotti.nl/",
+    "datum": "2026-07-29",
+    "issue_url": "https://github.com/Quintenfullybookers/seo-roadmap-pipeline/issues/210",
+    "issue_number": 210,
+    "samenvatting": "Quinten, de situatie verslechtert verder: clicks daalden van 21.193 naar 19.163 (-10%) en jullie hebben 7.381 keywords verloren, terwijl de positie stabiel bleef op 6.3. De aanbevelingen uit de vorige audit zijn niet opgevolgd – cruciale termen zoals \"pizza\" (301.000 volume, was positie 74) en \"menukaart\" (14.800 volume, was positie 52) zijn volledig uit de ranking verdwenen, en de conversie-pagina's staan nog steeds op 0 traffic. Concurrent Fratelli.nl scoort nu 3.849 keywords die jullie missen door hun dedicated content per gerecht, wat jullie 10.938 potentiële clicks kost. De karaoke-pagina blijft een goudmijn met 63% CTR, maar zonder dedicated pagina mis je de generieke term \"karaoke\" (22.200 volume). De aanbevolen volgende stap is om deze week de \"/pizza\" en \"/menukaart\" pagina's aan te maken met geoptimaliseerde content, want zonder actie zakt de traffic verder naar 15.000 clicks per maand.",
+    "aantal_taken": 5
+  },
+  {
     "id": "audit-ambassador-city-centre-hotel-2026-07-15",
     "klant": "Ambassador City Centre Hotel",
     "klant_type": "hotel",
