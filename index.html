@@ -9943,7 +9943,12 @@ function App() {
           style: { width: '9px', height: '9px', borderRadius: '50%', background: m2.dot, flexShrink: 0 }
         }), h("span", {
           style: { flex: 1, color: it.status === 'af' ? 'var(--text-light)' : 'var(--text)', textDecoration: it.status === 'af' ? 'line-through' : 'none' }
-        }, it.label), asg && h("span", {
+        }, it.label), isAdmin && it.kind === 'taak' ? h("select", {
+          value: it.assignee || '',
+          onChange: e => setQuarterTaskAssignee(x.cl.id, sel.qk, it.taskId, e.target.value),
+          title: "Wie voert dit uit?",
+          style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '1px 7px', borderRadius: '8px', border: '1px solid ' + (asg && asg.color ? asg.color + '44' : 'var(--border)'), background: asg ? asg.bg : 'var(--white)', color: asg ? asg.color : 'var(--text-light)', cursor: 'pointer', maxWidth: '120px', WebkitAppearance: 'none', MozAppearance: 'none', appearance: 'none' }
+        }, h("option", { value: "" }, "\u2014 wie \u2014"), ASSIGNEES.map(a => h("option", { key: a.key, value: a.key }, a.label))) : asg && h("span", {
           style: { flexShrink: 0, fontSize: '10px', fontWeight: '600', padding: '1px 7px', borderRadius: '8px', background: asg.bg || 'var(--bg,#f1f5f9)', color: asg.color || 'var(--text-light)' }
         }, asg.label), h("span", {
           style: { flexShrink: 0, color: 'var(--text-light)', fontWeight: '600', minWidth: '38px', textAlign: 'right' }
