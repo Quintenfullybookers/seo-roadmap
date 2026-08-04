@@ -2564,7 +2564,22 @@ function QuarterCard({
         }, PHASE_OPTIONS.map(p => /*#__PURE__*/React.createElement("option", {
           key: p.key,
           value: p.key
-        }, p.icon, " ", p.label))), isAdmin && /*#__PURE__*/React.createElement("select", {
+        }, p.icon, " ", p.label))), isAdmin && ctrlH === 0 && (getTaskAssignee(client, q.key, t) || '') !== '' && (getTaskAssignee(client, q.key, t) || '') !== 'quinten' && /*#__PURE__*/React.createElement("button", {
+          onClick: () => onSetCtrlHours && onSetCtrlHours(client.id, q.key, t.id, ''),
+          title: "Controle toevoegen bij deze taak",
+          style: {
+            flexShrink: 0,
+            cursor: 'pointer',
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '2px 7px',
+            borderRadius: '8px',
+            border: '1px dashed var(--border)',
+            background: 'transparent',
+            color: 'var(--text-lighter,#9ca3af)',
+            whiteSpace: 'nowrap'
+          }
+        }, "\uD83D\uDD0D + controle"), isAdmin && /*#__PURE__*/React.createElement("select", {
           value: t.month || '',
           onChange: e => onSetMonth(client.id, q.key, t.id, e.target.value),
           title: "Maand",
@@ -2763,7 +2778,20 @@ function QuarterCard({
             fontWeight: '700',
             whiteSpace: 'nowrap'
           }
-        }, r1(ctrlH), "u")), extraH > 0 && (() => {
+        }, r1(ctrlH), "u"), isAdmin && /*#__PURE__*/React.createElement("button", {
+          onClick: () => onSetCtrlHours && onSetCtrlHours(client.id, q.key, t.id, 0),
+          title: "Controle weghalen bij deze taak",
+          style: {
+            border: 'none',
+            background: 'none',
+            cursor: 'pointer',
+            color: 'var(--text-lighter,#cbd5e1)',
+            fontSize: '14px',
+            lineHeight: 1,
+            flexShrink: 0,
+            padding: 0
+          }
+        }, "\xD7")), extraH > 0 && (() => {
           const xDoneKey = q.key + '::extra::' + t.id + '::done';
           const xDone = !!((client.quarterAutoDone || {})[xDoneKey]);
           return /*#__PURE__*/React.createElement("div", {
