@@ -2416,7 +2416,21 @@ function QuarterCard({
             textDecoration: checked ? 'line-through' : 'none',
             fontWeight: '500'
           }
-        }, t.label, checked && (client.quarterTaskDoneAt || {})[`${q.key}::${t.id}`] && (() => {
+        }, t.label, t.carriedFrom && !checked && /*#__PURE__*/React.createElement("span", {
+          title: "Automatisch doorgeschoven uit een eerdere maand",
+          style: {
+            marginLeft: '6px',
+            fontSize: '10px',
+            fontWeight: '600',
+            padding: '1px 7px',
+            borderRadius: '10px',
+            background: '#fff7ed',
+            border: '1px solid #fed7aa',
+            color: '#c2410c',
+            whiteSpace: 'nowrap',
+            textDecoration: 'none'
+          }
+        }, "\u27A1\uFE0F doorgeschoven"), checked && (client.quarterTaskDoneAt || {})[`${q.key}::${t.id}`] && (() => {
           const d = new Date((client.quarterTaskDoneAt || {})[`${q.key}::${t.id}`]);
           return /*#__PURE__*/React.createElement("span", {
             title: "Afgevinkt op " + d.getDate() + " " + MONTH_ABBR[d.getMonth()] + " " + d.getFullYear(),
@@ -6323,6 +6337,65 @@ function App() {
       clients: updated
     });
   };
+  // Automatisch doorschuiven: niet-afgeronde taken uit voorbije maanden gaan mee naar de huidige maand
+  useEffect(() => {
+    if (!isAdmin || !clients.length) return;
+    const now = new Date();
+    const curMonthKey = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    if (settings.lastCarryMonth === curMonthKey) return;
+    const curQ = getCurrentQuarterKey();
+    const qMonths = getQuarterMonths(curQ);
+    const curRel = String(qMonths.indexOf(curMonthKey) + 1);
+    if (curRel === '0') return;
+    let moved = 0;
+    const updated = clients.map(c => {
+      if (c.archived) return c;
+      const src = (c.quarterCustomTasks || {})[curQ];
+      if (!src || !src.length) return c;
+      const st = c.quarterTaskState || {};
+      let touched = false;
+      const arr = src.map(t => {
+        const rel = t.month || '';
+        if (rel === '' || parseInt(rel, 10) >= parseInt(curRel, 10)) return t;
+        if (st[curQ + '::' + t.id]) return t;
+        touched = true;
+        moved++;
+        return {
+          ...t,
+          month: curRel,
+          carriedFrom: t.carriedFrom || rel
+        };
+      });
+      if (!touched) return c;
+      return {
+        ...c,
+        quarterCustomTasks: {
+          ...(c.quarterCustomTasks || {}),
+          [curQ]: arr
+        }
+      };
+    });
+    const ns = {
+      ...settings,
+      lastCarryMonth: curMonthKey
+    };
+    setSettings(ns);
+    if (moved > 0) {
+      setClients(updated);
+      saveData({
+        clients: updated,
+        settings: ns
+      });
+      setToast({
+        type: 'success',
+        message: '\u27A1\uFE0F ' + moved + ' openstaande taken doorgeschoven naar deze maand'
+      });
+    } else {
+      saveData({
+        settings: ns
+      });
+    }
+  }, [isAdmin, clients.length, settings.lastCarryMonth]);
   const toggleAutoScheduled = (clientId, key) => {
     const updated = clients.map(c => {
       if (c.id !== clientId) return c;
