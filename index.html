@@ -1660,7 +1660,10 @@ function QuarterCard({
   const pkgHours = Math.round((packageHours || 0) * 10) / 10;
   const workedQ = Math.round((workedHours || 0) * 10) / 10;
   const reserveHours = Math.round((carriedInHours || 0) * 10) / 10;
-  const plannedHours = ((client.quarterCustomTasks || {})[q.key] || []).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (parseFloat(rapportageHours) || 0) + (parseFloat(auditHours) || 0) + (parseFloat(controlHours) || 0) + (parseFloat(extraLinkHours) || 0);
+  // Uren-teller telt exact de taken die hieronder worden getoond (respecteert het personen-filter)
+  const shownTasks = ((client.quarterCustomTasks || {})[q.key] || []).filter(t => !assigneeFilter || assigneeFilter === 'all' || (getTaskAssignee(client, q.key, t) || '') === assigneeFilter);
+  const showsOwnExtras = !assigneeFilter || assigneeFilter === 'all' || assigneeFilter === 'quinten';
+  const plannedHours = shownTasks.reduce((s, t) => s + (parseFloat(t.hours) || 0) + (taskControlRate ? parseFloat(taskControlRate(t)) || 0 : 0) + (taskExtraLink ? parseFloat(taskExtraLink(t)) || 0 : 0), 0) + (showsOwnExtras ? (parseFloat(rapportageHours) || 0) + (parseFloat(auditHours) || 0) : 0);
   const r1 = n => Math.round(n * 10) / 10;
   const overBase = plannedHours > baseAvailHours; // meer ingepland dan resterende kwartaal-ruimte
   const usedFromReserve = Math.max(0, plannedHours - baseAvailHours); // wat uit de reserve komt
