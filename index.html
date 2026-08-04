@@ -1600,6 +1600,9 @@ function QuarterCard({
   onToggleScheduled,
   onToggleAutoSched,
   onToggleAutoDone,
+  onSetCtrlAssignee,
+  onSetCtrlHours,
+  taskControlAssignee,
   onHideAudit,
   onDeleteRapportage,
   onSetPhase
@@ -2044,7 +2047,9 @@ function QuarterCard({
       const ak = getTaskAssignee(client, q.key, t);
       const done = !!st[`${q.key}::${t.id}`];
       const ctrl = !!controlSt[`${q.key}::${t.id}`];
-      return ak && ak !== 'quinten' && done && !ctrl;
+      const cak = taskControlAssignee ? taskControlAssignee(t) : 'quinten';
+      const crate = taskControlRate ? parseFloat(taskControlRate(t)) || 0 : 0;
+      return ak && ak !== 'quinten' && done && !ctrl && cak === 'quinten' && crate > 0;
     });
     if (toCheck.length === 0) return null;
     const ctrlRateOf = t => taskControlRate ? parseFloat(taskControlRate(t)) || 0 : parseFloat(controlRate) || 0;
@@ -2691,18 +2696,63 @@ function QuarterCard({
             color: controlled ? '#166534' : 'var(--text-light)',
             fontWeight: controlled ? '600' : 'normal'
           }
-        }, controlled ? '✓ Gecontroleerd' : 'Controle van werk'), autoSchedChip(q.key + '::ctrl::' + t.id), /*#__PURE__*/React.createElement("span", {
+        }, controlled ? '✓ Gecontroleerd' : 'Controle van werk'), autoSchedChip(q.key + '::ctrl::' + t.id), (() => {
+          const cak = taskControlAssignee ? taskControlAssignee(t) : 'quinten';
+          const ci = getAssigneeInfo(cak);
+          return isAdmin ? /*#__PURE__*/React.createElement("select", {
+            value: cak,
+            onChange: e => onSetCtrlAssignee && onSetCtrlAssignee(client.id, q.key, t.id, e.target.value),
+            title: "Wie doet de controle?",
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 7px',
+              borderRadius: '8px',
+              border: '1px solid ' + (ci && ci.color ? ci.color + '44' : 'var(--border)'),
+              background: ci ? ci.bg : 'var(--white)',
+              color: ci ? ci.color : 'var(--text-light)',
+              fontWeight: '600',
+              cursor: 'pointer',
+              maxWidth: '120px',
+              WebkitAppearance: 'none',
+              MozAppearance: 'none',
+              appearance: 'none'
+            }
+          }, ASSIGNEES.map(a => /*#__PURE__*/React.createElement("option", {
+            key: a.key,
+            value: a.key
+          }, a.label))) : /*#__PURE__*/React.createElement("span", {
+            style: {
+              flexShrink: 0,
+              fontSize: '10px',
+              padding: '2px 7px',
+              borderRadius: '8px',
+              background: ci ? ci.bg : '#dbeafe',
+              color: ci ? ci.color : '#2563eb',
+              fontWeight: '600',
+              whiteSpace: 'nowrap'
+            }
+          }, ci ? ci.label : 'Quinten');
+        })(), isAdmin ? /*#__PURE__*/React.createElement("input", {
+          type: "number",
+          step: "0.25",
+          min: "0",
+          value: t.controlHours != null && t.controlHours !== '' ? t.controlHours : r1(ctrlH),
+          onChange: e => onSetCtrlHours && onSetCtrlHours(client.id, q.key, t.id, e.target.value),
+          title: "Controletijd aanpassen (leeg = standaard)",
           style: {
             flexShrink: 0,
-            fontSize: '10px',
-            padding: '2px 7px',
-            borderRadius: '8px',
-            background: controlled ? '#dcfce7' : '#dbeafe',
-            color: controlled ? '#15803d' : '#2563eb',
-            fontWeight: '600',
-            whiteSpace: 'nowrap'
+            width: '46px',
+            fontSize: '11px',
+            padding: '2px 5px',
+            borderRadius: '6px',
+            border: '1px solid ' + (t.controlHours != null && t.controlHours !== '' ? '#93c5fd' : 'var(--border)'),
+            background: 'var(--white)',
+            color: 'var(--text)',
+            fontWeight: '700',
+            textAlign: 'right'
           }
-        }, "Quinten"), /*#__PURE__*/React.createElement("span", {
+        }) : /*#__PURE__*/React.createElement("span", {
           style: {
             flexShrink: 0,
             fontSize: '11px',
@@ -6581,15 +6631,66 @@ function App() {
   };
   // Controle-tarief per taak, afhankelijk van fase/uitvoerder: linkbuilding door Externe = 0,5 u, content = 0,25 u, overige = instelbaar tarief
   const getTaskControlRate = (client, quarterKey, t) => {
+    const ov = parseFloat(t && t.controlHours);
+    if (!isNaN(ov)) return Math.max(ov, 0);
     const ak = getTaskAssignee(client, quarterKey, t);
     if (!ak || ak === 'quinten') return 0;
     if (t.phaseKey === 'linkbuilding' && ak === 'extern') return 0.5;
     if (t.phaseKey === 'content') return 0.25;
     return getControlRate();
   };
+  // Wie doet de controle van deze taak (standaard Quinten)
+  const getTaskControlAssignee = (client, quarterKey, t) => t && t.controlAssignee ? t.controlAssignee : 'quinten';
   const getControlHoursForQuarter = (client, quarterKey) => {
     const tasks = (client.quarterCustomTasks || {})[quarterKey] || [];
     return tasks.reduce((s, t) => s + getTaskControlRate(client, quarterKey, t), 0);
+  };
+  // Controle-uren van één specifieke controleur
+  const getControlHoursForQuarterBy = (client, quarterKey, assigneeKey) => ((client.quarterCustomTasks || {})[quarterKey] || []).reduce((s, t) => s + (getTaskControlAssignee(client, quarterKey, t) === assigneeKey ? getTaskControlRate(client, quarterKey, t) : 0), 0);
+  // Handlers om controle per taak aan te passen
+  const setTaskControlAssignee = (clientId, quarterKey, taskId, val) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => t.id === taskId ? {
+        ...t,
+        controlAssignee: val || ''
+      } : t);
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
+  };
+  const setTaskControlHours = (clientId, quarterKey, taskId, val) => {
+    const updated = clients.map(c => {
+      if (c.id !== clientId) return c;
+      const qct = {
+        ...(c.quarterCustomTasks || {})
+      };
+      qct[quarterKey] = (qct[quarterKey] || []).map(t => {
+        if (t.id !== taskId) return t;
+        const nt = {
+          ...t
+        };
+        if (val === '' || val == null) delete nt.controlHours;else nt.controlHours = Math.max(parseFloat(val) || 0, 0);
+        return nt;
+      });
+      return {
+        ...c,
+        quarterCustomTasks: qct
+      };
+    });
+    setClients(updated);
+    saveData({
+      clients: updated
+    });
   };
   // Extra linkbuilding-uren: 0,3 u per linkbuilding-taak van een externe partij (auto, telt mee bij Quinten)
   const EXTRA_LINK_HRS = 0.3;
@@ -10551,7 +10652,7 @@ function App() {
       // Ingepland voor mij = taken toegewezen aan Quinten + rapportage-uren (1u per actieve klant)
       const plannedQ = qk => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '') === 'quinten').reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        return tot + taskH + getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk);
+        return tot + taskH + getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getControlHoursForQuarterBy(cl, qk, 'quinten') + getExtraLinkHoursForQuarter(cl, qk);
       }, 0);
       return /*#__PURE__*/React.createElement("div", {
         style: {
@@ -10814,7 +10915,7 @@ function App() {
     })(), (() => {
       const sumAsgQAll = (ak, qk) => activeClients.reduce((tot, cl) => {
         const taskH = ((cl.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(cl, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0);
-        const rap = ak === 'quinten' ? getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getControlHoursForQuarter(cl, qk) + getExtraLinkHoursForQuarter(cl, qk) : 0;
+        const rap = (ak === 'quinten' ? getRapportageHoursForQuarter(cl, qk) + getAuditHours(cl, qk) + getExtraLinkHoursForQuarter(cl, qk) : 0) + getControlHoursForQuarterBy(cl, qk, ak);
         return tot + taskH + rap;
       }, 0);
       const r1 = n => Math.round(n * 10) / 10;
@@ -13076,7 +13177,7 @@ function App() {
         }
       }, r1(QUARTERS.reduce((s, qt) => s + getQuarterAvailableHours(client, qt.key), 0)), " u")))));
     })(), (() => {
-      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHoursForQuarter(client, qk) + getAuditHours(client, qk) + getControlHoursForQuarter(client, qk) + getExtraLinkHoursForQuarter(client, qk) : 0);
+      const sumAsgQ = (ak, qk) => ((client.quarterCustomTasks || {})[qk] || []).filter(t => (getTaskAssignee(client, qk, t) || '__none') === ak).reduce((s, t) => s + (parseFloat(t.hours) || 0), 0) + (ak === 'quinten' ? getRapportageHoursForQuarter(client, qk) + getAuditHours(client, qk) + getExtraLinkHoursForQuarter(client, qk) : 0) + getControlHoursForQuarterBy(client, qk, ak);
       const r1 = n => Math.round(n * 10) / 10;
       const asgWithHours = ASSIGNEES.filter(a => QUARTERS.some(qt => sumAsgQ(a.key, qt.key) > 0));
       const grandTotal = ASSIGNEES.reduce((s, a) => s + QUARTERS.reduce((s2, qt) => s2 + sumAsgQ(a.key, qt.key), 0), 0);
@@ -13255,6 +13356,9 @@ function App() {
       onToggleScheduled: toggleTaskScheduled,
       onToggleAutoSched: toggleAutoScheduled,
       onToggleAutoDone: toggleAutoDone,
+      onSetCtrlAssignee: setTaskControlAssignee,
+      onSetCtrlHours: setTaskControlHours,
+      taskControlAssignee: t => getTaskControlAssignee(client, q.key, t),
       onHideAudit: hideAuditMonth,
       onDeleteRapportage: deleteRapportage,
       onSetPhase: setQuarterTaskPhase,
